@@ -64,23 +64,25 @@ export default async function Home() {
             {row.map((movie) => {
               const src = posterUrl(movie.poster_path);
               return (
-                <li
-                  key={movie.id}
-                  className="relative h-44 w-28 shrink-0 overflow-hidden rounded-sm bg-stage ring-1 ring-cream/10"
-                >
-                  {src ? (
-                    <Image
-                      src={src}
-                      alt={movie.title}
-                      fill
-                      sizes="112px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <span className="flex h-full items-center justify-center p-2 text-center text-xs text-cream/40">
-                      {movie.title}
-                    </span>
-                  )}
+                <li key={movie.id} className="shrink-0">
+                  <Link
+                    href={`/movie/${movie.id}`}
+                    className="relative block h-44 w-28 overflow-hidden rounded-sm bg-stage ring-1 ring-cream/10 transition-[box-shadow,transform] hover:scale-[1.03] hover:ring-amber/50"
+                  >
+                    {src ? (
+                      <Image
+                        src={src}
+                        alt={movie.title}
+                        fill
+                        sizes="112px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-full items-center justify-center p-2 text-center text-xs text-cream/40">
+                        {movie.title}
+                      </span>
+                    )}
+                  </Link>
                 </li>
               );
             })}

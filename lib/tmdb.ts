@@ -6,8 +6,13 @@
  * Never import this into a Client Component (`"use client"`) or the key can leak.
  */
 
-const TMDB_BASE = process.env.TMDB_BASE_URL;
-const TMDB_IMAGE_BASE = process.env.TMDB_IMAGE_BASE_URL;
+function getBaseUrl() {
+  return process.env.TMDB_BASE_URL ?? "https://api.themoviedb.org/3";
+}
+
+function getImageBase() {
+  return process.env.TMDB_IMAGE_BASE_URL ?? "https://image.tmdb.org/t/p";
+}
 
 export type TmdbMovie = {
   id: number;
@@ -17,6 +22,13 @@ export type TmdbMovie = {
   backdrop_path: string | null;
   vote_average: number;
   release_date: string;
+};
+
+/** Extra fields returned by GET /movie/{id} */
+export type TmdbMovieDetails = TmdbMovie & {
+  runtime: number | null;
+  tagline: string | null;
+  genres: { id: number; name: string }[];
 };
 
 type PopularMoviesResponse = {
@@ -45,17 +57,24 @@ export function posterUrl(
   size: "w185" | "w342" | "w500" = "w342",
 ) {
   if (!posterPath) return null;
-  return `${TMDB_IMAGE_BASE}/${size}${posterPath}`;
+  return `${getImageBase()}/${size}${posterPath}`;
+}
+
+export function backdropUrl(
+  backdropPath: string | null,
+  size: "w780" | "w1280" | "original" = "w1280",
+) {
+  if (!backdropPath) return null;
+  return `${getImageBase()}/${size}${backdropPath}`;
 }
 
 /** Popular movies from TMDB (page 1 by default). */
 export async function getPopularMovies(page = 1): Promise<TmdbMovie[]> {
-  const url = new URL(`${TMDB_BASE}/movie/popular`);
+  const url = new URL(`${getBaseUrl()}/movie/popular`);
   url.searchParams.set("api_key", getApiKey());
   url.searchParams.set("page", String(page));
 
   const res = await fetch(url.toString(), {
-    // Revalidate every hour — Next caches this fetch on the server
     next: { revalidate: 3600 },
   });
 
@@ -65,4 +84,24 @@ export async function getPopularMovies(page = 1): Promise<TmdbMovie[]> {
 
   const data = (await res.json()) as PopularMoviesResponse;
   return data.results;
+}
+
+/** Single movie by id. Returns null when TMDB says 404. */
+export async function getMovie(
+  id: string | number,
+): Promise<TmdbMovieDetails | null> {
+  const url = new URL(`${getBaseUrl()}/movie/${id}`);
+  url.searchParams.set("api_key", getApiKey());
+
+  const res = await fetch(url.toString(), {
+    next: { revalidate: 3600 },
+  });
+
+  if (res.status === 404) return null;
+
+  if (!res.ok) {
+    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+  }
+
+  return (await res.json()) as TmdbMovieDetails;
 }
