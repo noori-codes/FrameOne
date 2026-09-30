@@ -1,0 +1,19 @@
+opencollection: 1.0.0
+
+info:
+  name: frameone
+bundled: false
+extensions:
+  bruno:
+    defaultEnvironment: local
+    ignore:
+      - node_modules
+      - .git
+
+docs: |-
+  Frameone API checks (TMDB for now).
+
+  1. Select environment **local** (top-right in Bruno).
+  2. Set secret `tmdb_api_key` to your TMDB_API_KEY from `.env.local`
+     (short hex key — NOT the long eyJ... access token).
+  3. Run **TMDB / Authentication** first, then **Popular movies**.

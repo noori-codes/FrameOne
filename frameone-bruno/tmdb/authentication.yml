@@ -1,0 +1,22 @@
+info:
+  name: Authentication
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{tmdb_base_url}}/authentication?api_key={{tmdb_api_key}}"
+  headers:
+    - name: Accept
+      value: application/json
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+docs: |-
+  Expect `{ "success": true }`.
+  Select environment **local** before sending.
+  Key must be the short TMDB_API_KEY, not the eyJ... token.

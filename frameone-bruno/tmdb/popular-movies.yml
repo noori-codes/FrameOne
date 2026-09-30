@@ -1,0 +1,21 @@
+info:
+  name: Popular movies
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{tmdb_base_url}}/movie/popular?api_key={{tmdb_api_key}}&page=1"
+  headers:
+    - name: Accept
+      value: application/json
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+docs: |-
+  Same endpoint as getPopularMovies() in lib/tmdb.ts.
+  Select environment **local** before sending.

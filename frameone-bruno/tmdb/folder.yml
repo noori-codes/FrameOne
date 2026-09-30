@@ -1,0 +1,8 @@
+info:
+  name: TMDB
+  type: folder
+  seq: 1
+
+docs: |-
+  Direct calls to The Movie Database.
+  Use query param `api_key={{tmdb_api_key}}` — same approach as `lib/tmdb.ts`.
