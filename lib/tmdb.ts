@@ -6,7 +6,8 @@
  * Never import this into a Client Component (`"use client"`) or the key can leak.
  */
 
-const TMDB_BASE = "https://api.themoviedb.org/3";
+const TMDB_BASE = process.env.TMDB_BASE_URL;
+const TMDB_IMAGE_BASE = process.env.TMDB_IMAGE_BASE_URL;
 
 export type TmdbMovie = {
   id: number;
@@ -33,6 +34,18 @@ function getApiKey() {
     );
   }
   return key;
+}
+
+/**
+ * TMDB returns paths like `/abc.jpg`, not full URLs.
+ * `size` examples: w185, w342, w500, original
+ */
+export function posterUrl(
+  posterPath: string | null,
+  size: "w185" | "w342" | "w500" = "w342",
+) {
+  if (!posterPath) return null;
+  return `${TMDB_IMAGE_BASE}/${size}${posterPath}`;
 }
 
 /** Popular movies from TMDB (page 1 by default). */
