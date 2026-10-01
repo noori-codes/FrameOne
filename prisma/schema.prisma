@@ -1,0 +1,22 @@
+// Prisma schema = the shape of your database (tables + columns + relations).
+// In Prisma 7 the database URL lives in prisma.config.ts (not here).
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+/// App user — we'll use this for signup/signin in the auth phase.
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  /// Hashed password (never store plain text). Filled in auth phase.
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
