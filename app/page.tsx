@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { auth } from "@/auth";
 import { getPopularMovies, posterUrl } from "@/lib/tmdb";
 
 /**
@@ -7,8 +8,10 @@ import { getPopularMovies, posterUrl } from "@/lib/tmdb";
  * The API key never reaches the browser — only HTML + image URLs do.
  */
 export default async function Home() {
-  const movies = await getPopularMovies();
+  const [movies, session] = await Promise.all([getPopularMovies(), auth()]);
   const row = movies.slice(0, 12);
+  const user = session?.user;
+  const firstName = user?.name?.split(" ")[0] ?? user?.email?.split("@")[0];
 
   return (
     <main className="relative flex min-h-dvh flex-1 flex-col overflow-hidden">
@@ -26,11 +29,14 @@ export default async function Home() {
           Frameone
         </p>
         <h1 className="max-w-xl font-display text-5xl leading-none tracking-wide text-cream sm:text-7xl">
-          Movies, lit for the night
+          {firstName
+            ? `Welcome back, ${firstName}`
+            : "Movies, lit for the night"}
         </h1>
         <p className="mt-4 max-w-md text-base leading-relaxed text-cream/65 sm:text-lg">
-          Browse what’s playing in the culture — posters, details, and your list
-          coming soon.
+          {user
+            ? "Pick something from popular below — your list is coming next."
+            : "Browse what’s playing in the culture — posters, details, and your list coming soon."}
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -40,12 +46,14 @@ export default async function Home() {
           >
             Start browsing
           </Link>
-          <Link
-            href="/signin"
-            className="rounded-sm border border-cream/20 px-5 py-2.5 text-sm text-cream/80 transition-colors hover:border-cream/40 hover:text-cream"
-          >
-            Sign in
-          </Link>
+          {!user ? (
+            <Link
+              href="/signin"
+              className="rounded-sm border border-cream/20 px-5 py-2.5 text-sm text-cream/80 transition-colors hover:border-cream/40 hover:text-cream"
+            >
+              Sign in
+            </Link>
+          ) : null}
         </div>
 
         <section

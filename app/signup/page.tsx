@@ -1,6 +1,11 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { SignUpForm } from "@/components/sign-up-form";
 
-export default function SignUpPage() {
+export default async function SignUpPage() {
+  const session = await auth();
+  if (session?.user) redirect("/");
+
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col justify-center px-6 pt-24 pb-16">
       <h1 className="font-display text-4xl tracking-wide text-cream sm:text-5xl">
