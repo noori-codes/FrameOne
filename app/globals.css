@@ -27,6 +27,35 @@ body {
   font-family: var(--font-body), system-ui, sans-serif;
 }
 
+/* Site-wide scrollbars — thin, stage track + amber thumb */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--amber) 55%, transparent) var(--stage);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--stage);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--amber) 50%, #3a2a18);
+  border-radius: 999px;
+  border: 2px solid var(--stage);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--amber);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--stage);
+}
+
 /* Soft film grain (CSS only — no image asset needed yet) */
 .film-grain::after {
   content: "";
