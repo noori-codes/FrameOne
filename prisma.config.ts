@@ -11,7 +11,7 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    // Relative to the prisma/ folder → creates/uses prisma/dev.db
+    // Relative to project root → prisma/dev.db
     url: env("DATABASE_URL"),
   },
 });

@@ -24,6 +24,12 @@ export async function SiteHeader() {
 
           {session?.user ? (
             <div className="flex items-center gap-4">
+              <Link
+                href="/favorites"
+                className="transition-colors hover:text-cream"
+              >
+                My list
+              </Link>
               <span className="hidden text-cream/50 sm:inline">
                 {session.user.email}
               </span>

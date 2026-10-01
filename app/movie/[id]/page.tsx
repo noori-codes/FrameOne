@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
+import { FavoriteButton } from "@/components/favorite-button";
+import { prisma } from "@/lib/prisma";
 import { backdropUrl, getMovie, posterUrl } from "@/lib/tmdb";
 
 /**
@@ -29,6 +32,20 @@ export default async function MoviePage({ params }: MoviePageProps) {
   const movie = await getMovie(id);
 
   if (!movie) notFound();
+
+  const session = await auth();
+  const favorited = session?.user?.id
+    ? Boolean(
+        await prisma.favorite.findUnique({
+          where: {
+            userId_movieId: {
+              userId: session.user.id,
+              movieId: movie.id,
+            },
+          },
+        }),
+      )
+    : false;
 
   const poster = posterUrl(movie.poster_path, "w500");
   const backdrop = backdropUrl(movie.backdrop_path);
@@ -99,6 +116,15 @@ export default async function MoviePage({ params }: MoviePageProps) {
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-cream/70">
             {movie.overview || "No overview available."}
           </p>
+
+          <FavoriteButton
+            key={`${movie.id}-${favorited}`}
+            movieId={movie.id}
+            title={movie.title}
+            posterPath={movie.poster_path}
+            initialFavorited={favorited}
+            signedIn={Boolean(session?.user)}
+          />
         </div>
       </div>
     </main>

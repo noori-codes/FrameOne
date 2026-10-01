@@ -10,13 +10,28 @@ datasource db {
   provider = "sqlite"
 }
 
-/// App user — we'll use this for signup/signin in the auth phase.
 model User {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String?
-  email     String   @unique
-  /// Hashed password (never store plain text). Filled in auth phase.
+  email     String     @unique
+  /// Hashed password (never store plain text).
   password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  favorites Favorite[]
+}
+
+/// A TMDB movie the user saved. We store title/poster so the list page
+/// does not need to call TMDB for every row.
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  movieId    Int
+  title      String
+  posterPath String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+  @@index([userId])
 }
