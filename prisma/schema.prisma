@@ -29,6 +29,10 @@ model Favorite {
   movieId    Int
   title      String
   posterPath String?
+  /// Personal score 1–10 (optional). Null = not rated yet.
+  rating     Int?
+  /// Short “why I saved this” note (optional).
+  note       String?
   createdAt  DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

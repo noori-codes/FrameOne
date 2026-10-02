@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { FavoriteButton } from "@/components/favorite-button";
+import { FavoriteMetaForm } from "@/components/favorite-meta-form";
 import { prisma } from "@/lib/prisma";
 import { backdropUrl, getMovie, posterUrl } from "@/lib/tmdb";
 
@@ -34,18 +35,17 @@ export default async function MoviePage({ params }: MoviePageProps) {
   if (!movie) notFound();
 
   const session = await auth();
-  const favorited = session?.user?.id
-    ? Boolean(
-        await prisma.favorite.findUnique({
-          where: {
-            userId_movieId: {
-              userId: session.user.id,
-              movieId: movie.id,
-            },
+  const favorite = session?.user?.id
+    ? await prisma.favorite.findUnique({
+        where: {
+          userId_movieId: {
+            userId: session.user.id,
+            movieId: movie.id,
           },
-        }),
-      )
-    : false;
+        },
+      })
+    : null;
+  const favorited = Boolean(favorite);
 
   const poster = posterUrl(movie.poster_path, "w500");
   const backdrop = backdropUrl(movie.backdrop_path);
@@ -106,6 +106,9 @@ export default async function MoviePage({ params }: MoviePageProps) {
             {year ? <span>{year}</span> : null}
             {runtime ? <span>{runtime}</span> : null}
             <span className="text-amber">★ {movie.vote_average.toFixed(1)}</span>
+            {favorite?.rating != null ? (
+              <span className="text-cream/70">Your ★ {favorite.rating}/10</span>
+            ) : null}
           </p>
 
           {movie.genres.length > 0 ? (
@@ -126,6 +129,12 @@ export default async function MoviePage({ params }: MoviePageProps) {
             {movie.overview || "No overview available."}
           </p>
 
+          {favorite?.note ? (
+            <p className="mt-4 max-w-md rounded-xl border border-cream/10 bg-black/25 px-4 py-3 text-sm text-cream/65 italic">
+              “{favorite.note}”
+            </p>
+          ) : null}
+
           <FavoriteButton
             key={`${movie.id}-${favorited}`}
             movieId={movie.id}
@@ -134,6 +143,15 @@ export default async function MoviePage({ params }: MoviePageProps) {
             initialFavorited={favorited}
             signedIn={Boolean(session?.user)}
           />
+
+          {favorite ? (
+            <FavoriteMetaForm
+              key={`${favorite.id}-${favorite.rating}-${favorite.note}`}
+              movieId={movie.id}
+              initialRating={favorite.rating}
+              initialNote={favorite.note}
+            />
+          ) : null}
         </div>
       </div>
     </main>
