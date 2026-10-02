@@ -1,19 +1,23 @@
 import Image from "next/image";
 import Link from "next/link";
+import { PaginationNav, parsePageParam } from "@/components/pagination-nav";
 import { posterUrl, searchMovies } from "@/lib/tmdb";
 
 /**
- * /search?q=inception
+ * /search?q=inception&page=2
  * `searchParams` comes from the URL query string (Promise in App Router).
  */
 type SearchPageProps = {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 };
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const { q = "" } = await searchParams;
+  const { q = "", page: pageRaw } = await searchParams;
   const query = q.trim();
-  const results = query ? await searchMovies(query) : [];
+  const page = parsePageParam(pageRaw);
+  const data = query ? await searchMovies(query, page) : null;
+  const results = data?.results ?? [];
+  const totalPages = data?.totalPages ?? 0;
 
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-24 pb-16">
@@ -21,7 +25,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         Search
       </h1>
 
-      {/* Same GET form pattern as the header — works without JavaScript */}
       <form action="/search" method="get" className="mt-6 flex max-w-md gap-2">
         <input
           type="search"
@@ -31,6 +34,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           autoFocus
           className="min-w-0 flex-1 rounded-sm border border-cream/20 bg-stage px-3 py-2 text-sm text-cream outline-none focus:border-amber"
         />
+        {/* New search always starts at page 1 (no hidden page field) */}
         <button
           type="submit"
           className="rounded-sm bg-amber px-4 py-2 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream"
@@ -49,8 +53,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       ) : (
         <>
           <p className="mt-8 text-sm text-cream/55">
-            {results.length} result{results.length === 1 ? "" : "s"} for{" "}
+            Showing page {page} for{" "}
             <span className="text-cream/80">&ldquo;{query}&rdquo;</span>
+            {data ? ` · ${data.totalResults.toLocaleString()} total` : null}
           </p>
           <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
             {results.map((movie) => {
@@ -81,6 +86,21 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               );
             })}
           </ul>
+
+          <PaginationNav
+            page={page}
+            totalPages={totalPages}
+            prevHref={
+              page > 1
+                ? `/search?q=${encodeURIComponent(query)}&page=${page - 1}`
+                : null
+            }
+            nextHref={
+              page < totalPages
+                ? `/search?q=${encodeURIComponent(query)}&page=${page + 1}`
+                : null
+            }
+          />
         </>
       )}
     </main>

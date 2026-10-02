@@ -43,6 +43,31 @@ type PaginatedMoviesResponse = {
   total_results: number;
 };
 
+/** Friendly shape for UI pagination (camelCase). */
+export type PaginatedMovies = {
+  results: TmdbMovie[];
+  page: number;
+  totalPages: number;
+  totalResults: number;
+};
+
+function toPaginated(data: PaginatedMoviesResponse): PaginatedMovies {
+  return {
+    results: data.results,
+    page: data.page,
+    // TMDB can report huge total_pages; cap keeps UI sane
+    totalPages: Math.min(data.total_pages, 500),
+    totalResults: data.total_results,
+  };
+}
+
+const EMPTY_PAGE: PaginatedMovies = {
+  results: [],
+  page: 1,
+  totalPages: 0,
+  totalResults: 0,
+};
+
 function getApiKey() {
   const key = process.env.TMDB_API_KEY;
   if (!key) {
@@ -138,15 +163,15 @@ export async function getTopRatedMovies(page = 1): Promise<TmdbMovie[]> {
 
 /**
  * Search movies by title text.
- * TMDB endpoint: GET /search/movie?query=...
- * Empty query → [] (no network call).
+ * Returns results + page info so the UI can build Next/Previous links.
+ * Empty query → empty page (no network call).
  */
 export async function searchMovies(
   query: string,
   page = 1,
-): Promise<TmdbMovie[]> {
+): Promise<PaginatedMovies> {
   const q = query.trim();
-  if (!q) return [];
+  if (!q) return EMPTY_PAGE;
 
   const url = new URL(`${getBaseUrl()}/search/movie`);
   url.searchParams.set("api_key", getApiKey());
@@ -155,7 +180,6 @@ export async function searchMovies(
   url.searchParams.set("include_adult", "false");
 
   const res = await fetch(url.toString(), {
-    // Search results change often — cache briefly
     next: { revalidate: 60 },
   });
 
@@ -164,7 +188,7 @@ export async function searchMovies(
   }
 
   const data = (await res.json()) as PaginatedMoviesResponse;
-  return data.results;
+  return toPaginated(data);
 }
 
 /** Single movie by id. Returns null when TMDB says 404. */
@@ -209,12 +233,13 @@ export async function getMovieGenres(): Promise<TmdbGenre[]> {
 
 /**
  * Discover movies filtered by one genre id.
+ * Returns results + page info for pagination UI.
  * TMDB: GET /discover/movie?with_genres=28
  */
 export async function getMoviesByGenre(
   genreId: number,
   page = 1,
-): Promise<TmdbMovie[]> {
+): Promise<PaginatedMovies> {
   const url = new URL(`${getBaseUrl()}/discover/movie`);
   url.searchParams.set("api_key", getApiKey());
   url.searchParams.set("with_genres", String(genreId));
@@ -231,5 +256,5 @@ export async function getMoviesByGenre(
   }
 
   const data = (await res.json()) as PaginatedMoviesResponse;
-  return data.results;
+  return toPaginated(data);
 }
