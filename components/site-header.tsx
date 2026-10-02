@@ -43,6 +43,9 @@ export async function SiteHeader() {
           <Link href="/" className="transition-colors hover:text-cream">
             Browse
           </Link>
+          <Link href="/genres" className="transition-colors hover:text-cream">
+            Genres
+          </Link>
 
           {session?.user ? (
             <div className="flex items-center gap-3 md:gap-4">

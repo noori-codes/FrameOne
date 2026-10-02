@@ -31,6 +31,11 @@ export type TmdbMovieDetails = TmdbMovie & {
   genres: { id: number; name: string }[];
 };
 
+export type TmdbGenre = {
+  id: number;
+  name: string;
+};
+
 type PaginatedMoviesResponse = {
   page: number;
   results: TmdbMovie[];
@@ -180,4 +185,51 @@ export async function getMovie(
   }
 
   return (await res.json()) as TmdbMovieDetails;
+}
+
+/**
+ * Official movie genre list (Action, Comedy, …).
+ * TMDB: GET /genre/movie/list
+ */
+export async function getMovieGenres(): Promise<TmdbGenre[]> {
+  const url = new URL(`${getBaseUrl()}/genre/movie/list`);
+  url.searchParams.set("api_key", getApiKey());
+
+  const res = await fetch(url.toString(), {
+    next: { revalidate: 86400 }, // genres rarely change — cache 1 day
+  });
+
+  if (!res.ok) {
+    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+  }
+
+  const data = (await res.json()) as { genres: TmdbGenre[] };
+  return data.genres;
+}
+
+/**
+ * Discover movies filtered by one genre id.
+ * TMDB: GET /discover/movie?with_genres=28
+ */
+export async function getMoviesByGenre(
+  genreId: number,
+  page = 1,
+): Promise<TmdbMovie[]> {
+  const url = new URL(`${getBaseUrl()}/discover/movie`);
+  url.searchParams.set("api_key", getApiKey());
+  url.searchParams.set("with_genres", String(genreId));
+  url.searchParams.set("page", String(page));
+  url.searchParams.set("sort_by", "popularity.desc");
+  url.searchParams.set("include_adult", "false");
+
+  const res = await fetch(url.toString(), {
+    next: { revalidate: 3600 },
+  });
+
+  if (!res.ok) {
+    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+  }
+
+  const data = (await res.json()) as PaginatedMoviesResponse;
+  return data.results;
 }
