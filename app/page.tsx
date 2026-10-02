@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { BrandLogo } from "@/components/brand-logo";
 import { getPopularMovies, posterUrl } from "@/lib/tmdb";
 
 /**
@@ -25,9 +26,7 @@ export default async function Home() {
       </div>
 
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-end px-6 pt-28 pb-16 sm:pb-24">
-        <p className="mb-3 font-display text-sm tracking-[0.35em] text-amber uppercase">
-          Frameone
-        </p>
+        <BrandLogo size="md" className="mb-4" priority />
         <h1 className="max-w-xl font-display text-5xl leading-none tracking-wide text-cream sm:text-7xl">
           {firstName
             ? `Welcome back, ${firstName}`

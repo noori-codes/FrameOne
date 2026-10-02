@@ -22,7 +22,7 @@ export async function generateMetadata({
   const movie = await getMovie(id);
   if (!movie) return { title: "Movie not found" };
   return {
-    title: `${movie.title} · Frameone`,
+    title: movie.title,
     description: movie.overview.slice(0, 160),
   };
 }

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { BrandLogo } from "@/components/brand-logo";
 import { SignInForm } from "@/components/sign-in-form";
 
 export default async function SignInPage() {
@@ -8,6 +9,7 @@ export default async function SignInPage() {
 
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col justify-center px-6 pt-24 pb-16">
+      <BrandLogo size="md" className="mb-6" />
       <h1 className="font-display text-4xl tracking-wide text-cream sm:text-5xl">
         Sign in
       </h1>

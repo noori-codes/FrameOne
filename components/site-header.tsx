@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth, signOut } from "@/auth";
+import { BrandLogo } from "@/components/brand-logo";
 
 /**
  * Shared top bar. `auth()` reads the session cookie on the server.
@@ -13,9 +14,10 @@ export async function SiteHeader() {
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-6">
         <Link
           href="/"
-          className="shrink-0 font-display text-xl tracking-[0.2em] text-cream uppercase"
+          className="shrink-0 transition-opacity hover:opacity-90"
+          aria-label="FrameOne home"
         >
-          Frameone
+          <BrandLogo size="sm" withWordmark priority />
         </Link>
 
         <form

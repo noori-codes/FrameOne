@@ -20,8 +20,15 @@ const body = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Frameone",
+  title: {
+    default: "FrameOne",
+    template: "%s · FrameOne",
+  },
   description: "Discover movies with a cinematic UI.",
+  icons: {
+    icon: "/brand/logo-dark.jpg",
+    apple: "/brand/logo-dark.jpg",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
