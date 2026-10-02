@@ -33,7 +33,7 @@ export function FavoriteButton({
     return (
       <Link
         href="/signin"
-        className="mt-6 inline-flex rounded-sm border border-cream/25 px-4 py-2 text-sm text-cream/80 transition-colors hover:border-amber hover:text-amber"
+        className="mt-6 inline-flex rounded-full border border-cream/25 px-4 py-2 text-sm text-cream/80 transition-colors hover:border-amber hover:text-amber"
       >
         Sign in to save
       </Link>
@@ -48,7 +48,7 @@ export function FavoriteButton({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-sm border border-cream/25 px-4 py-2 text-sm text-cream transition-colors hover:border-amber hover:text-amber disabled:opacity-60"
+        className="rounded-full border border-cream/25 px-4 py-2 text-sm text-cream transition-colors hover:border-amber hover:text-amber disabled:opacity-60"
       >
         {pending
           ? "Saving…"

@@ -65,14 +65,15 @@ export default async function MoviePage({ params }: MoviePageProps) {
             fill
             priority
             sizes="100vw"
-            className="object-cover opacity-35"
+            className="object-cover opacity-40"
           />
         ) : null}
-        <div className="absolute inset-0 bg-linear-to-t from-background via-background/85 to-background/40" />
+        <div className="absolute inset-0 bg-linear-to-t from-background via-background/80 to-background/35" />
+        <div className="film-grain absolute inset-0" />
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 pt-24 pb-16 sm:flex-row sm:items-end sm:pb-24">
-        <div className="relative mx-auto aspect-2/3 w-48 shrink-0 overflow-hidden rounded-sm bg-stage ring-1 ring-cream/15 sm:mx-0 sm:w-56">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 pt-28 pb-20 sm:flex-row sm:items-end sm:px-8 sm:pb-24">
+        <div className="relative mx-auto aspect-2/3 w-48 shrink-0 overflow-hidden rounded-lg bg-stage shadow-[0_16px_48px_-16px_rgba(0,0,0,0.8)] ring-1 ring-cream/15 sm:mx-0 sm:w-56">
           {poster ? (
             <Image
               src={poster}
@@ -87,13 +88,13 @@ export default async function MoviePage({ params }: MoviePageProps) {
 
         <div className="min-w-0 flex-1">
           <Link
-            href="/#popular"
+            href="/#trending"
             className="text-sm text-cream/50 transition-colors hover:text-amber"
           >
-            ← Back to popular
+            ← Back to browse
           </Link>
 
-          <h1 className="mt-3 font-display text-4xl tracking-wide text-cream sm:text-6xl">
+          <h1 className="mt-4 font-display text-5xl tracking-wide text-cream uppercase sm:text-7xl">
             {movie.title}
           </h1>
 
@@ -101,16 +102,24 @@ export default async function MoviePage({ params }: MoviePageProps) {
             <p className="mt-2 text-base text-amber/80 italic">{movie.tagline}</p>
           ) : null}
 
-          <p className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm text-cream/55">
+          <p className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-sm text-cream/55 sm:text-base">
             {year ? <span>{year}</span> : null}
             {runtime ? <span>{runtime}</span> : null}
-            <span>{movie.vote_average.toFixed(1)} / 10</span>
+            <span className="text-amber">★ {movie.vote_average.toFixed(1)}</span>
           </p>
 
           {movie.genres.length > 0 ? (
-            <p className="mt-2 text-sm text-cream/45">
-              {movie.genres.map((g) => g.name).join(" · ")}
-            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {movie.genres.map((g) => (
+                <Link
+                  key={g.id}
+                  href={`/genres/${g.id}`}
+                  className="rounded-full border border-cream/15 px-3 py-1 text-xs text-cream/65 transition-colors hover:border-amber hover:text-amber"
+                >
+                  {g.name}
+                </Link>
+              ))}
+            </div>
           ) : null}
 
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-cream/70">

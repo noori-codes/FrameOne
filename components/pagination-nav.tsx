@@ -25,12 +25,12 @@ export function PaginationNav({
       {prevHref ? (
         <Link
           href={prevHref}
-          className="rounded-sm border border-cream/20 px-3 py-1.5 text-sm text-cream transition-colors hover:border-amber hover:text-amber"
+          className="rounded-full border border-cream/20 px-4 py-1.5 text-sm text-cream transition-colors hover:border-amber hover:text-amber"
         >
           ← Previous
         </Link>
       ) : (
-        <span className="px-3 py-1.5 text-sm text-cream/25">← Previous</span>
+        <span className="px-4 py-1.5 text-sm text-cream/25">← Previous</span>
       )}
 
       <p className="text-sm text-cream/50">
@@ -40,7 +40,7 @@ export function PaginationNav({
       {nextHref ? (
         <Link
           href={nextHref}
-          className="rounded-sm border border-cream/20 px-3 py-1.5 text-sm text-cream transition-colors hover:border-amber hover:text-amber"
+          className="rounded-full border border-cream/20 px-4 py-1.5 text-sm text-cream transition-colors hover:border-amber hover:text-amber"
         >
           Next →
         </Link>

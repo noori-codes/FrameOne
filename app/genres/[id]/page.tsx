@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { MovieCard } from "@/components/movie-card";
 import { PaginationNav, parsePageParam } from "@/components/pagination-nav";
-import {
-  getMovieGenres,
-  getMoviesByGenre,
-  posterUrl,
-} from "@/lib/tmdb";
+import { getMovieGenres, getMoviesByGenre } from "@/lib/tmdb";
 
 type GenrePageProps = {
   params: Promise<{ id: string }>;
@@ -46,7 +42,7 @@ export default async function GenrePage({
   const { totalPages, totalResults } = moviesPage;
 
   return (
-    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-24 pb-16">
+    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-28 pb-20 sm:px-8">
       <Link
         href="/genres"
         className="text-sm text-cream/50 transition-colors hover:text-amber"
@@ -54,7 +50,7 @@ export default async function GenrePage({
         ← All genres
       </Link>
 
-      <h1 className="mt-3 font-display text-4xl tracking-wide text-cream sm:text-5xl">
+      <h1 className="mt-4 font-display text-5xl tracking-wide text-cream uppercase sm:text-6xl">
         {genre.name}
       </h1>
       <p className="mt-2 text-sm text-cream/55">
@@ -65,37 +61,21 @@ export default async function GenrePage({
       </p>
 
       {movies.length === 0 ? (
-        <p className="mt-12 text-cream/50">No movies found for this genre.</p>
+        <p className="mt-14 text-cream/50">No movies found for this genre.</p>
       ) : (
         <>
-          <ul className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
-            {movies.map((movie) => {
-              const src = posterUrl(movie.poster_path);
-              return (
-                <li key={movie.id}>
-                  <Link href={`/movie/${movie.id}`} className="group block">
-                    <div className="relative aspect-2/3 overflow-hidden rounded-sm bg-stage ring-1 ring-cream/10 transition-[box-shadow,transform] group-hover:scale-[1.03] group-hover:ring-amber/50">
-                      {src ? (
-                        <Image
-                          src={src}
-                          alt={movie.title}
-                          fill
-                          sizes="160px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <span className="flex h-full items-center justify-center p-2 text-center text-xs text-cream/40">
-                          {movie.title}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-2 line-clamp-2 text-sm text-cream/70 group-hover:text-cream">
-                      {movie.title}
-                    </p>
-                  </Link>
-                </li>
-              );
-            })}
+          <ul className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5 md:grid-cols-5 lg:grid-cols-6">
+            {movies.map((movie) => (
+              <li key={movie.id}>
+                <MovieCard
+                  id={movie.id}
+                  title={movie.title}
+                  posterPath={movie.poster_path}
+                  voteAverage={movie.vote_average}
+                  showTitle
+                />
+              </li>
+            ))}
           </ul>
 
           <PaginationNav
