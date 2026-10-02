@@ -55,7 +55,13 @@ export async function SiteHeader() {
               >
                 My list
               </Link>
-              <span className="hidden text-cream/50 lg:inline">
+              <Link
+                href="/profile"
+                className="hidden transition-colors hover:text-cream sm:inline"
+              >
+                Profile
+              </Link>
+              <span className="hidden max-w-[10rem] truncate text-cream/50 lg:inline">
                 {session.user.email}
               </span>
               <form

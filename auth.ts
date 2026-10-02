@@ -55,6 +55,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
+        // Read fresh name/email from DB so profile edits show up without re-login
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.sub },
+          select: { name: true, email: true },
+        });
+        if (dbUser) {
+          session.user.name = dbUser.name;
+          session.user.email = dbUser.email;
+        }
       }
       return session;
     },
