@@ -87,6 +87,51 @@ export async function getPopularMovies(page = 1): Promise<TmdbMovie[]> {
 }
 
 /**
+ * Movies trending today (or this week).
+ * TMDB: GET /trending/movie/{day|week}
+ */
+export async function getTrendingMovies(
+  window: "day" | "week" = "day",
+  page = 1,
+): Promise<TmdbMovie[]> {
+  const url = new URL(`${getBaseUrl()}/trending/movie/${window}`);
+  url.searchParams.set("api_key", getApiKey());
+  url.searchParams.set("page", String(page));
+
+  const res = await fetch(url.toString(), {
+    next: { revalidate: 1800 },
+  });
+
+  if (!res.ok) {
+    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+  }
+
+  const data = (await res.json()) as PaginatedMoviesResponse;
+  return data.results;
+}
+
+/**
+ * Highest-rated movies (all time, TMDB ranking).
+ * TMDB: GET /movie/top_rated
+ */
+export async function getTopRatedMovies(page = 1): Promise<TmdbMovie[]> {
+  const url = new URL(`${getBaseUrl()}/movie/top_rated`);
+  url.searchParams.set("api_key", getApiKey());
+  url.searchParams.set("page", String(page));
+
+  const res = await fetch(url.toString(), {
+    next: { revalidate: 3600 },
+  });
+
+  if (!res.ok) {
+    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+  }
+
+  const data = (await res.json()) as PaginatedMoviesResponse;
+  return data.results;
+}
+
+/**
  * Search movies by title text.
  * TMDB endpoint: GET /search/movie?query=...
  * Empty query → [] (no network call).
