@@ -31,7 +31,7 @@ export type TmdbMovieDetails = TmdbMovie & {
   genres: { id: number; name: string }[];
 };
 
-type PopularMoviesResponse = {
+type PaginatedMoviesResponse = {
   page: number;
   results: TmdbMovie[];
   total_pages: number;
@@ -82,7 +82,38 @@ export async function getPopularMovies(page = 1): Promise<TmdbMovie[]> {
     throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
   }
 
-  const data = (await res.json()) as PopularMoviesResponse;
+  const data = (await res.json()) as PaginatedMoviesResponse;
+  return data.results;
+}
+
+/**
+ * Search movies by title text.
+ * TMDB endpoint: GET /search/movie?query=...
+ * Empty query → [] (no network call).
+ */
+export async function searchMovies(
+  query: string,
+  page = 1,
+): Promise<TmdbMovie[]> {
+  const q = query.trim();
+  if (!q) return [];
+
+  const url = new URL(`${getBaseUrl()}/search/movie`);
+  url.searchParams.set("api_key", getApiKey());
+  url.searchParams.set("query", q);
+  url.searchParams.set("page", String(page));
+  url.searchParams.set("include_adult", "false");
+
+  const res = await fetch(url.toString(), {
+    // Search results change often — cache briefly
+    next: { revalidate: 60 },
+  });
+
+  if (!res.ok) {
+    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+  }
+
+  const data = (await res.json()) as PaginatedMoviesResponse;
   return data.results;
 }
 

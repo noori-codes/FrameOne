@@ -1,0 +1,21 @@
+info:
+  name: Search movies
+  type: http
+  seq: 5
+
+http:
+  method: GET
+  url: "{{tmdb_base_url}}/search/movie?api_key={{tmdb_api_key}}&query=inception&page=1&include_adult=false"
+  headers:
+    - name: Accept
+      value: application/json
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+docs: |-
+  Same endpoint as searchMovies() in lib/tmdb.ts.
+  Change `query=` to try other titles.
