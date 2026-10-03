@@ -48,7 +48,8 @@ export default async function Home() {
     <main className="relative flex min-h-dvh flex-1 flex-col overflow-x-hidden">
       {/* Full-bleed hero */}
       <section className="relative flex min-h-dvh w-full flex-col justify-end">
-        <div aria-hidden className="absolute inset-0">
+        {/* overflow-hidden clips the scaled backdrop so overlays always cover the full hero */}
+        <div aria-hidden className="absolute inset-0 overflow-hidden">
           {heroBackdrop ? (
             <Image
               src={heroBackdrop}
@@ -61,8 +62,10 @@ export default async function Home() {
           ) : (
             <div className="hero-drift absolute inset-[-8%] bg-[radial-gradient(ellipse_at_70%_40%,#3a2a18_0%,transparent_55%),radial-gradient(ellipse_at_20%_80%,#1a1510_0%,transparent_50%),linear-gradient(160deg,#1c1410_0%,#0c0b0a_45%,#080706_100%)]" />
           )}
-          <div className="absolute inset-0 bg-linear-to-t from-background via-background/55 to-transparent" />
-          <div className="absolute inset-0 bg-linear-to-r from-background/70 via-transparent to-transparent" />
+          {/* Base veil — covers the entire image, not just the bottom fade */}
+          <div className="absolute inset-0 bg-background/50" />
+          <div className="absolute inset-0 bg-linear-to-t from-background via-background/55 to-background/25" />
+          <div className="absolute inset-0 bg-linear-to-r from-background/60 via-transparent to-transparent" />
           <div className="film-grain absolute inset-0" />
         </div>
 
