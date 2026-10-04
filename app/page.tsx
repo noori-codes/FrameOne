@@ -4,6 +4,7 @@ import { pickDailyHeroMovies, todayKey } from "@/lib/daily-hero";
 import {
   backdropUrl,
   getMovie,
+  getMovieTrailerKey,
   getPopularMovies,
   getTopRatedMovies,
   getTrendingMovies,
@@ -28,7 +29,11 @@ export default async function Home() {
     await Promise.all(heroPicks.map((m) => getMovie(m.id)))
   ).filter((m): m is NonNullable<typeof m> => m != null);
 
-  const slides: HeroSlide[] = heroDetails.map((movie) => {
+  const trailerKeys = await Promise.all(
+    heroDetails.map((m) => getMovieTrailerKey(m.id)),
+  );
+
+  const slides: HeroSlide[] = heroDetails.map((movie, i) => {
     const year = movie.release_date?.slice(0, 4);
     const runtime =
       movie.runtime != null
@@ -51,6 +56,7 @@ export default async function Home() {
       tagline: movie.tagline,
       backdropUrl: backdropUrl(movie.backdrop_path),
       meta,
+      trailerKey: trailerKeys[i] ?? null,
     };
   });
 

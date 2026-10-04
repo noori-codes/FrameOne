@@ -211,6 +211,48 @@ export async function getMovie(
   return (await res.json()) as TmdbMovieDetails;
 }
 
+type TmdbVideo = {
+  id: string;
+  key: string;
+  name: string;
+  site: string;
+  type: string;
+  official: boolean;
+};
+
+/**
+ * Best YouTube trailer key for a movie, or null if TMDB has none.
+ * TMDB: GET /movie/{id}/videos
+ * Prefers official Trailer → any Trailer → Teaser.
+ */
+export async function getMovieTrailerKey(
+  id: string | number,
+): Promise<string | null> {
+  const url = new URL(`${getBaseUrl()}/movie/${id}/videos`);
+  url.searchParams.set("api_key", getApiKey());
+
+  const res = await fetch(url.toString(), {
+    next: { revalidate: 86400 },
+  });
+
+  if (res.status === 404) return null;
+
+  if (!res.ok) {
+    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+  }
+
+  const data = (await res.json()) as { results: TmdbVideo[] };
+  const youtube = data.results.filter((v) => v.site === "YouTube" && v.key);
+
+  const pick =
+    youtube.find((v) => v.type === "Trailer" && v.official) ??
+    youtube.find((v) => v.type === "Trailer") ??
+    youtube.find((v) => v.type === "Teaser") ??
+    youtube[0];
+
+  return pick?.key ?? null;
+}
+
 /**
  * Official movie genre list (Action, Comedy, …).
  * TMDB: GET /genre/movie/list

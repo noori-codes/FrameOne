@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Info, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { TrailerButton } from "@/components/trailer-button";
 
 export type HeroSlide = {
   id: number;
@@ -12,6 +13,8 @@ export type HeroSlide = {
   tagline: string | null;
   backdropUrl: string | null;
   meta: string;
+  /** YouTube key from TMDB videos (null if none). */
+  trailerKey: string | null;
 };
 
 type HeroCarouselProps = {
@@ -24,6 +27,7 @@ type HeroCarouselProps = {
  */
 export function HeroCarousel({ slides }: HeroCarouselProps) {
   const [index, setIndex] = useState(0);
+  const [trailerOpen, setTrailerOpen] = useState(false);
   const count = slides.length;
   const slide = slides[index] ?? null;
 
@@ -48,7 +52,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
   }, [count, go]);
 
   useEffect(() => {
-    if (count < 2) return;
+    if (count < 2 || trailerOpen) return;
 
     let timer: ReturnType<typeof setInterval> | undefined;
 
@@ -71,7 +75,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
       stop();
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [count, go]);
+  }, [count, go, trailerOpen]);
 
   if (!slide) {
     return (
@@ -145,13 +149,12 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link
-              href={`/movie/${slide.id}`}
-              className="inline-flex items-center gap-2 rounded-full bg-amber px-5 py-2.5 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream"
-            >
-              <Play className="h-4 w-4 fill-current" aria-hidden />
-              Watch now
-            </Link>
+            <TrailerButton
+              youtubeKey={slide.trailerKey}
+              title={slide.title}
+              label="Watch trailer"
+              onOpenChange={setTrailerOpen}
+            />
             <Link
               href={`/movie/${slide.id}`}
               className="inline-flex items-center gap-2 rounded-full border border-cream/30 bg-black/20 px-5 py-2.5 text-sm text-cream/85 backdrop-blur-sm transition-colors hover:border-cream/50 hover:text-cream"

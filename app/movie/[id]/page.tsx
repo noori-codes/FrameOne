@@ -6,7 +6,8 @@ import { auth } from "@/auth";
 import { FavoriteButton } from "@/components/favorite-button";
 import { FavoriteMetaForm } from "@/components/favorite-meta-form";
 import { prisma } from "@/lib/prisma";
-import { backdropUrl, getMovie, posterUrl } from "@/lib/tmdb";
+import { TrailerButton } from "@/components/trailer-button";
+import { backdropUrl, getMovie, getMovieTrailerKey, posterUrl } from "@/lib/tmdb";
 
 /**
  * Dynamic route: folder name `[id]` → URL `/movie/550`
@@ -47,6 +48,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
     : null;
   const favorited = Boolean(favorite);
 
+  const trailerKey = await getMovieTrailerKey(movie.id);
   const poster = posterUrl(movie.poster_path, "w500");
   const backdrop = backdropUrl(movie.backdrop_path);
   const year = movie.release_date?.slice(0, 4);
@@ -134,6 +136,14 @@ export default async function MoviePage({ params }: MoviePageProps) {
               “{favorite.note}”
             </p>
           ) : null}
+
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <TrailerButton
+              youtubeKey={trailerKey}
+              title={movie.title}
+              label="Watch trailer"
+            />
+          </div>
 
           <FavoriteButton
             key={`${movie.id}-${favorited}`}
