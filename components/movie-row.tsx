@@ -114,7 +114,10 @@ export function MovieRow({
         </div>
       </div>
 
-      <div className="overflow-hidden px-6 sm:px-8 lg:px-10" ref={emblaRef}>
+      <div
+        className="overflow-hidden px-6 pt-2 pb-4 sm:px-8 lg:px-10"
+        ref={emblaRef}
+      >
         <ul className="flex gap-4 sm:gap-5">
           {row.map((movie) => (
             <li

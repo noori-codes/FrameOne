@@ -110,5 +110,16 @@ body {
       transform: none;
     }
   }
+
+  .movie-card .movie-card-frame,
+  .movie-card .movie-card-image,
+  .movie-card .movie-card-caption {
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .movie-card .movie-card-caption {
+    opacity: 1;
+  }
 }
 
