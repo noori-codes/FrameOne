@@ -1,6 +1,7 @@
 import type { TmdbMovie } from "@/lib/tmdb";
 
-const HERO_COUNT = 5;
+/** How many hero slides to rotate through each day. */
+export const HERO_COUNT = 5;
 
 /** UTC calendar day — same picks all day, new set tomorrow. */
 export function todayKey(date = new Date()) {

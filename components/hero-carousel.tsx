@@ -166,27 +166,19 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
         </div>
 
         {count > 1 ? (
-          <div className="mt-10 flex w-full max-w-3xl items-center justify-between gap-4">
-            <div className="flex items-center gap-2" role="tablist" aria-label="Hero slides">
-              {slides.map((s, i) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={i === index}
-                  aria-label={`Show ${s.title}`}
-                  onClick={() => setIndex(i)}
-                  className={
-                    i === index
-                      ? "h-1.5 w-6 rounded-full bg-amber"
-                      : "h-1.5 w-1.5 rounded-full bg-cream/35 transition-colors hover:bg-cream/60"
-                  }
-                />
-              ))}
+          <div className="mt-10 flex w-full max-w-3xl items-center gap-4">
+            <div
+              className="h-0.5 min-w-0 flex-1 overflow-hidden rounded-full bg-cream/15"
+              aria-hidden
+            >
+              <div
+                className="h-full rounded-full bg-amber transition-[width] duration-300 ease-out"
+                style={{ width: `${((index + 1) / count) * 100}%` }}
+              />
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="mr-1 text-xs tabular-nums text-cream/40">
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="text-xs tabular-nums text-cream/40">
                 {index + 1} / {count}
               </span>
               <button

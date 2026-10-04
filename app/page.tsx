@@ -1,6 +1,6 @@
 import { HeroCarousel, type HeroSlide } from "@/components/hero-carousel";
 import { MovieRow } from "@/components/movie-row";
-import { pickDailyHeroMovies, todayKey } from "@/lib/daily-hero";
+import { HERO_COUNT, pickDailyHeroMovies, todayKey } from "@/lib/daily-hero";
 import {
   backdropUrl,
   getMovie,
@@ -9,6 +9,7 @@ import {
   getPopularMovies,
   getTopRatedMovies,
   getTrendingMovies,
+  type TmdbMovie,
 } from "@/lib/tmdb";
 
 /** Refresh at least hourly so a new UTC day picks a new hero set. */
@@ -33,14 +34,56 @@ const HOME_GENRE_ROWS = [
  * Home: daily hero carousel + discovery rows + genre strips.
  */
 export default async function Home() {
-  const [popular, trending, topRated, ...genrePages] = await Promise.all([
-    getPopularMovies(),
-    getTrendingMovies("day"),
-    getTopRatedMovies(),
-    ...HOME_GENRE_ROWS.map((g) => getMoviesByGenre(g.id)),
+  const [
+    popularP1,
+    popularP2,
+    trendingP1,
+    trendingP2,
+    topRatedP1,
+    topRatedP2,
+    ...genrePagePairs
+  ] = await Promise.all([
+    getPopularMovies(1),
+    getPopularMovies(2),
+    getTrendingMovies("day", 1),
+    getTrendingMovies("day", 2),
+    getTopRatedMovies(1),
+    getTopRatedMovies(2),
+    // Two TMDB pages per genre (~40 titles) so row carousels stay long
+    ...HOME_GENRE_ROWS.flatMap((g) => [
+      getMoviesByGenre(g.id, 1),
+      getMoviesByGenre(g.id, 2),
+    ]),
   ]);
 
-  const heroPicks = pickDailyHeroMovies([trending, popular], 5, todayKey());
+  function mergePages(...pages: TmdbMovie[][]): TmdbMovie[] {
+    const seen = new Set<number>();
+    const out: TmdbMovie[] = [];
+    for (const page of pages) {
+      for (const movie of page) {
+        if (seen.has(movie.id)) continue;
+        seen.add(movie.id);
+        out.push(movie);
+      }
+    }
+    return out;
+  }
+
+  const popular = mergePages(popularP1, popularP2);
+  const trending = mergePages(trendingP1, trendingP2);
+  const topRated = mergePages(topRatedP1, topRatedP2);
+
+  const genreRows = HOME_GENRE_ROWS.map((genre, i) => {
+    const page1 = genrePagePairs[i * 2]?.results ?? [];
+    const page2 = genrePagePairs[i * 2 + 1]?.results ?? [];
+    return { ...genre, movies: mergePages(page1, page2) };
+  });
+
+  const heroPicks = pickDailyHeroMovies(
+    [trendingP1, popularP1],
+    HERO_COUNT,
+    todayKey(),
+  );
   const heroDetails = (
     await Promise.all(heroPicks.map((m) => getMovie(m.id)))
   ).filter((m): m is NonNullable<typeof m> => m != null);
@@ -85,12 +128,12 @@ export default async function Home() {
         <MovieRow id="popular" title="Popular now" movies={popular} />
         <MovieRow id="top-rated" title="Top rated" movies={topRated} />
 
-        {HOME_GENRE_ROWS.map((genre, i) => (
+        {genreRows.map((genre) => (
           <MovieRow
             key={genre.id}
             id={genre.slug}
             title={genre.title}
-            movies={genrePages[i]?.results ?? []}
+            movies={genre.movies}
             href={`/genres/${genre.id}`}
           />
         ))}

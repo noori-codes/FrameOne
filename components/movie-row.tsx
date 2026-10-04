@@ -28,7 +28,8 @@ export function MovieRow({
   movies,
   href,
 }: MovieRowProps) {
-  const row = movies.slice(0, 12);
+  // Show the full list passed from the server (home loads ~40 per row)
+  const row = movies;
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
     containScroll: "trimSnaps",
