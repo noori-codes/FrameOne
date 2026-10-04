@@ -99,7 +99,9 @@ export function backdropUrl(
 }
 
 /** Popular movies from TMDB (page 1 by default). */
-export async function getPopularMovies(page = 1): Promise<TmdbMovie[]> {
+export async function getPopularMoviesPage(
+  page = 1,
+): Promise<PaginatedMovies> {
   const url = new URL(`${getBaseUrl()}/movie/popular`);
   url.searchParams.set("api_key", getApiKey());
   url.searchParams.set("page", String(page));
@@ -112,18 +114,21 @@ export async function getPopularMovies(page = 1): Promise<TmdbMovie[]> {
     throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
   }
 
-  const data = (await res.json()) as PaginatedMoviesResponse;
-  return data.results;
+  return toPaginated((await res.json()) as PaginatedMoviesResponse);
+}
+
+export async function getPopularMovies(page = 1): Promise<TmdbMovie[]> {
+  return (await getPopularMoviesPage(page)).results;
 }
 
 /**
  * Movies trending today (or this week).
  * TMDB: GET /trending/movie/{day|week}
  */
-export async function getTrendingMovies(
+export async function getTrendingMoviesPage(
   window: "day" | "week" = "day",
   page = 1,
-): Promise<TmdbMovie[]> {
+): Promise<PaginatedMovies> {
   const url = new URL(`${getBaseUrl()}/trending/movie/${window}`);
   url.searchParams.set("api_key", getApiKey());
   url.searchParams.set("page", String(page));
@@ -136,15 +141,23 @@ export async function getTrendingMovies(
     throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
   }
 
-  const data = (await res.json()) as PaginatedMoviesResponse;
-  return data.results;
+  return toPaginated((await res.json()) as PaginatedMoviesResponse);
+}
+
+export async function getTrendingMovies(
+  window: "day" | "week" = "day",
+  page = 1,
+): Promise<TmdbMovie[]> {
+  return (await getTrendingMoviesPage(window, page)).results;
 }
 
 /**
  * Highest-rated movies (all time, TMDB ranking).
  * TMDB: GET /movie/top_rated
  */
-export async function getTopRatedMovies(page = 1): Promise<TmdbMovie[]> {
+export async function getTopRatedMoviesPage(
+  page = 1,
+): Promise<PaginatedMovies> {
   const url = new URL(`${getBaseUrl()}/movie/top_rated`);
   url.searchParams.set("api_key", getApiKey());
   url.searchParams.set("page", String(page));
@@ -157,8 +170,11 @@ export async function getTopRatedMovies(page = 1): Promise<TmdbMovie[]> {
     throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
   }
 
-  const data = (await res.json()) as PaginatedMoviesResponse;
-  return data.results;
+  return toPaginated((await res.json()) as PaginatedMoviesResponse);
+}
+
+export async function getTopRatedMovies(page = 1): Promise<TmdbMovie[]> {
+  return (await getTopRatedMoviesPage(page)).results;
 }
 
 /**

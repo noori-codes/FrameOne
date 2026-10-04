@@ -79,19 +79,18 @@ export function MovieRow({
     <section id={id} aria-label={title} className="space-y-6">
       <div className="flex items-end justify-between gap-4 px-6 sm:px-8 lg:px-10">
         <div>
-          <h2 className="font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl md:text-[2.5rem]">
+          <h2 className="text-2xl font-semibold tracking-tight text-cream sm:text-3xl md:text-4xl">
             {href ? (
               <Link
                 href={href}
-                className="group inline-flex items-baseline gap-2 transition-colors hover:text-amber"
+                className="group inline-flex items-center gap-1 text-cream transition-colors duration-200 hover:text-amber"
               >
                 <span>{title}</span>
-                <span
+                <ChevronRight
                   aria-hidden
-                  className="translate-x-0 text-[0.85em] text-cream/45 transition-all duration-200 group-hover:translate-x-1 group-hover:text-amber"
-                >
-                  &gt;
-                </span>
+                  strokeWidth={2.5}
+                  className="size-[0.85em] shrink-0 text-cream/35 transition-colors duration-200 group-hover:text-amber"
+                />
               </Link>
             ) : (
               title

@@ -124,9 +124,24 @@ export default async function Home() {
       <HeroCarousel slides={slides} />
 
       <div className="relative z-10 flex w-full flex-col gap-20 border-t border-cream/8 pt-16 pb-24 sm:gap-24 sm:pt-20 sm:pb-28">
-        <MovieRow id="trending" title="Trending now" movies={trending} />
-        <MovieRow id="popular" title="Popular now" movies={popular} />
-        <MovieRow id="top-rated" title="Top rated" movies={topRated} />
+        <MovieRow
+          id="trending"
+          title="Trending now"
+          movies={trending}
+          href="/browse/trending"
+        />
+        <MovieRow
+          id="popular"
+          title="Popular now"
+          movies={popular}
+          href="/browse/popular"
+        />
+        <MovieRow
+          id="top-rated"
+          title="Top rated"
+          movies={topRated}
+          href="/browse/top-rated"
+        />
 
         {genreRows.map((genre) => (
           <MovieRow
