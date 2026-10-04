@@ -71,23 +71,28 @@ body {
   mix-blend-mode: overlay;
 }
 
-@keyframes drift {
+@keyframes heroKenBurns {
   from {
-    transform: scale(1.05) translate3d(0, 0, 0);
+    transform: scale(1.06) translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
   }
   to {
-    transform: scale(1.12) translate3d(-1.5%, 1%, 0);
+    transform: scale(1.14) translate3d(-1.5%, 1.2%, 0);
+    opacity: 1;
   }
 }
 
-.hero-drift {
-  animation: drift 28s ease-in-out infinite alternate;
+.hero-backdrop {
+  animation: heroKenBurns 9s ease-out forwards;
 }
 
-@keyframes heroFade {
+@keyframes heroLineIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
@@ -95,20 +100,65 @@ body {
   }
 }
 
+.hero-line {
+  opacity: 0;
+  animation: heroLineIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.hero-line-1 {
+  animation-delay: 40ms;
+}
+.hero-line-2 {
+  animation-delay: 100ms;
+}
+.hero-line-3 {
+  animation-delay: 160ms;
+}
+.hero-line-4 {
+  animation-delay: 220ms;
+}
+.hero-line-5 {
+  animation-delay: 280ms;
+}
+
+@keyframes heroProgress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.hero-progress {
+  width: 100%;
+  transform: scaleX(0);
+  animation: heroProgress 9s linear forwards;
+}
+
+.hero-progress-paused {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .hero-drift {
+  .hero-backdrop,
+  .hero-progress {
     animation: none;
   }
 
-  @keyframes heroFade {
-    from {
-      opacity: 1;
-      transform: none;
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
+  .hero-backdrop {
+    opacity: 1;
+    transform: none;
+  }
+
+  .hero-progress {
+    transform: scaleX(1);
+  }
+
+  .hero-line {
+    opacity: 1;
+    animation: none;
+    transform: none;
   }
 
   .movie-card .movie-card-frame,
