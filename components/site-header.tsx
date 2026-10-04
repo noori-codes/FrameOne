@@ -1,14 +1,20 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { auth, signOut } from "@/auth";
+import { auth } from "@/auth";
 import { BrandLogo } from "@/components/brand-logo";
 
 /**
  * Full-width sticky header. `auth()` reads the session cookie on the server.
- * Search uses a plain GET form → /search?q=... (no client JS required).
+ * Search is icon-only → /search (query lives on that page).
  */
+function userInitial(name?: string | null, email?: string | null) {
+  const source = name?.trim() || email?.trim() || "?";
+  return source.charAt(0).toUpperCase();
+}
+
 export async function SiteHeader() {
   const session = await auth();
+  const initial = userInitial(session?.user?.name, session?.user?.email);
 
   return (
     <header className="sticky top-0 z-30 border-b border-cream/10 bg-background/90 backdrop-blur-md">
@@ -21,29 +27,13 @@ export async function SiteHeader() {
           <BrandLogo size="sm" withWordmark priority />
         </Link>
 
-        <form
-          action="/search"
-          method="get"
-          className="relative mx-4 hidden min-w-0 max-w-2xl flex-1 sm:block lg:mx-8"
-        >
-          <Search
-            className="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-cream/35"
-            aria-hidden
-          />
-          <input
-            type="search"
-            name="q"
-            placeholder="Search movies…"
-            className="w-full rounded-full border border-cream/10 bg-stage/70 py-1.5 pr-3 pl-9 text-sm text-cream outline-none placeholder:text-cream/35 transition-[border-color,box-shadow] focus:border-amber/50 focus:ring-1 focus:ring-amber/60"
-          />
-        </form>
-
         <nav className="ml-auto flex shrink-0 items-center gap-3 text-sm text-cream/70 md:gap-5">
           <Link
             href="/search"
-            className="transition-colors hover:text-cream sm:hidden"
+            aria-label="Search movies"
+            className="rounded-full p-2 text-cream/70 transition-colors hover:bg-cream/5 hover:text-cream"
           >
-            Search
+            <Search className="h-5 w-5" strokeWidth={1.75} />
           </Link>
           <Link href="/" className="transition-colors hover:text-cream">
             Browse
@@ -68,23 +58,13 @@ export async function SiteHeader() {
               </Link>
               <Link
                 href="/profile"
-                className="hidden transition-colors hover:text-cream md:inline"
+                aria-label="Profile"
+                title={session.user.name ?? session.user.email ?? "Profile"}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-cream/20 bg-stage text-sm font-medium text-cream transition-colors hover:border-amber hover:text-amber"
               >
-                Profile
+                {/* Swap for profile image later */}
+                {initial}
               </Link>
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/" });
-                }}
-              >
-                <button
-                  type="submit"
-                  className="rounded-full border border-cream/20 px-3 py-1 text-cream transition-colors hover:border-amber hover:text-amber"
-                >
-                  Sign out
-                </button>
-              </form>
             </div>
           ) : (
             <Link

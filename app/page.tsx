@@ -58,15 +58,9 @@ const GENRE_CLAIM_PRIORITY = [
   10751, // Family — often overlaps Animation / Comedy
 ] as const;
 
-const HOME_GENRE_IDS = new Set<number>(HOME_GENRE_ROWS.map((g) => g.id));
-
-function primaryHomeGenreId(genreIds: number[] | undefined): number | null {
-  if (!genreIds?.length) return null;
-  for (const id of GENRE_CLAIM_PRIORITY) {
-    if (genreIds.includes(id) && HOME_GENRE_IDS.has(id)) return id;
-  }
-  return null;
-}
+const GENRE_PAGES = 10; // ~200 candidates each — enough to fill 50 after dedupe
+const GENRE_ROW_SIZE = 50;
+const DISCOVERY_ROW_SIZE = 28;
 
 /**
  * Home: daily hero carousel + discovery rows + genre strips.
@@ -87,12 +81,12 @@ export default async function Home() {
     getTrendingMovies("day", 2),
     getTopRatedMovies(1),
     getTopRatedMovies(2),
-    // Snapshot only — full lists live on /genres/[id] via the row title link
-    ...HOME_GENRE_ROWS.flatMap((g) => [
-      getMoviesByGenre(g.id, 1),
-      getMoviesByGenre(g.id, 2),
-      getMoviesByGenre(g.id, 3),
-    ]),
+    // Deep pools so every genre row can reach GENRE_ROW_SIZE unique titles
+    ...HOME_GENRE_ROWS.flatMap((g) =>
+      Array.from({ length: GENRE_PAGES }, (_, i) =>
+        getMoviesByGenre(g.id, i + 1),
+      ),
+    ),
   ]);
 
   function mergePages(...pages: TmdbMovie[][]): TmdbMovie[] {
@@ -112,51 +106,62 @@ export default async function Home() {
   function takeUnique(
     movies: TmdbMovie[],
     used: Set<number>,
+    limit?: number,
   ): TmdbMovie[] {
     const out: TmdbMovie[] = [];
     for (const movie of movies) {
       if (used.has(movie.id)) continue;
       used.add(movie.id);
       out.push(movie);
+      if (limit != null && out.length >= limit) break;
     }
     return out;
   }
 
   // Discovery rows dedupe only among themselves (not against genres)
   const usedInDiscovery = new Set<number>();
-  const ROW_SNAPSHOT = 28;
-
   const trending = takeUnique(
     mergePages(trendingP1, trendingP2),
     usedInDiscovery,
-  ).slice(0, ROW_SNAPSHOT);
+    DISCOVERY_ROW_SIZE,
+  );
   const popular = takeUnique(
     mergePages(popularP1, popularP2),
     usedInDiscovery,
-  ).slice(0, ROW_SNAPSHOT);
+    DISCOVERY_ROW_SIZE,
+  );
   const topRated = takeUnique(
     mergePages(topRatedP1, topRatedP2),
     usedInDiscovery,
-  ).slice(0, ROW_SNAPSHOT);
-
-  // Genres: one primary bucket each — no Comedy/Family duplicates
-  const usedInGenres = new Set<number>();
-  const genreBuckets = new Map<number, TmdbMovie[]>(
-    HOME_GENRE_ROWS.map((g) => [g.id, []]),
+    DISCOVERY_ROW_SIZE,
   );
-  for (const page of genrePagePairs) {
-    for (const movie of page.results) {
-      if (usedInGenres.has(movie.id)) continue;
-      const primary = primaryHomeGenreId(movie.genre_ids);
-      if (primary == null) continue;
-      usedInGenres.add(movie.id);
-      genreBuckets.get(primary)!.push(movie);
-    }
+
+  // Per-genre discover pools, then claim in priority order (Animation before Family)
+  const genrePools = new Map<number, TmdbMovie[]>();
+  HOME_GENRE_ROWS.forEach((genre, i) => {
+    const start = i * GENRE_PAGES;
+    const pages = genrePagePairs
+      .slice(start, start + GENRE_PAGES)
+      .map((p) => p.results);
+    genrePools.set(genre.id, mergePages(...pages));
+  });
+
+  const usedInGenres = new Set<number>();
+  const genreBuckets = new Map<number, TmdbMovie[]>();
+  for (const genreId of GENRE_CLAIM_PRIORITY) {
+    genreBuckets.set(
+      genreId,
+      takeUnique(
+        genrePools.get(genreId) ?? [],
+        usedInGenres,
+        GENRE_ROW_SIZE,
+      ),
+    );
   }
 
   const genreRows = HOME_GENRE_ROWS.map((genre) => ({
     ...genre,
-    movies: (genreBuckets.get(genre.id) ?? []).slice(0, ROW_SNAPSHOT),
+    movies: genreBuckets.get(genre.id) ?? [],
   }));
 
   const heroPicks = pickDailyHeroMovies(

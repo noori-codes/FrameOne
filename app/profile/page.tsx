@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { auth, signOut } from "@/auth";
 import {
   ChangePasswordForm,
   UpdateNameForm,
@@ -57,6 +57,28 @@ export default async function ProfilePage() {
           Enter your current password, then choose a new one (min 6 characters).
         </p>
         <ChangePasswordForm />
+      </section>
+
+      <section className="mt-12 border-t border-cream/10 pt-8">
+        <h2 className="font-display text-2xl tracking-wide text-cream">
+          Session
+        </h2>
+        <p className="mt-1 mb-6 text-sm text-cream/50">
+          Sign out of FrameOne on this device.
+        </p>
+        <form
+          action={async () => {
+            "use server";
+            await signOut({ redirectTo: "/" });
+          }}
+        >
+          <button
+            type="submit"
+            className="rounded-full border border-cream/25 px-4 py-2 text-sm text-cream transition-colors hover:border-amber hover:text-amber"
+          >
+            Sign out
+          </button>
+        </form>
       </section>
     </main>
   );
