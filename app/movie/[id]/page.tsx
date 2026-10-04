@@ -88,7 +88,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
         <div className="film-grain absolute inset-0" />
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 pt-28 pb-20 sm:flex-row sm:items-end sm:px-8 sm:pb-24">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 pt-10 pb-20 sm:flex-row sm:items-end sm:px-8 sm:pb-24">
         <div className="relative mx-auto aspect-2/3 w-48 shrink-0 overflow-hidden rounded-lg bg-stage shadow-[0_16px_48px_-16px_rgba(0,0,0,0.8)] ring-1 ring-cream/15 sm:mx-0 sm:w-56">
           {poster ? (
             <Image

@@ -79,9 +79,9 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
   if (!slide) {
     return (
-      <section className="relative flex min-h-dvh w-full flex-col justify-end">
+      <section className="relative flex min-h-[calc(100dvh-3.5rem)] w-full flex-col justify-end sm:min-h-[calc(100dvh-4rem)]">
         <div aria-hidden className="absolute inset-0 bg-stage" />
-        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-start px-6 pt-28 pb-16 sm:px-8 sm:pb-20 lg:px-10">
+        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-start px-6 pt-10 pb-16 sm:px-8 sm:pb-20 lg:px-10">
           <h1 className="max-w-xl font-display text-5xl leading-none tracking-wide text-cream sm:text-7xl">
             Movies, lit for the night
           </h1>
@@ -102,7 +102,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
   return (
     <section
-      className="relative flex min-h-dvh w-full flex-col justify-end"
+      className="relative flex min-h-[calc(100dvh-3.5rem)] w-full flex-col justify-end sm:min-h-[calc(100dvh-4rem)]"
       aria-roledescription="carousel"
       aria-label="Featured movies"
     >
@@ -128,7 +128,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
         <div className="film-grain absolute inset-0" />
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-start px-6 pt-28 pb-16 sm:px-8 sm:pb-20 lg:px-10">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-start px-6 pt-10 pb-16 sm:px-8 sm:pb-20 lg:px-10">
         <div
           key={slide.id}
           className="w-full max-w-3xl animate-[heroFade_400ms_ease-out]"

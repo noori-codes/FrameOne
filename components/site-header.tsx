@@ -4,18 +4,18 @@ import { auth, signOut } from "@/auth";
 import { BrandLogo } from "@/components/brand-logo";
 
 /**
- * Floating glass header. `auth()` reads the session cookie on the server.
+ * Full-width sticky header. `auth()` reads the session cookie on the server.
  * Search uses a plain GET form → /search?q=... (no client JS required).
  */
 export async function SiteHeader() {
   const session = await auth();
 
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-30 px-4 pt-4 sm:px-6 sm:pt-5">
-      <div className="pointer-events-auto mx-auto flex h-12 max-w-6xl items-center gap-3 rounded-full border border-cream/10 bg-background/45 px-3 shadow-[0_8px_32px_-12px_rgba(0,0,0,0.65)] backdrop-blur-xl sm:h-14 sm:gap-4 sm:px-5">
+    <header className="sticky top-0 z-30 border-b border-cream/10 bg-background/90 backdrop-blur-md">
+      <div className="flex h-14 w-full items-center gap-4 px-4 sm:h-16 sm:gap-6 sm:px-6 lg:px-10">
         <Link
           href="/"
-          className="shrink-0 transition-opacity hover:opacity-90"
+          className="inline-flex h-full shrink-0 items-center transition-opacity hover:opacity-90"
           aria-label="FrameOne home"
         >
           <BrandLogo size="sm" withWordmark priority />
@@ -24,7 +24,7 @@ export async function SiteHeader() {
         <form
           action="/search"
           method="get"
-          className="relative mx-auto hidden min-w-0 max-w-md flex-1 sm:block"
+          className="relative mx-4 hidden min-w-0 max-w-2xl flex-1 sm:block lg:mx-8"
         >
           <Search
             className="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-cream/35"
@@ -33,7 +33,7 @@ export async function SiteHeader() {
           <input
             type="search"
             name="q"
-            placeholder="Search movies, actors, directors…"
+            placeholder="Search movies…"
             className="w-full rounded-full border border-cream/10 bg-stage/70 py-1.5 pr-3 pl-9 text-sm text-cream outline-none placeholder:text-cream/35 transition-[border-color,box-shadow] focus:border-amber/50 focus:ring-1 focus:ring-amber/60"
           />
         </form>

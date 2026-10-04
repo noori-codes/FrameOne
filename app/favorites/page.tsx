@@ -17,7 +17,7 @@ export default async function FavoritesPage() {
   });
 
   return (
-    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-28 pb-20 sm:px-8">
+    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-10 pb-20 sm:px-8">
       <h1 className="font-display text-5xl tracking-wide text-cream uppercase sm:text-6xl">
         Favorites
       </h1>

@@ -65,7 +65,7 @@ export default async function BrowsePage({
   const { totalPages, totalResults } = moviesPage;
 
   return (
-    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-28 pb-20 sm:px-8">
+    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-10 pb-20 sm:px-8">
       <Link
         href="/"
         className="text-sm text-cream/50 transition-colors hover:text-amber"

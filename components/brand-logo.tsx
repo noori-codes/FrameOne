@@ -2,9 +2,9 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const sizes = {
-  sm: { px: 32, className: "h-8 w-8" },
-  md: { px: 48, className: "h-12 w-12" },
-  lg: { px: 80, className: "h-20 w-20" },
+  sm: { px: 32, className: "h-8 w-8", word: "h-8 text-xl" },
+  md: { px: 48, className: "h-12 w-12", word: "h-12 text-2xl" },
+  lg: { px: 80, className: "h-20 w-20", word: "h-20 text-4xl" },
 } as const;
 
 type BrandLogoProps = {
@@ -25,7 +25,7 @@ export function BrandLogo({
   withWordmark = false,
   priority = false,
 }: BrandLogoProps) {
-  const { px, className: sizeClass } = sizes[size];
+  const { px, className: sizeClass, word } = sizes[size];
 
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
@@ -35,10 +35,18 @@ export function BrandLogo({
         width={px}
         height={px}
         priority={priority}
-        className={cn("rounded-sm object-cover", sizeClass)}
+        className={cn("block shrink-0 rounded-sm object-cover", sizeClass)}
       />
       {withWordmark ? (
-        <span className="font-display text-xl tracking-[0.2em] text-cream uppercase">
+        <span
+          className={cn(
+            // Same height as the mark so both share one vertical center
+            "inline-flex items-center font-display leading-none tracking-[0.2em] text-cream uppercase",
+            // Bebas sits a hair high in the em-box — nudge to match the mark
+            "translate-y-[0.06em]",
+            word,
+          )}
+        >
           FrameOne
         </span>
       ) : null}
