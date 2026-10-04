@@ -3,7 +3,7 @@
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { MovieCard } from "@/components/movie-card";
 import type { TmdbMovie } from "@/lib/tmdb";
 
@@ -18,8 +18,7 @@ type MovieRowProps = {
 
 /**
  * Horizontal poster row powered by Embla.
- * `"use client"` is required so Embla can attach to the DOM and handle drag/buttons.
- * Data still comes from the Server Component parent (home page).
+ * Next/prev jump by roughly a full “page” of posters (not one card at a time).
  */
 export function MovieRow({
   id,
@@ -28,12 +27,14 @@ export function MovieRow({
   movies,
   href,
 }: MovieRowProps) {
-  // Show the full list passed from the server (home loads ~40 per row)
   const row = movies;
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
     containScroll: "trimSnaps",
-    dragFree: true,
+    // Snappy pages feel better for Next than dragFree one-card steps
+    dragFree: false,
+    // Lower = faster scroll animation (Embla default is 25)
+    duration: 18,
   });
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
@@ -56,19 +57,41 @@ export function MovieRow({
     };
   }, [emblaApi]);
 
+  /** Jump by almost a full row of visible posters. */
+  const scrollPage = useCallback(
+    (dir: -1 | 1) => {
+      if (!emblaApi) return;
+
+      const current = emblaApi.selectedScrollSnap();
+      const visible = emblaApi.slidesInView().length;
+      // Leave one card of overlap so the move feels continuous
+      const step = Math.max(visible > 1 ? visible - 1 : 4, 3);
+      const last = emblaApi.scrollSnapList().length - 1;
+      const next = Math.min(Math.max(current + dir * step, 0), last);
+      emblaApi.scrollTo(next);
+    },
+    [emblaApi],
+  );
+
   if (row.length === 0) return null;
 
   return (
     <section id={id} aria-label={title} className="space-y-6">
       <div className="flex items-end justify-between gap-4 px-6 sm:px-8 lg:px-10">
         <div>
-          <h2 className="font-display text-4xl tracking-wide text-cream uppercase sm:text-5xl md:text-[3.25rem]">
+          <h2 className="font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl md:text-[2.5rem]">
             {href ? (
               <Link
                 href={href}
-                className="transition-colors hover:text-amber"
+                className="group inline-flex items-baseline gap-2 transition-colors hover:text-amber"
               >
-                {title}
+                <span>{title}</span>
+                <span
+                  aria-hidden
+                  className="translate-x-0 text-[0.85em] text-cream/45 transition-all duration-200 group-hover:translate-x-1 group-hover:text-amber"
+                >
+                  &gt;
+                </span>
               </Link>
             ) : (
               title
@@ -82,14 +105,6 @@ export function MovieRow({
         </div>
 
         <div className="mb-1 flex shrink-0 items-center gap-2">
-          {href ? (
-            <Link
-              href={href}
-              className="mr-1 hidden text-sm text-cream/45 transition-colors hover:text-amber sm:inline"
-            >
-              See all
-            </Link>
-          ) : null}
           <span
             aria-hidden
             className="hidden h-px w-10 bg-amber/70 sm:block"
@@ -98,7 +113,7 @@ export function MovieRow({
             type="button"
             aria-label={`Previous ${title}`}
             disabled={!canPrev}
-            onClick={() => emblaApi?.scrollPrev()}
+            onClick={() => scrollPage(-1)}
             className="rounded-full border border-cream/20 p-2 text-cream transition-colors hover:border-amber hover:text-amber disabled:cursor-not-allowed disabled:opacity-30"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -107,7 +122,7 @@ export function MovieRow({
             type="button"
             aria-label={`Next ${title}`}
             disabled={!canNext}
-            onClick={() => emblaApi?.scrollNext()}
+            onClick={() => scrollPage(1)}
             className="rounded-full border border-cream/20 p-2 text-cream transition-colors hover:border-amber hover:text-amber disabled:cursor-not-allowed disabled:opacity-30"
           >
             <ChevronRight className="h-4 w-4" />

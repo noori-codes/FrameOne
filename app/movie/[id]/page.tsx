@@ -79,6 +79,8 @@ export default async function MoviePage({ params }: MoviePageProps) {
             fill
             priority
             sizes="100vw"
+            // Bypass /_next/image — TMDB CDN can exceed Next’s 7s upstream timeout
+            unoptimized
             className="object-cover opacity-40"
           />
         ) : null}
@@ -96,6 +98,8 @@ export default async function MoviePage({ params }: MoviePageProps) {
               sizes="224px"
               className="object-cover"
               priority
+              // Bypass /_next/image — TMDB CDN can exceed Next’s 7s upstream timeout
+              unoptimized
             />
           ) : null}
         </div>

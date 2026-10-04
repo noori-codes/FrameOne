@@ -1,6 +1,9 @@
+"use client";
+
 import { Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { posterUrl } from "@/lib/tmdb";
 
@@ -19,6 +22,7 @@ type MovieCardProps = {
 /**
  * Poster card — image zooms inside the frame (no layout jump), card lifts,
  * soft shadow + title fade. Respects prefers-reduced-motion via globals.
+ * Falls back to a title tile when TMDB has no path or the image 404s.
  */
 export function MovieCard({
   id,
@@ -31,6 +35,8 @@ export function MovieCard({
   className,
 }: MovieCardProps) {
   const src = posterUrl(posterPath);
+  const [failed, setFailed] = useState(false);
+  const showImage = Boolean(src) && !failed;
   const rating =
     voteAverage != null && voteAverage > 0
       ? voteAverage.toFixed(1)
@@ -42,17 +48,20 @@ export function MovieCard({
       className={cn("movie-card group block", className)}
     >
       <div className="movie-card-frame relative aspect-2/3 overflow-hidden rounded-lg bg-stage shadow-[0_8px_24px_-12px_rgba(0,0,0,0.65)] ring-1 ring-cream/10 transition-[transform,box-shadow,ring-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform group-hover:-translate-y-1.5 group-hover:shadow-[0_20px_40px_-16px_rgba(0,0,0,0.85)] group-hover:ring-cream/20">
-        {src ? (
+        {showImage ? (
           <Image
-            src={src}
+            src={src!}
             alt={title}
             fill
             sizes={sizes}
             priority={priority}
+            // Bypass /_next/image — TMDB CDN can exceed Next’s 7s upstream timeout
+            unoptimized
+            onError={() => setFailed(true)}
             className="movie-card-image object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform group-hover:scale-[1.06]"
           />
         ) : (
-          <span className="flex h-full items-center justify-center p-3 text-center text-xs text-cream/40">
+          <span className="flex h-full items-center justify-center bg-stage p-3 text-center text-xs leading-snug text-cream/45">
             {title}
           </span>
         )}

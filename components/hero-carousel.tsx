@@ -115,6 +115,8 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             fill
             priority={index === 0}
             sizes="100vw"
+            // Bypass /_next/image — TMDB CDN can exceed Next’s 7s upstream timeout
+            unoptimized
             className="hero-drift object-cover object-center"
           />
         ) : (
