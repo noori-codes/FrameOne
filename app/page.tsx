@@ -59,7 +59,8 @@ const GENRE_CLAIM_PRIORITY = [
   10751, // Family — often overlaps Animation / Comedy
 ] as const;
 
-const GENRE_PAGES = 4; // ~80 candidates each — enough for 50 after dedupe
+const GENRE_PAGES_INITIAL = 3;
+const GENRE_PAGE_MAX = 20; // keep paging short rows until full
 const GENRE_FETCH_CONCURRENCY = 8; // don’t open 100+ sockets to TMDB at once
 const GENRE_ROW_SIZE = 50;
 const DISCOVERY_ROW_SIZE = 28;
@@ -80,7 +81,7 @@ export default async function Home() {
 
   // Cap concurrency — a full Promise.all of every genre page was timing out
   const genreJobs = HOME_GENRE_ROWS.flatMap((g) =>
-    Array.from({ length: GENRE_PAGES }, (_, i) => ({
+    Array.from({ length: GENRE_PAGES_INITIAL }, (_, i) => ({
       genreId: g.id,
       page: i + 1,
     })),
@@ -141,9 +142,9 @@ export default async function Home() {
   // Per-genre discover pools, then claim in priority order (Animation before Family)
   const genrePools = new Map<number, TmdbMovie[]>();
   HOME_GENRE_ROWS.forEach((genre, i) => {
-    const start = i * GENRE_PAGES;
+    const start = i * GENRE_PAGES_INITIAL;
     const pages = genrePagePairs
-      .slice(start, start + GENRE_PAGES)
+      .slice(start, start + GENRE_PAGES_INITIAL)
       .map((p) => p.results);
     genrePools.set(genre.id, mergePages(...pages));
   });
@@ -159,6 +160,34 @@ export default async function Home() {
         GENRE_ROW_SIZE,
       ),
     );
+  }
+
+  // Action/Adventure/etc. often lose overlaps to earlier genres — page deeper until 50
+  for (const genreId of GENRE_CLAIM_PRIORITY) {
+    let bucket = genreBuckets.get(genreId) ?? [];
+    let nextPage = GENRE_PAGES_INITIAL + 1;
+
+    while (bucket.length < GENRE_ROW_SIZE && nextPage <= GENRE_PAGE_MAX) {
+      const batch = Array.from(
+        { length: 3 },
+        (_, i) => nextPage + i,
+      ).filter((p) => p <= GENRE_PAGE_MAX);
+
+      const pages = await mapPool(batch, GENRE_FETCH_CONCURRENCY, (page) =>
+        getMoviesByGenre(genreId, page),
+      );
+      nextPage += batch.length;
+
+      const fresh = mergePages(...pages.map((p) => p.results));
+      if (fresh.length === 0) break;
+
+      const need = GENRE_ROW_SIZE - bucket.length;
+      const added = takeUnique(fresh, usedInGenres, need);
+      if (added.length === 0) continue;
+
+      bucket = [...bucket, ...added];
+      genreBuckets.set(genreId, bucket);
+    }
   }
 
   const genreRows = HOME_GENRE_ROWS.map((genre) => ({

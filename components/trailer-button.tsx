@@ -2,6 +2,7 @@
 
 import { Play, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 function youtubeEmbedUrl(key: string) {
@@ -23,6 +24,7 @@ type TrailerButtonProps = {
 /**
  * Opens an in-page YouTube embed for the TMDB trailer.
  * Hidden (returns null) when there is no trailer key.
+ * Modal is portaled to body so hero transforms don’t pin it to a corner.
  */
 export function TrailerButton({
   youtubeKey,
@@ -33,6 +35,7 @@ export function TrailerButton({
   onOpenChange,
 }: TrailerButtonProps) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
 
@@ -40,6 +43,10 @@ export function TrailerButton({
     setOpen(next);
     onOpenChange?.(next);
   }
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -62,6 +69,48 @@ export function TrailerButton({
 
   if (!youtubeKey) return null;
 
+  const modal =
+    open && mounted
+      ? createPortal(
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm sm:p-8"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setTrailerOpen(false);
+            }}
+          >
+            <div className="relative w-full max-w-4xl">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p id={titleId} className="truncate text-sm text-cream/70">
+                  {title} — Trailer
+                </p>
+                <button
+                  ref={closeRef}
+                  type="button"
+                  onClick={() => setTrailerOpen(false)}
+                  aria-label="Close trailer"
+                  className="rounded-full border border-cream/25 p-1.5 text-cream/80 transition-colors hover:border-cream/45 hover:text-cream"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="aspect-video overflow-hidden rounded-lg bg-black ring-1 ring-cream/15">
+                <iframe
+                  title={`${title} trailer`}
+                  src={youtubeEmbedUrl(youtubeKey)}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="h-full w-full"
+                />
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <>
       <button
@@ -78,44 +127,7 @@ export function TrailerButton({
         <Play className="h-4 w-4 fill-current" aria-hidden />
         {label}
       </button>
-
-      {open ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setTrailerOpen(false);
-          }}
-        >
-          <div className="relative w-full max-w-4xl">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <p id={titleId} className="truncate text-sm text-cream/70">
-                {title} — Trailer
-              </p>
-              <button
-                ref={closeRef}
-                type="button"
-                onClick={() => setTrailerOpen(false)}
-                aria-label="Close trailer"
-                className="rounded-full border border-cream/25 p-1.5 text-cream/80 transition-colors hover:border-cream/45 hover:text-cream"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="aspect-video overflow-hidden rounded-lg bg-black ring-1 ring-cream/15">
-              <iframe
-                title={`${title} trailer`}
-                src={youtubeEmbedUrl(youtubeKey)}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                className="h-full w-full"
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {modal}
     </>
   );
 }
