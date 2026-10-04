@@ -291,6 +291,24 @@ export async function getMovieGenres(): Promise<TmdbGenre[]> {
   return data.genres;
 }
 
+/** Sort modes for genre discover (home always uses popular). */
+export type GenreSort = "popular" | "top" | "newest";
+
+export const GENRE_SORTS: {
+  id: GenreSort;
+  label: string;
+  tmdb: string;
+}[] = [
+  { id: "popular", label: "Popular", tmdb: "popularity.desc" },
+  { id: "top", label: "Top rated", tmdb: "vote_average.desc" },
+  { id: "newest", label: "Newest", tmdb: "primary_release_date.desc" },
+];
+
+export function parseGenreSort(raw: string | undefined | null): GenreSort {
+  if (raw === "top" || raw === "newest" || raw === "popular") return raw;
+  return "popular";
+}
+
 /**
  * Discover movies filtered by one genre id.
  * Returns results + page info for pagination UI.
@@ -299,13 +317,21 @@ export async function getMovieGenres(): Promise<TmdbGenre[]> {
 export async function getMoviesByGenre(
   genreId: number,
   page = 1,
+  sort: GenreSort = "popular",
 ): Promise<PaginatedMovies> {
+  const sortConfig =
+    GENRE_SORTS.find((s) => s.id === sort) ?? GENRE_SORTS[0]!;
+
   const url = new URL(`${getBaseUrl()}/discover/movie`);
   url.searchParams.set("api_key", getApiKey());
   url.searchParams.set("with_genres", String(genreId));
   url.searchParams.set("page", String(page));
-  url.searchParams.set("sort_by", "popularity.desc");
+  url.searchParams.set("sort_by", sortConfig.tmdb);
   url.searchParams.set("include_adult", "false");
+  // Top-rated without a vote floor is noisy (one-vote 10.0s)
+  if (sort === "top") {
+    url.searchParams.set("vote_count.gte", "100");
+  }
 
   const res = await fetch(url.toString(), {
     next: { revalidate: 3600 },

@@ -13,9 +13,20 @@ export function Skeleton({ className }: { className?: string }) {
 }
 
 /** Poster-shaped placeholders in a grid (search, genres, favorites). */
-export function MovieGridSkeleton({ count = 12 }: { count?: number }) {
+export function MovieGridSkeleton({
+  count = 12,
+  className,
+}: {
+  count?: number;
+  className?: string;
+}) {
   return (
-    <ul className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5 md:grid-cols-5 lg:grid-cols-6">
+    <ul
+      className={cn(
+        "grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5 md:grid-cols-5 lg:grid-cols-6",
+        className ?? "mt-10",
+      )}
+    >
       {Array.from({ length: count }).map((_, i) => (
         <li key={i}>
           <Skeleton className="aspect-2/3 w-full" />

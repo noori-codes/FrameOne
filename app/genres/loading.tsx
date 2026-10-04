@@ -2,16 +2,22 @@ import { Skeleton } from "@/components/skeletons";
 
 export default function GenresLoading() {
   return (
-    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-8 pb-16">
-      <Skeleton className="h-10 w-36" />
-      <Skeleton className="mt-2 h-4 w-72 max-w-full" />
-      <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-        {Array.from({ length: 16 }).map((_, i) => (
-          <li key={i}>
-            <Skeleton className="h-12 w-full" />
-          </li>
-        ))}
-      </ul>
+    <main className="relative flex min-h-dvh w-full flex-1 flex-col">
+      <div className="border-b border-cream/8 bg-stage/30">
+        <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-10">
+          <Skeleton className="h-12 w-40 sm:h-14 sm:w-52" />
+          <Skeleton className="mt-3 h-4 w-80 max-w-full" />
+        </div>
+      </div>
+      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-10">
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
+          {Array.from({ length: 15 }).map((_, i) => (
+            <li key={i}>
+              <Skeleton className="aspect-4/3 w-full rounded-xl" />
+            </li>
+          ))}
+        </ul>
+      </div>
     </main>
   );
 }
