@@ -10,6 +10,7 @@ import {
   getPopularMovies,
   getTopRatedMovies,
   getTrendingMovies,
+  mapPool,
   type TmdbMovie,
 } from "@/lib/tmdb";
 
@@ -58,7 +59,8 @@ const GENRE_CLAIM_PRIORITY = [
   10751, // Family — often overlaps Animation / Comedy
 ] as const;
 
-const GENRE_PAGES = 10; // ~200 candidates each — enough to fill 50 after dedupe
+const GENRE_PAGES = 4; // ~80 candidates each — enough for 50 after dedupe
+const GENRE_FETCH_CONCURRENCY = 8; // don’t open 100+ sockets to TMDB at once
 const GENRE_ROW_SIZE = 50;
 const DISCOVERY_ROW_SIZE = 28;
 
@@ -66,28 +68,28 @@ const DISCOVERY_ROW_SIZE = 28;
  * Home: daily hero carousel + discovery rows + genre strips.
  */
 export default async function Home() {
-  const [
-    popularP1,
-    popularP2,
-    trendingP1,
-    trendingP2,
-    topRatedP1,
-    topRatedP2,
-    ...genrePagePairs
-  ] = await Promise.all([
-    getPopularMovies(1),
-    getPopularMovies(2),
-    getTrendingMovies("day", 1),
-    getTrendingMovies("day", 2),
-    getTopRatedMovies(1),
-    getTopRatedMovies(2),
-    // Deep pools so every genre row can reach GENRE_ROW_SIZE unique titles
-    ...HOME_GENRE_ROWS.flatMap((g) =>
-      Array.from({ length: GENRE_PAGES }, (_, i) =>
-        getMoviesByGenre(g.id, i + 1),
-      ),
-    ),
-  ]);
+  const [popularP1, popularP2, trendingP1, trendingP2, topRatedP1, topRatedP2] =
+    await Promise.all([
+      getPopularMovies(1),
+      getPopularMovies(2),
+      getTrendingMovies("day", 1),
+      getTrendingMovies("day", 2),
+      getTopRatedMovies(1),
+      getTopRatedMovies(2),
+    ]);
+
+  // Cap concurrency — a full Promise.all of every genre page was timing out
+  const genreJobs = HOME_GENRE_ROWS.flatMap((g) =>
+    Array.from({ length: GENRE_PAGES }, (_, i) => ({
+      genreId: g.id,
+      page: i + 1,
+    })),
+  );
+  const genrePagePairs = await mapPool(
+    genreJobs,
+    GENRE_FETCH_CONCURRENCY,
+    ({ genreId, page }) => getMoviesByGenre(genreId, page),
+  );
 
   function mergePages(...pages: TmdbMovie[][]): TmdbMovie[] {
     const seen = new Set<number>();

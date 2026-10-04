@@ -1,6 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getMovieGenres, getMoviesByGenre, posterUrl } from "@/lib/tmdb";
+import {
+  getMovieGenres,
+  getMoviesByGenre,
+  mapPool,
+  posterUrl,
+} from "@/lib/tmdb";
 
 /**
  * /genres — pick a category, then open /genres/[id]
@@ -8,17 +13,15 @@ import { getMovieGenres, getMoviesByGenre, posterUrl } from "@/lib/tmdb";
 export default async function GenresPage() {
   const genres = await getMovieGenres();
 
-  const cards = await Promise.all(
-    genres.map(async (genre) => {
-      const page = await getMoviesByGenre(genre.id, 1, "popular");
-      const lead = page.results.find((m) => m.poster_path) ?? page.results[0];
-      return {
-        genre,
-        poster: posterUrl(lead?.poster_path ?? null, "w342"),
-        titleCount: page.totalResults,
-      };
-    }),
-  );
+  const cards = await mapPool(genres, 6, async (genre) => {
+    const page = await getMoviesByGenre(genre.id, 1, "popular");
+    const lead = page.results.find((m) => m.poster_path) ?? page.results[0];
+    return {
+      genre,
+      poster: posterUrl(lead?.poster_path ?? null, "w342"),
+      titleCount: page.totalResults,
+    };
+  });
 
   return (
     <main className="relative flex min-h-dvh w-full flex-1 flex-col">

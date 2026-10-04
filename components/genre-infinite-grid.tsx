@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { MovieCard } from "@/components/movie-card";
 import type { GenreSort, PaginatedMovies, TmdbMovie } from "@/lib/tmdb";
 
@@ -10,9 +10,48 @@ type GenreInfiniteGridProps = {
   initial: PaginatedMovies;
 };
 
+/** Matches `grid-cols-2 sm:3 md:4 lg:5 xl:6` on this grid. */
+function useGenreGridColumns() {
+  const [cols, setCols] = useState(2);
+
+  useEffect(() => {
+    const queries = [
+      { mq: window.matchMedia("(min-width: 1280px)"), cols: 6 },
+      { mq: window.matchMedia("(min-width: 1024px)"), cols: 5 },
+      { mq: window.matchMedia("(min-width: 768px)"), cols: 4 },
+      { mq: window.matchMedia("(min-width: 640px)"), cols: 3 },
+    ] as const;
+
+    function update() {
+      for (const { mq, cols: n } of queries) {
+        if (mq.matches) {
+          setCols(n);
+          return;
+        }
+      }
+      setCols(2);
+    }
+
+    update();
+    for (const { mq } of queries) {
+      mq.addEventListener("change", update);
+    }
+    return () => {
+      for (const { mq } of queries) {
+        mq.removeEventListener("change", update);
+      }
+    };
+  }, []);
+
+  return cols;
+}
+
 /**
  * Genre poster grid — loads the next TMDB page when the sentinel enters view.
  * Parent should pass key={`${genreId}-${sort}`} so state resets on navigation.
+ *
+ * While more pages exist, incomplete last rows are held back so the grid
+ * never shows empty slots that later “pop in”.
  */
 export function GenreInfiniteGrid({
   genreId,
@@ -28,6 +67,14 @@ export function GenreInfiniteGrid({
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+  const cols = useGenreGridColumns();
+
+  const visibleMovies = useMemo(() => {
+    if (!hasMore || cols < 2) return movies;
+    const remainder = movies.length % cols;
+    if (remainder === 0) return movies;
+    return movies.slice(0, movies.length - remainder);
+  }, [cols, hasMore, movies]);
 
   const loadMore = useCallback(async () => {
     if (loadingRef.current || !hasMore) return;
@@ -88,7 +135,7 @@ export function GenreInfiniteGrid({
       (entries) => {
         if (entries[0]?.isIntersecting) void loadMore();
       },
-      { rootMargin: "320px 0px" },
+      { rootMargin: "400px 0px" },
     );
 
     observer.observe(node);
@@ -104,14 +151,14 @@ export function GenreInfiniteGrid({
   return (
     <div>
       <p className="mb-6 text-sm text-cream/40" aria-live="polite">
-        Showing {movies.length.toLocaleString()}
+        Showing {visibleMovies.length.toLocaleString()}
         {totalResults > 0
           ? ` of ${totalResults.toLocaleString()} titles`
           : " titles"}
       </p>
 
       <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {movies.map((movie: TmdbMovie) => (
+        {visibleMovies.map((movie: TmdbMovie) => (
           <li key={movie.id}>
             <MovieCard
               id={movie.id}

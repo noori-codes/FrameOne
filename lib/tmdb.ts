@@ -80,6 +80,67 @@ function getApiKey() {
   return key;
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * TMDB fetch with short retries — connection timeouts / 429s are common
+ * when the home page fires many discover calls.
+ */
+async function tmdbFetch(
+  url: string,
+  revalidate: number | false = 3600,
+): Promise<Response> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await fetch(url, {
+        next: { revalidate },
+      });
+
+      if ((res.status === 429 || res.status >= 500) && attempt < 2) {
+        await sleep(400 * (attempt + 1));
+        continue;
+      }
+
+      return res;
+    } catch (err) {
+      lastError = err;
+      if (attempt < 2) await sleep(500 * (attempt + 1));
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("TMDB fetch failed");
+}
+
+/** Run async work with a concurrency cap (avoids blasting TMDB). */
+export async function mapPool<T, R>(
+  items: readonly T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) return [];
+
+  const results = new Array<R>(items.length);
+  let next = 0;
+
+  async function run() {
+    while (next < items.length) {
+      const i = next;
+      next += 1;
+      results[i] = await worker(items[i]!, i);
+    }
+  }
+
+  const n = Math.min(Math.max(1, concurrency), items.length);
+  await Promise.all(Array.from({ length: n }, () => run()));
+  return results;
+}
+
 /**
  * TMDB returns paths like `/abc.jpg`, not full URLs.
  * `size` examples: w185, w342, w500, original
@@ -108,9 +169,7 @@ export async function getPopularMoviesPage(
   url.searchParams.set("api_key", getApiKey());
   url.searchParams.set("page", String(page));
 
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 3600 },
-  });
+  const res = await tmdbFetch(url.toString(), 3600);
 
   if (!res.ok) {
     throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
@@ -135,9 +194,7 @@ export async function getTrendingMoviesPage(
   url.searchParams.set("api_key", getApiKey());
   url.searchParams.set("page", String(page));
 
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 1800 },
-  });
+  const res = await tmdbFetch(url.toString(), 1800);
 
   if (!res.ok) {
     throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
@@ -164,9 +221,7 @@ export async function getTopRatedMoviesPage(
   url.searchParams.set("api_key", getApiKey());
   url.searchParams.set("page", String(page));
 
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 3600 },
-  });
+  const res = await tmdbFetch(url.toString(), 3600);
 
   if (!res.ok) {
     throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
@@ -197,9 +252,7 @@ export async function searchMovies(
   url.searchParams.set("page", String(page));
   url.searchParams.set("include_adult", "false");
 
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 60 },
-  });
+  const res = await tmdbFetch(url.toString(), 60);
 
   if (!res.ok) {
     throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
@@ -216,9 +269,7 @@ export async function getMovie(
   const url = new URL(`${getBaseUrl()}/movie/${id}`);
   url.searchParams.set("api_key", getApiKey());
 
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 3600 },
-  });
+  const res = await tmdbFetch(url.toString(), 3600);
 
   if (res.status === 404) return null;
 
@@ -249,9 +300,7 @@ export async function getMovieTrailerKey(
   const url = new URL(`${getBaseUrl()}/movie/${id}/videos`);
   url.searchParams.set("api_key", getApiKey());
 
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 86400 },
-  });
+  const res = await tmdbFetch(url.toString(), 86400);
 
   if (res.status === 404) return null;
 
@@ -279,9 +328,7 @@ export async function getMovieGenres(): Promise<TmdbGenre[]> {
   const url = new URL(`${getBaseUrl()}/genre/movie/list`);
   url.searchParams.set("api_key", getApiKey());
 
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 86400 }, // genres rarely change — cache 1 day
-  });
+  const res = await tmdbFetch(url.toString(), 86400);
 
   if (!res.ok) {
     throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
@@ -333,9 +380,7 @@ export async function getMoviesByGenre(
     url.searchParams.set("vote_count.gte", "100");
   }
 
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 3600 },
-  });
+  const res = await tmdbFetch(url.toString(), 3600);
 
   if (!res.ok) {
     throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
