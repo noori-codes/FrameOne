@@ -22,6 +22,8 @@ export type TmdbMovie = {
   backdrop_path: string | null;
   vote_average: number;
   release_date: string;
+  /** Present on list/discover results — used to pick a home-row genre. */
+  genre_ids?: number[];
 };
 
 /** Extra fields returned by GET /movie/{id} */
