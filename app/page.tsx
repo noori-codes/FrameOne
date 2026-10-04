@@ -5,6 +5,7 @@ import {
   backdropUrl,
   getMovie,
   getMovieTrailerKey,
+  getMoviesByGenre,
   getPopularMovies,
   getTopRatedMovies,
   getTrendingMovies,
@@ -14,14 +15,29 @@ import {
 export const revalidate = 3600;
 
 /**
- * Home: daily-rotating hero carousel + category rows.
- * Hero movies are shuffled from trending/popular using today's date as seed.
+ * Curated TMDB genre rows for the home page.
+ * IDs come from TMDB’s genre list (same as /genres).
+ */
+const HOME_GENRE_ROWS = [
+  { id: 35, slug: "comedy", title: "Comedy" },
+  { id: 10751, slug: "family", title: "Family" },
+  { id: 28, slug: "action", title: "Action" },
+  { id: 27, slug: "horror", title: "Horror" },
+  { id: 878, slug: "scifi", title: "Sci-Fi" },
+  { id: 10749, slug: "romance", title: "Romance" },
+  { id: 16, slug: "animation", title: "Animation" },
+  { id: 53, slug: "thriller", title: "Thriller" },
+] as const;
+
+/**
+ * Home: daily hero carousel + discovery rows + genre strips.
  */
 export default async function Home() {
-  const [popular, trending, topRated] = await Promise.all([
+  const [popular, trending, topRated, ...genrePages] = await Promise.all([
     getPopularMovies(),
     getTrendingMovies("day"),
     getTopRatedMovies(),
+    ...HOME_GENRE_ROWS.map((g) => getMoviesByGenre(g.id)),
   ]);
 
   const heroPicks = pickDailyHeroMovies([trending, popular], 5, todayKey());
@@ -68,6 +84,16 @@ export default async function Home() {
         <MovieRow id="trending" title="Trending now" movies={trending} />
         <MovieRow id="popular" title="Popular now" movies={popular} />
         <MovieRow id="top-rated" title="Top rated" movies={topRated} />
+
+        {HOME_GENRE_ROWS.map((genre, i) => (
+          <MovieRow
+            key={genre.id}
+            id={genre.slug}
+            title={genre.title}
+            movies={genrePages[i]?.results ?? []}
+            href={`/genres/${genre.id}`}
+          />
+        ))}
       </div>
     </main>
   );

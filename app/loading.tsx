@@ -19,9 +19,9 @@ export default function HomeLoading() {
       </section>
 
       <div className="flex flex-col gap-20 pt-16 pb-24 sm:gap-24 sm:pt-20">
-        <MovieRowSkeleton />
-        <MovieRowSkeleton />
-        <MovieRowSkeleton />
+        {Array.from({ length: 6 }).map((_, i) => (
+          <MovieRowSkeleton key={i} />
+        ))}
       </div>
     </main>
   );

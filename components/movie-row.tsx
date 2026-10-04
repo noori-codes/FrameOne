@@ -2,6 +2,7 @@
 
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MovieCard } from "@/components/movie-card";
 import type { TmdbMovie } from "@/lib/tmdb";
@@ -11,6 +12,8 @@ type MovieRowProps = {
   title: string;
   subtitle?: string;
   movies: TmdbMovie[];
+  /** Optional “See all” link (e.g. /genres/35). */
+  href?: string;
 };
 
 /**
@@ -18,7 +21,13 @@ type MovieRowProps = {
  * `"use client"` is required so Embla can attach to the DOM and handle drag/buttons.
  * Data still comes from the Server Component parent (home page).
  */
-export function MovieRow({ id, title, subtitle, movies }: MovieRowProps) {
+export function MovieRow({
+  id,
+  title,
+  subtitle,
+  movies,
+  href,
+}: MovieRowProps) {
   const row = movies.slice(0, 12);
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
@@ -46,12 +55,23 @@ export function MovieRow({ id, title, subtitle, movies }: MovieRowProps) {
     };
   }, [emblaApi]);
 
+  if (row.length === 0) return null;
+
   return (
     <section id={id} aria-label={title} className="space-y-6">
       <div className="flex items-end justify-between gap-4 px-6 sm:px-8 lg:px-10">
         <div>
           <h2 className="font-display text-4xl tracking-wide text-cream uppercase sm:text-5xl md:text-[3.25rem]">
-            {title}
+            {href ? (
+              <Link
+                href={href}
+                className="transition-colors hover:text-amber"
+              >
+                {title}
+              </Link>
+            ) : (
+              title
+            )}
           </h2>
           {subtitle ? (
             <p className="mt-1.5 text-sm text-cream/50 sm:text-base">
@@ -61,6 +81,14 @@ export function MovieRow({ id, title, subtitle, movies }: MovieRowProps) {
         </div>
 
         <div className="mb-1 flex shrink-0 items-center gap-2">
+          {href ? (
+            <Link
+              href={href}
+              className="mr-1 hidden text-sm text-cream/45 transition-colors hover:text-amber sm:inline"
+            >
+              See all
+            </Link>
+          ) : null}
           <span
             aria-hidden
             className="hidden h-px w-10 bg-amber/70 sm:block"
