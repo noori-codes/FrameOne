@@ -1,7 +1,6 @@
-import { Info, Play } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+import { HeroCarousel, type HeroSlide } from "@/components/hero-carousel";
 import { MovieRow } from "@/components/movie-row";
+import { pickDailyHeroMovies, todayKey } from "@/lib/daily-hero";
 import {
   backdropUrl,
   getMovie,
@@ -10,9 +9,12 @@ import {
   getTrendingMovies,
 } from "@/lib/tmdb";
 
+/** Refresh at least hourly so a new UTC day picks a new hero set. */
+export const revalidate = 3600;
+
 /**
- * Home fetches TMDB lists in parallel, then hydrates the hero with full details
- * (runtime + genres) for the top trending title that has a backdrop.
+ * Home: daily-rotating hero carousel + category rows.
+ * Hero movies are shuffled from trending/popular using today's date as seed.
  */
 export default async function Home() {
   const [popular, trending, topRated] = await Promise.all([
@@ -21,114 +23,41 @@ export default async function Home() {
     getTopRatedMovies(),
   ]);
 
-  const heroCandidate =
-    trending.find((m) => m.backdrop_path) ??
-    popular.find((m) => m.backdrop_path) ??
-    trending[0] ??
-    popular[0];
+  const heroPicks = pickDailyHeroMovies([trending, popular], 5, todayKey());
+  const heroDetails = (
+    await Promise.all(heroPicks.map((m) => getMovie(m.id)))
+  ).filter((m): m is NonNullable<typeof m> => m != null);
 
-  const hero = heroCandidate ? await getMovie(heroCandidate.id) : null;
-  const heroBackdrop = hero ? backdropUrl(hero.backdrop_path) : null;
-  const heroYear = hero?.release_date?.slice(0, 4);
-  const heroRuntime =
-    hero?.runtime != null
-      ? `${Math.floor(hero.runtime / 60)}h ${hero.runtime % 60}m`
-      : null;
-  const heroGenres = hero?.genres?.map((g) => g.name).join(" / ");
-  const heroMeta = [
-    heroYear,
-    heroGenres,
-    heroRuntime,
-    hero ? `★ ${hero.vote_average.toFixed(1)}` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const slides: HeroSlide[] = heroDetails.map((movie) => {
+    const year = movie.release_date?.slice(0, 4);
+    const runtime =
+      movie.runtime != null
+        ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m`
+        : null;
+    const genres = movie.genres?.map((g) => g.name).join(" / ");
+    const meta = [
+      year,
+      genres,
+      runtime,
+      `★ ${movie.vote_average.toFixed(1)}`,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+
+    return {
+      id: movie.id,
+      title: movie.title,
+      overview: movie.overview,
+      tagline: movie.tagline,
+      backdropUrl: backdropUrl(movie.backdrop_path),
+      meta,
+    };
+  });
 
   return (
     <main className="relative flex min-h-dvh flex-1 flex-col overflow-x-hidden">
-      {/* Full-bleed hero */}
-      <section className="relative flex min-h-dvh w-full flex-col justify-end">
-        {/* overflow-hidden clips the scaled backdrop so overlays always cover the full hero */}
-        <div aria-hidden className="absolute inset-0 overflow-hidden">
-          {heroBackdrop ? (
-            <Image
-              src={heroBackdrop}
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className="hero-drift object-cover object-center"
-            />
-          ) : (
-            <div className="hero-drift absolute inset-[-8%] bg-[radial-gradient(ellipse_at_70%_40%,#3a2a18_0%,transparent_55%),radial-gradient(ellipse_at_20%_80%,#1a1510_0%,transparent_50%),linear-gradient(160deg,#1c1410_0%,#0c0b0a_45%,#080706_100%)]" />
-          )}
-          {/* Base veil — covers the entire image, not just the bottom fade */}
-          <div className="absolute inset-0 bg-background/50" />
-          <div className="absolute inset-0 bg-linear-to-t from-background via-background/55 to-background/25" />
-          <div className="absolute inset-0 bg-linear-to-r from-background/60 via-transparent to-transparent" />
-          <div className="film-grain absolute inset-0" />
-        </div>
+      <HeroCarousel slides={slides} />
 
-        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-start px-6 pt-28 pb-16 sm:px-8 sm:pb-20 lg:px-10">
-          {hero ? (
-            <>
-              {hero.tagline ? (
-                <p className="mb-3 max-w-xl text-xs tracking-[0.28em] text-cream/55 uppercase">
-                  {hero.tagline}
-                </p>
-              ) : null}
-              <h1 className="max-w-3xl font-display text-6xl leading-[0.9] tracking-wide text-cream sm:text-7xl md:text-8xl">
-                {hero.title}
-              </h1>
-              {heroMeta ? (
-                <p className="mt-4 max-w-xl text-sm text-cream/60 sm:text-base">
-                  {heroMeta}
-                </p>
-              ) : null}
-              <p className="mt-4 max-w-lg text-sm leading-relaxed text-cream/55 line-clamp-3 sm:text-base">
-                {hero.overview}
-              </p>
-
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Link
-                  href={`/movie/${hero.id}`}
-                  className="inline-flex items-center gap-2 rounded-full bg-amber px-5 py-2.5 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream"
-                >
-                  <Play className="h-4 w-4 fill-current" aria-hidden />
-                  Watch now
-                </Link>
-                <Link
-                  href={`/movie/${hero.id}`}
-                  className="inline-flex items-center gap-2 rounded-full border border-cream/30 bg-black/20 px-5 py-2.5 text-sm text-cream/85 backdrop-blur-sm transition-colors hover:border-cream/50 hover:text-cream"
-                >
-                  <Info className="h-4 w-4" aria-hidden />
-                  More info
-                </Link>
-              </div>
-            </>
-          ) : (
-            <>
-              <h1 className="max-w-xl font-display text-5xl leading-none tracking-wide text-cream sm:text-7xl">
-                Movies, lit for the night
-              </h1>
-              <p className="mt-4 max-w-md text-base leading-relaxed text-cream/65">
-                Browse what’s playing in the culture — posters, details, and
-                your list.
-              </p>
-              <div className="mt-8">
-                <Link
-                  href="#trending"
-                  className="inline-flex items-center gap-2 rounded-full bg-amber px-5 py-2.5 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream"
-                >
-                  Start browsing
-                </Link>
-              </div>
-            </>
-          )}
-        </div>
-      </section>
-
-      {/* Category rows — edge-to-edge with generous vertical rhythm */}
       <div className="relative z-10 flex w-full flex-col gap-20 border-t border-cream/8 pt-16 pb-24 sm:gap-24 sm:pt-20 sm:pb-28">
         <MovieRow id="trending" title="Trending now" movies={trending} />
         <MovieRow id="popular" title="Popular now" movies={popular} />
