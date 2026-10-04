@@ -73,11 +73,18 @@ export async function login(
     return { error: "Email and password are required." };
   }
 
+  const callbackRaw = String(formData.get("callbackUrl") ?? "").trim();
+  // Only allow same-site relative paths (block open redirects)
+  const redirectTo =
+    callbackRaw.startsWith("/") && !callbackRaw.startsWith("//")
+      ? callbackRaw
+      : "/";
+
   try {
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/",
+      redirectTo,
     });
   } catch (error) {
     if (error instanceof AuthError) {

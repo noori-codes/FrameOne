@@ -6,11 +6,18 @@ import { login, type AuthFormState } from "@/app/actions/auth";
 
 const initial: AuthFormState = {};
 
-export function SignInForm() {
+type SignInFormProps = {
+  /** Where to send the user after login (from ?callbackUrl=). */
+  callbackUrl?: string;
+};
+
+export function SignInForm({ callbackUrl = "/" }: SignInFormProps) {
   const [state, action, pending] = useActionState(login, initial);
 
   return (
     <form action={action} className="mt-8 flex w-full max-w-sm flex-col gap-4">
+      <input type="hidden" name="callbackUrl" value={callbackUrl} />
+
       <label className="flex flex-col gap-1.5 text-sm text-cream/70">
         Email
         <input

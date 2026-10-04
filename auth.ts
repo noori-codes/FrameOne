@@ -1,15 +1,15 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
 
 /**
- * Auth.js (NextAuth v5) config.
- *
- * Credentials = email + password we store in our SQLite User table.
- * JWT sessions = cookie signed with AUTH_SECRET (no Session table needed yet).
+ * Auth.js (NextAuth v5) — Node runtime (API routes + Server Components).
+ * Middleware uses `auth.config.ts` only so it stays Edge-safe.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   providers: [
     Credentials({
       name: "Email",
@@ -34,7 +34,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const valid = await bcrypt.compare(password, user.password);
         if (!valid) return null;
 
-        // Returned object becomes the session user (minus password)
         return {
           id: user.id,
           email: user.email,
@@ -43,19 +42,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/signin",
-  },
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user }) {
-      if (user?.id) token.sub = user.id;
+      if (user?.id) {
+        token.sub = user.id;
+        token.name = user.name;
+        token.email = user.email;
+      }
       return token;
     },
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
-        // Read fresh name/email from DB so profile edits show up without re-login
+        // Fresh name/email from DB (Node only — never called from Edge middleware)
         const dbUser = await prisma.user.findUnique({
           where: { id: token.sub },
           select: { name: true, email: true },
