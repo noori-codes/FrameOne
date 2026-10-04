@@ -14,7 +14,9 @@ export const authConfig = {
     authorized({ auth, request }) {
       const { pathname } = request.nextUrl;
       const isProtected =
-        pathname.startsWith("/favorites") || pathname.startsWith("/profile");
+        pathname.startsWith("/favorites") ||
+        pathname.startsWith("/watchlist") ||
+        pathname.startsWith("/profile");
 
       if (isProtected) {
         return Boolean(auth?.user);

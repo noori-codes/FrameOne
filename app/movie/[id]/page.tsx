@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
-import { FavoriteButton } from "@/components/favorite-button";
+import { SaveListButtons } from "@/components/save-list-buttons";
 import { FavoriteMetaForm } from "@/components/favorite-meta-form";
 import { prisma } from "@/lib/prisma";
 import { TrailerButton } from "@/components/trailer-button";
@@ -36,17 +36,29 @@ export default async function MoviePage({ params }: MoviePageProps) {
   if (!movie) notFound();
 
   const session = await auth();
-  const favorite = session?.user?.id
-    ? await prisma.favorite.findUnique({
-        where: {
-          userId_movieId: {
-            userId: session.user.id,
-            movieId: movie.id,
+  const userId = session?.user?.id;
+  const [favorite, watchlistItem] = userId
+    ? await Promise.all([
+        prisma.favorite.findUnique({
+          where: {
+            userId_movieId_listType: {
+              userId,
+              movieId: movie.id,
+              listType: "favorite",
+            },
           },
-        },
-      })
-    : null;
-  const favorited = Boolean(favorite);
+        }),
+        prisma.favorite.findUnique({
+          where: {
+            userId_movieId_listType: {
+              userId,
+              movieId: movie.id,
+              listType: "watchlist",
+            },
+          },
+        }),
+      ])
+    : [null, null];
 
   const trailerKey = await getMovieTrailerKey(movie.id);
   const poster = posterUrl(movie.poster_path, "w500");
@@ -145,12 +157,13 @@ export default async function MoviePage({ params }: MoviePageProps) {
             />
           </div>
 
-          <FavoriteButton
-            key={`${movie.id}-${favorited}`}
+          <SaveListButtons
+            key={`${movie.id}-${Boolean(favorite)}-${Boolean(watchlistItem)}`}
             movieId={movie.id}
             title={movie.title}
             posterPath={movie.poster_path}
-            initialFavorited={favorited}
+            initialFavorite={Boolean(favorite)}
+            initialWatchlist={Boolean(watchlistItem)}
             signedIn={Boolean(session?.user)}
           />
 

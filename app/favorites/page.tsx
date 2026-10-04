@@ -2,7 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { FavoriteMetaForm } from "@/components/favorite-meta-form";
+import { ListPageNav } from "@/components/list-page-nav";
 import { MovieCard } from "@/components/movie-card";
+import { LIST_FAVORITE } from "@/lib/lists";
 import { prisma } from "@/lib/prisma";
 
 export default async function FavoritesPage() {
@@ -10,24 +12,26 @@ export default async function FavoritesPage() {
   if (!session?.user?.id) redirect("/signin");
 
   const favorites = await prisma.favorite.findMany({
-    where: { userId: session.user.id },
+    where: { userId: session.user.id, listType: LIST_FAVORITE },
     orderBy: { createdAt: "desc" },
   });
 
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-28 pb-20 sm:px-8">
       <h1 className="font-display text-5xl tracking-wide text-cream uppercase sm:text-6xl">
-        My list
+        Favorites
       </h1>
-      <p className="mt-3 text-cream/55">
-        Saved movies — add your score and a short note.
+      <p className="mt-3 max-w-lg text-cream/55">
+        Movies you loved — rate them and leave a short note.
       </p>
 
+      <ListPageNav active="favorites" />
+
       {favorites.length === 0 ? (
-        <>
-          <p className="mt-14 text-cream/50">
+        <div className="mt-14">
+          <p className="text-cream/50">
             Nothing here yet. Open a movie and tap{" "}
-            <span className="text-cream/80">Add to my list</span>.
+            <span className="text-cream/80">Add to favorites</span>.
           </p>
           <Link
             href="/#trending"
@@ -35,7 +39,7 @@ export default async function FavoritesPage() {
           >
             Browse trending
           </Link>
-        </>
+        </div>
       ) : (
         <ul className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {favorites.map((fav) => (

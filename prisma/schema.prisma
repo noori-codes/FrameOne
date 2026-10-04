@@ -21,21 +21,24 @@ model User {
   favorites Favorite[]
 }
 
-/// A TMDB movie the user saved. We store title/poster so the list page
-/// does not need to call TMDB for every row.
+/// A TMDB movie the user saved to Favorites or Watchlist.
+/// We cache title/poster so list pages don’t need TMDB for every row.
 model Favorite {
   id         String   @id @default(cuid())
   userId     String
   movieId    Int
   title      String
   posterPath String?
-  /// Personal score 1–10 (optional). Null = not rated yet.
+  /// "favorite" (loved / rated) or "watchlist" (want to watch).
+  listType   String   @default("favorite")
+  /// Personal score 1–10 (favorites only). Null = not rated yet.
   rating     Int?
-  /// Short “why I saved this” note (optional).
+  /// Short note (favorites only).
   note       String?
   createdAt  DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, movieId])
+  @@unique([userId, movieId, listType])
   @@index([userId])
+  @@index([userId, listType])
 }

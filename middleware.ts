@@ -12,7 +12,9 @@ export default auth((req) => {
   const { pathname, search } = req.nextUrl;
   const isLoggedIn = Boolean(req.auth?.user);
   const isProtected =
-    pathname.startsWith("/favorites") || pathname.startsWith("/profile");
+    pathname.startsWith("/favorites") ||
+    pathname.startsWith("/watchlist") ||
+    pathname.startsWith("/profile");
   const isAuthPage = pathname === "/signin" || pathname === "/signup";
 
   if (isProtected && !isLoggedIn) {
@@ -30,5 +32,11 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/favorites/:path*", "/profile/:path*", "/signin", "/signup"],
+  matcher: [
+    "/favorites/:path*",
+    "/watchlist/:path*",
+    "/profile/:path*",
+    "/signin",
+    "/signup",
+  ],
 };

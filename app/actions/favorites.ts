@@ -2,11 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
+import { isListType, LIST_FAVORITE, type ListType } from "@/lib/lists";
 import { prisma } from "@/lib/prisma";
 
-export type ToggleFavoriteState = {
+export type ToggleListState = {
   error?: string;
-  favorited?: boolean;
+  saved?: boolean;
+  listType?: ListType;
 };
 
 export type FavoriteMetaState = {
@@ -14,18 +16,30 @@ export type FavoriteMetaState = {
   success?: string;
 };
 
+function revalidateLists(movieId: number) {
+  revalidatePath(`/movie/${movieId}`);
+  revalidatePath("/favorites");
+  revalidatePath("/watchlist");
+}
+
 /**
- * Add or remove a favorite for the signed-in user.
- * Called from a form on the movie detail page.
+ * Add or remove a movie from Favorites or Watchlist.
+ * Form field `listType` must be "favorite" or "watchlist".
  */
-export async function toggleFavorite(
-  _prev: ToggleFavoriteState,
+export async function toggleList(
+  _prev: ToggleListState,
   formData: FormData,
-): Promise<ToggleFavoriteState> {
+): Promise<ToggleListState> {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: "Sign in to save favorites." };
+    return { error: "Sign in to save movies." };
   }
+
+  const listTypeRaw = String(formData.get("listType") ?? "");
+  if (!isListType(listTypeRaw)) {
+    return { error: "Invalid list." };
+  }
+  const listType = listTypeRaw;
 
   const movieId = Number(formData.get("movieId"));
   const title = String(formData.get("title") ?? "").trim();
@@ -41,18 +55,18 @@ export async function toggleFavorite(
 
   const existing = await prisma.favorite.findUnique({
     where: {
-      userId_movieId: {
+      userId_movieId_listType: {
         userId: session.user.id,
         movieId,
+        listType,
       },
     },
   });
 
   if (existing) {
     await prisma.favorite.delete({ where: { id: existing.id } });
-    revalidatePath(`/movie/${movieId}`);
-    revalidatePath("/favorites");
-    return { favorited: false };
+    revalidateLists(movieId);
+    return { saved: false, listType };
   }
 
   await prisma.favorite.create({
@@ -61,17 +75,19 @@ export async function toggleFavorite(
       movieId,
       title,
       posterPath,
+      listType,
     },
   });
 
-  revalidatePath(`/movie/${movieId}`);
-  revalidatePath("/favorites");
-  return { favorited: true };
+  revalidateLists(movieId);
+  return { saved: true, listType };
 }
 
+/** @deprecated Prefer toggleList — kept name alias for clarity in older call sites. */
+export const toggleFavorite = toggleList;
+
 /**
- * Save personal rating (1–10) and/or a short note on an existing favorite.
- * Empty rating clears it; empty note clears the note.
+ * Save personal rating / note on a Favorites entry only.
  */
 export async function updateFavoriteMeta(
   _prev: FavoriteMetaState,
@@ -101,15 +117,16 @@ export async function updateFavoriteMeta(
 
   const existing = await prisma.favorite.findUnique({
     where: {
-      userId_movieId: {
+      userId_movieId_listType: {
         userId: session.user.id,
         movieId,
+        listType: LIST_FAVORITE,
       },
     },
   });
 
   if (!existing) {
-    return { error: "Save this movie to My list before rating it." };
+    return { error: "Add this movie to Favorites before rating it." };
   }
 
   await prisma.favorite.update({
@@ -120,7 +137,6 @@ export async function updateFavoriteMeta(
     },
   });
 
-  revalidatePath("/favorites");
-  revalidatePath(`/movie/${movieId}`);
+  revalidateLists(movieId);
   return { success: "Saved." };
 }

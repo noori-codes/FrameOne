@@ -58,11 +58,17 @@ export async function SiteHeader() {
                 href="/favorites"
                 className="transition-colors hover:text-cream"
               >
-                My list
+                Favorites
+              </Link>
+              <Link
+                href="/watchlist"
+                className="hidden transition-colors hover:text-cream sm:inline"
+              >
+                Watchlist
               </Link>
               <Link
                 href="/profile"
-                className="hidden transition-colors hover:text-cream sm:inline"
+                className="hidden transition-colors hover:text-cream md:inline"
               >
                 Profile
               </Link>
