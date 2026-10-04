@@ -177,6 +177,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
               movieId={movie.id}
               initialRating={favorite.rating}
               initialNote={favorite.note}
+              className="mt-6"
             />
           ) : null}
         </div>

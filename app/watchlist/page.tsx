@@ -16,43 +16,63 @@ export default async function WatchlistPage() {
   });
 
   return (
-    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-10 pb-20 sm:px-8">
-      <h1 className="font-display text-5xl tracking-wide text-cream uppercase sm:text-6xl">
-        Watchlist
-      </h1>
-      <p className="mt-3 max-w-lg text-cream/55">
-        Titles you want to watch later — separate from your favorites.
-      </p>
-
-      <ListPageNav active="watchlist" />
-
-      {items.length === 0 ? (
-        <div className="mt-14">
-          <p className="text-cream/50">
-            Your watchlist is empty. Open a movie and tap{" "}
-            <span className="text-cream/80">Add to watchlist</span>.
-          </p>
-          <Link
-            href="/#trending"
-            className="mt-8 inline-flex w-fit rounded-full border border-cream/20 px-4 py-2 text-sm text-cream/80 transition-colors hover:border-amber hover:text-amber"
-          >
-            Browse trending
-          </Link>
+    <main className="relative flex min-h-dvh w-full flex-1 flex-col">
+      <div className="border-b border-cream/8 bg-stage/30">
+        <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="text-4xl font-semibold tracking-tight text-cream sm:text-5xl md:text-6xl">
+                Watchlist
+              </h1>
+              <p className="mt-2 text-sm text-cream/50">
+                {items.length === 0
+                  ? "Titles you want to watch later — separate from favorites."
+                  : `${items.length} ${items.length === 1 ? "title" : "titles"} queued up`}
+              </p>
+            </div>
+            <ListPageNav active="watchlist" />
+          </div>
         </div>
-      ) : (
-        <ul className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5 md:grid-cols-5 lg:grid-cols-6">
-          {items.map((item) => (
-            <li key={item.id}>
-              <MovieCard
-                id={item.movieId}
-                title={item.title}
-                posterPath={item.posterPath}
-                showTitle
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      </div>
+
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+        {items.length === 0 ? (
+          <div className="relative overflow-hidden rounded-2xl border border-cream/10 bg-stage/40 px-6 py-14 sm:px-10">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-linear-to-br from-amber/10 via-transparent to-transparent"
+            />
+            <div className="relative max-w-md">
+              <h2 className="text-2xl font-semibold tracking-tight text-cream">
+                Watchlist is empty
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-cream/50">
+                Open a movie and tap{" "}
+                <span className="text-cream/75">Add to watchlist</span>.
+              </p>
+              <Link
+                href="/#trending"
+                className="mt-8 inline-flex rounded-full bg-amber px-5 py-2.5 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream"
+              >
+                Browse trending
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {items.map((item) => (
+              <li key={item.id}>
+                <MovieCard
+                  id={item.movieId}
+                  title={item.title}
+                  posterPath={item.posterPath}
+                  showTitle
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </main>
   );
 }

@@ -5,20 +5,17 @@ type ListPageNavProps = {
   active: "favorites" | "watchlist";
 };
 
-/** Tabs between Favorites and Watchlist collection pages. */
+/** Pills between Favorites and Watchlist. */
 export function ListPageNav({ active }: ListPageNavProps) {
   return (
-    <nav
-      className="mt-6 flex gap-1 border-b border-cream/10"
-      aria-label="Your lists"
-    >
+    <nav aria-label="Your lists" className="flex flex-wrap gap-2">
       <Link
         href="/favorites"
         className={cn(
-          "-mb-px border-b-2 px-3 py-2 text-sm transition-colors",
+          "rounded-full px-3.5 py-1.5 text-sm transition-colors",
           active === "favorites"
-            ? "border-amber text-cream"
-            : "border-transparent text-cream/50 hover:text-cream",
+            ? "bg-amber text-[#1a1208]"
+            : "border border-cream/15 text-cream/60 hover:border-amber/50 hover:text-amber",
         )}
         aria-current={active === "favorites" ? "page" : undefined}
       >
@@ -27,10 +24,10 @@ export function ListPageNav({ active }: ListPageNavProps) {
       <Link
         href="/watchlist"
         className={cn(
-          "-mb-px border-b-2 px-3 py-2 text-sm transition-colors",
+          "rounded-full px-3.5 py-1.5 text-sm transition-colors",
           active === "watchlist"
-            ? "border-amber text-cream"
-            : "border-transparent text-cream/50 hover:text-cream",
+            ? "bg-amber text-[#1a1208]"
+            : "border border-cream/15 text-cream/60 hover:border-amber/50 hover:text-amber",
         )}
         aria-current={active === "watchlist" ? "page" : undefined}
       >

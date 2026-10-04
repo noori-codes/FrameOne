@@ -1,82 +1,106 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { FavoriteMetaForm } from "@/components/favorite-meta-form";
+import { FavoriteRow } from "@/components/favorite-row";
+import {
+  FavoritesSortNav,
+  parseFavoritesSort,
+} from "@/components/favorites-sort-nav";
 import { ListPageNav } from "@/components/list-page-nav";
-import { MovieCard } from "@/components/movie-card";
 import { LIST_FAVORITE } from "@/lib/lists";
 import { prisma } from "@/lib/prisma";
 
-export default async function FavoritesPage() {
+type FavoritesPageProps = {
+  searchParams: Promise<{ sort?: string }>;
+};
+
+export default async function FavoritesPage({
+  searchParams,
+}: FavoritesPageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin");
 
+  const { sort: sortRaw } = await searchParams;
+  const sort = parseFavoritesSort(sortRaw);
+
   const favorites = await prisma.favorite.findMany({
     where: { userId: session.user.id, listType: LIST_FAVORITE },
-    orderBy: { createdAt: "desc" },
+    orderBy:
+      sort === "title"
+        ? { title: "asc" }
+        : sort === "rating"
+          ? [{ rating: "desc" }, { createdAt: "desc" }]
+          : { createdAt: "desc" },
   });
 
   return (
-    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-10 pb-20 sm:px-8">
-      <h1 className="font-display text-5xl tracking-wide text-cream uppercase sm:text-6xl">
-        Favorites
-      </h1>
-      <p className="mt-3 max-w-lg text-cream/55">
-        Movies you loved — rate them and leave a short note.
-      </p>
-
-      <ListPageNav active="favorites" />
-
-      {favorites.length === 0 ? (
-        <div className="mt-14">
-          <p className="text-cream/50">
-            Nothing here yet. Open a movie and tap{" "}
-            <span className="text-cream/80">Add to favorites</span>.
-          </p>
-          <Link
-            href="/#trending"
-            className="mt-8 inline-flex w-fit rounded-full border border-cream/20 px-4 py-2 text-sm text-cream/80 transition-colors hover:border-amber hover:text-amber"
-          >
-            Browse trending
-          </Link>
+    <main className="relative flex min-h-dvh w-full flex-1 flex-col">
+      <div className="border-b border-cream/8 bg-stage/30">
+        <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="text-4xl font-semibold tracking-tight text-cream sm:text-5xl md:text-6xl">
+                Favorites
+              </h1>
+              <p className="mt-2 text-sm text-cream/50">
+                {favorites.length === 0
+                  ? "Movies you love — rate them and leave a short note."
+                  : `${favorites.length} ${favorites.length === 1 ? "title" : "titles"} you’ve saved`}
+              </p>
+            </div>
+            <ListPageNav active="favorites" />
+          </div>
         </div>
-      ) : (
-        <ul className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {favorites.map((fav) => (
-            <li
-              key={fav.id}
-              className="rounded-2xl border border-cream/10 bg-stage/40 p-4"
-            >
-              <div className="mx-auto max-w-44">
-                <MovieCard
-                  id={fav.movieId}
-                  title={fav.title}
-                  posterPath={fav.posterPath}
-                  voteAverage={fav.rating ?? undefined}
-                  showTitle
+      </div>
+
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+        {favorites.length === 0 ? (
+          <div className="relative overflow-hidden rounded-2xl border border-cream/10 bg-stage/40 px-6 py-14 sm:px-10">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-linear-to-br from-amber/10 via-transparent to-transparent"
+            />
+            <div className="relative max-w-md">
+              <h2 className="text-2xl font-semibold tracking-tight text-cream">
+                Nothing here yet
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-cream/50">
+                Open a movie and tap{" "}
+                <span className="text-cream/75">Add to favorites</span>. Your
+                ratings and notes will live here.
+              </p>
+              <Link
+                href="/#trending"
+                className="mt-8 inline-flex rounded-full bg-amber px-5 py-2.5 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream"
+              >
+                Find something to love
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="mb-6 flex justify-end">
+              <FavoritesSortNav active={sort} />
+            </div>
+
+            <ul className="divide-y divide-cream/8 border-t border-cream/8">
+              {favorites.map((fav) => (
+                <FavoriteRow
+                  key={fav.id}
+                  favorite={{
+                    id: fav.id,
+                    movieId: fav.movieId,
+                    title: fav.title,
+                    posterPath: fav.posterPath,
+                    rating: fav.rating,
+                    note: fav.note,
+                  }}
                 />
-              </div>
-              {fav.rating != null || fav.note ? (
-                <p className="mt-3 text-center text-xs text-cream/45">
-                  {fav.rating != null ? (
-                    <span className="text-amber">Your ★ {fav.rating}/10</span>
-                  ) : null}
-                  {fav.rating != null && fav.note ? " · " : null}
-                  {fav.note ? (
-                    <span className="line-clamp-2 text-cream/55">{fav.note}</span>
-                  ) : null}
-                </p>
-              ) : null}
-              <FavoriteMetaForm
-                movieId={fav.movieId}
-                initialRating={fav.rating}
-                initialNote={fav.note}
-                compact
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
     </main>
   );
 }
