@@ -1,5 +1,6 @@
 import { HeroCarousel, type HeroSlide } from "@/components/hero-carousel";
 import { MovieRow } from "@/components/movie-row";
+import { SiteFooter } from "@/components/site-footer";
 import { HERO_COUNT, pickDailyHeroMovies, todayKey } from "@/lib/daily-hero";
 import {
   backdropUrl,
@@ -23,11 +24,17 @@ const HOME_GENRE_ROWS = [
   { id: 35, slug: "comedy", title: "Comedy" },
   { id: 10751, slug: "family", title: "Family" },
   { id: 28, slug: "action", title: "Action" },
+  { id: 12, slug: "adventure", title: "Adventure" },
   { id: 27, slug: "horror", title: "Horror" },
   { id: 878, slug: "scifi", title: "Sci-Fi" },
+  { id: 14, slug: "fantasy", title: "Fantasy" },
   { id: 10749, slug: "romance", title: "Romance" },
   { id: 16, slug: "animation", title: "Animation" },
   { id: 53, slug: "thriller", title: "Thriller" },
+  { id: 18, slug: "drama", title: "Drama" },
+  { id: 80, slug: "crime", title: "Crime" },
+  { id: 9648, slug: "mystery", title: "Mystery" },
+  { id: 10752, slug: "war", title: "War" },
 ] as const;
 
 /**
@@ -123,7 +130,7 @@ export default async function Home() {
     <main className="relative flex min-h-dvh flex-1 flex-col overflow-x-hidden">
       <HeroCarousel slides={slides} />
 
-      <div className="relative z-10 flex w-full flex-col gap-20 border-t border-cream/8 pt-16 pb-24 sm:gap-24 sm:pt-20 sm:pb-28">
+      <div className="relative z-10 flex w-full flex-col gap-20 border-t border-cream/8 pt-16 pb-16 sm:gap-24 sm:pt-20 sm:pb-20">
         <MovieRow
           id="trending"
           title="Trending now"
@@ -153,6 +160,8 @@ export default async function Home() {
           />
         ))}
       </div>
+
+      <SiteFooter />
     </main>
   );
 }
