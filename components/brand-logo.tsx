@@ -16,8 +16,7 @@ type BrandLogoProps = {
 };
 
 /**
- * Site brand mark — dark charcoal + gold F1 monogram.
- * Use on dark UI surfaces. For light surfaces, swap to /brand/logo-light.jpg later.
+ * Site brand mark — charcoal + electric-teal F/aperture monogram.
  */
 export function BrandLogo({
   size = "sm",
@@ -30,7 +29,7 @@ export function BrandLogo({
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <Image
-        src="/brand/logo-dark.jpg"
+        src="/brand/logo-dark.png"
         alt={withWordmark ? "" : "FrameOne"}
         width={px}
         height={px}
@@ -41,7 +40,7 @@ export function BrandLogo({
         <span
           className={cn(
             // Same height as the mark so both share one vertical center
-            "inline-flex items-center font-display leading-none tracking-[0.2em] text-cream uppercase",
+            "inline-flex items-center font-display leading-none tracking-[0.2em] text-amber uppercase",
             // Bebas sits a hair high in the em-box — nudge to match the mark
             "translate-y-[0.06em]",
             // Drop the wordmark on very narrow phones so the header doesn’t overflow

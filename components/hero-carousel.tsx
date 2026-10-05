@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight, Info } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { TrailerButton } from "@/components/trailer-button";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +22,7 @@ type HeroCarouselProps = {
   slides: HeroSlide[];
 };
 
+/** Every slide stays this long — progress bar and advance share the same clock. */
 const AUTO_MS = 9000;
 
 /**
@@ -33,6 +34,29 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
   const [trailerOpen, setTrailerOpen] = useState(false);
   const count = slides.length;
   const slide = slides[index] ?? null;
+
+  const trailerOpenRef = useRef(trailerOpen);
+  const startedAtRef = useRef(0);
+  const pausedAtRef = useRef<number | null>(null);
+  const elapsedBeforePauseRef = useRef(0);
+  const progressRef = useRef<HTMLDivElement>(null);
+
+  trailerOpenRef.current = trailerOpen;
+
+  const setBar = useCallback((ratio: number) => {
+    const el = progressRef.current;
+    if (el) el.style.transform = `scaleX(${Math.min(1, Math.max(0, ratio))})`;
+  }, []);
+
+  const resetClock = useCallback(
+    (now = performance.now()) => {
+      startedAtRef.current = now;
+      elapsedBeforePauseRef.current = 0;
+      pausedAtRef.current = null;
+      setBar(0);
+    },
+    [setBar],
+  );
 
   const go = useCallback(
     (dir: -1 | 1) => {
@@ -50,6 +74,11 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
     [count],
   );
 
+  // Restart the shared clock whenever the slide changes (auto or manual).
+  useEffect(() => {
+    resetClock();
+  }, [index, resetClock]);
+
   useEffect(() => {
     if (count < 2) return;
 
@@ -62,31 +91,51 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [count, go]);
 
+  // Single rAF clock — progress fill + slide advance stay locked together.
   useEffect(() => {
-    if (count < 2 || trailerOpen) return;
+    if (count < 2) return;
 
-    let timer: ReturnType<typeof setInterval> | undefined;
+    let raf = 0;
 
-    function start() {
-      timer = setInterval(() => go(1), AUTO_MS);
+    function tick(now: number) {
+      const paused =
+        trailerOpenRef.current ||
+        (typeof document !== "undefined" && document.hidden);
+
+      if (paused) {
+        if (pausedAtRef.current == null) {
+          pausedAtRef.current = now;
+          elapsedBeforePauseRef.current = Math.min(
+            AUTO_MS,
+            Math.max(0, now - startedAtRef.current),
+          );
+        }
+        setBar(elapsedBeforePauseRef.current / AUTO_MS);
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+
+      if (pausedAtRef.current != null) {
+        startedAtRef.current = now - elapsedBeforePauseRef.current;
+        pausedAtRef.current = null;
+      }
+
+      const elapsed = now - startedAtRef.current;
+
+      if (elapsed >= AUTO_MS) {
+        resetClock(now);
+        setIndex((i) => (i + 1) % count);
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+
+      setBar(elapsed / AUTO_MS);
+      raf = requestAnimationFrame(tick);
     }
 
-    function stop() {
-      if (timer) clearInterval(timer);
-    }
-
-    function onVisibility() {
-      if (document.hidden) stop();
-      else start();
-    }
-
-    start();
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => {
-      stop();
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, [count, go, trailerOpen, index]);
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [count, resetClock, setBar]);
 
   if (!slide) {
     return (
@@ -185,11 +234,8 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               aria-hidden
             >
               <div
-                key={slide.id}
-                className={cn(
-                  "hero-progress h-full origin-left bg-amber",
-                  trailerOpen && "hero-progress-paused",
-                )}
+                ref={progressRef}
+                className="h-full origin-left scale-x-0 bg-amber will-change-transform"
               />
             </div>
 

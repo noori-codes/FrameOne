@@ -26,8 +26,8 @@ export const metadata: Metadata = {
   },
   description: "Discover movies with a cinematic UI.",
   icons: {
-    icon: "/brand/logo-dark.jpg",
-    apple: "/brand/logo-dark.jpg",
+    icon: "/brand/logo-dark.png",
+    apple: "/brand/logo-dark.png",
   },
 };
 
