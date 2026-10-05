@@ -2,19 +2,20 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { auth } from "@/auth";
 import { BrandLogo } from "@/components/brand-logo";
+import { UserAvatar } from "@/components/user-avatar";
 
 /**
  * Full-width sticky header. `auth()` reads the session cookie on the server.
  * Search is icon-only → /search (query lives on that page).
  */
-function userInitial(name?: string | null, email?: string | null) {
-  const source = name?.trim() || email?.trim() || "?";
-  return source.charAt(0).toUpperCase();
-}
-
 export async function SiteHeader() {
-  const session = await auth();
-  const initial = userInitial(session?.user?.name, session?.user?.email);
+  let session: Awaited<ReturnType<typeof auth>> = null;
+  try {
+    session = await auth();
+  } catch {
+    // Bad/expired session cookie — show signed-out chrome instead of crashing
+    session = null;
+  }
 
   return (
     <header className="sticky top-0 z-30 border-b border-cream/10 bg-background/90 backdrop-blur-md">
@@ -60,10 +61,15 @@ export async function SiteHeader() {
                 href="/profile"
                 aria-label="Profile"
                 title={session.user.name ?? session.user.email ?? "Profile"}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-cream/20 bg-stage text-sm font-medium text-cream transition-colors hover:border-amber hover:text-amber"
+                className="rounded-full transition-opacity hover:opacity-90"
               >
-                {/* Swap for profile image later */}
-                {initial}
+                <UserAvatar
+                  name={session.user.name}
+                  email={session.user.email}
+                  image={session.user.image}
+                  size="sm"
+                  className="hover:border-amber"
+                />
               </Link>
             </div>
           ) : (

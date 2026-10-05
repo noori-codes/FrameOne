@@ -13,7 +13,7 @@ import { PrismaClient } from "@/lib/generated/prisma/client";
  * Bump PRISMA_SCHEMA_VERSION whenever the schema gains fields/models so the
  * cached client is discarded (otherwise you get “Unknown argument …” errors).
  */
-const PRISMA_SCHEMA_VERSION = 2; // v2: Favorite.listType (favorites vs watchlist)
+const PRISMA_SCHEMA_VERSION = 4; // v4: force reload after User.image generate
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;

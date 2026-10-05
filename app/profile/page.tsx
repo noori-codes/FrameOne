@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
 import {
+  AvatarForm,
   ChangePasswordForm,
   UpdateNameForm,
 } from "@/components/profile-forms";
@@ -12,21 +13,29 @@ export default async function ProfilePage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { email: true, name: true, createdAt: true },
+    select: { email: true, name: true, image: true, createdAt: true },
   });
 
   if (!user) redirect("/signin");
 
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-8 pb-16">
-      <h1 className="font-display text-4xl tracking-wide text-cream sm:text-5xl">
+      <h1 className="text-4xl font-semibold tracking-tight text-cream sm:text-5xl">
         Profile
       </h1>
-      <p className="mt-2 text-cream/60">
-        Manage your FrameOne account.
-      </p>
+      <p className="mt-2 text-cream/60">Manage your FrameOne account.</p>
 
-      <dl className="mt-10 space-y-2 text-sm">
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold tracking-tight text-cream">
+          Photo
+        </h2>
+        <p className="mt-1 mb-6 text-sm text-cream/50">
+          Shown in the header and on your profile.
+        </p>
+        <AvatarForm name={user.name} email={user.email} image={user.image} />
+      </section>
+
+      <dl className="mt-12 space-y-2 border-t border-cream/10 pt-8 text-sm">
         <div className="flex flex-wrap gap-x-3">
           <dt className="text-cream/40">Email</dt>
           <dd className="text-cream/80">{user.email}</dd>
@@ -40,7 +49,7 @@ export default async function ProfilePage() {
       </dl>
 
       <section className="mt-12 border-t border-cream/10 pt-8">
-        <h2 className="font-display text-2xl tracking-wide text-cream">
+        <h2 className="text-xl font-semibold tracking-tight text-cream">
           Display name
         </h2>
         <p className="mt-1 mb-6 text-sm text-cream/50">
@@ -50,7 +59,7 @@ export default async function ProfilePage() {
       </section>
 
       <section className="mt-12 border-t border-cream/10 pt-8">
-        <h2 className="font-display text-2xl tracking-wide text-cream">
+        <h2 className="text-xl font-semibold tracking-tight text-cream">
           Password
         </h2>
         <p className="mt-1 mb-6 text-sm text-cream/50">
@@ -60,7 +69,7 @@ export default async function ProfilePage() {
       </section>
 
       <section className="mt-12 border-t border-cream/10 pt-8">
-        <h2 className="font-display text-2xl tracking-wide text-cream">
+        <h2 className="text-xl font-semibold tracking-tight text-cream">
           Session
         </h2>
         <p className="mt-1 mb-6 text-sm text-cream/50">

@@ -14,6 +14,8 @@ model User {
   id        String     @id @default(cuid())
   name      String?
   email     String     @unique
+  /// Public path to avatar under /uploads/avatars, e.g. /uploads/avatars/xyz.jpg
+  image     String?
   /// Hashed password (never store plain text).
   password  String
   createdAt DateTime   @default(now())
