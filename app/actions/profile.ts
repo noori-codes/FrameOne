@@ -1,18 +1,21 @@
 "use server";
 
-import { mkdir, readdir, unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  avatarObjectKey,
+  avatarPublicUrl,
+  deleteUserAvatarObjects,
+  uploadAvatarObject,
+} from "@/lib/s3";
 
 export type ProfileFormState = {
   error?: string;
   success?: string;
 };
 
-const AVATAR_DIR = path.join(process.cwd(), "public", "uploads", "avatars");
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024; // 2 MB
 const ALLOWED_AVATAR_TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -26,19 +29,6 @@ async function requireUserId() {
     return null;
   }
   return session.user.id;
-}
-
-async function clearUserAvatarFiles(userId: string) {
-  try {
-    const files = await readdir(AVATAR_DIR);
-    await Promise.all(
-      files
-        .filter((f) => f.startsWith(`${userId}.`))
-        .map((f) => unlink(path.join(AVATAR_DIR, f)).catch(() => undefined)),
-    );
-  } catch {
-    // dir may not exist yet
-  }
 }
 
 /** Update display name on the User row (email stays the login id). */
@@ -110,7 +100,7 @@ export async function changePassword(
   return { success: "Password changed." };
 }
 
-/** Upload a JPEG/PNG/WebP avatar (max 2 MB) to /public/uploads/avatars. */
+/** Upload a JPEG/PNG/WebP avatar (max 2 MB) to S3. */
 export async function updateAvatar(
   _prev: ProfileFormState,
   formData: FormData,
@@ -133,27 +123,31 @@ export async function updateAvatar(
     return { error: "Use a JPEG, PNG, or WebP image." };
   }
 
-  await mkdir(AVATAR_DIR, { recursive: true });
-  await clearUserAvatarFiles(userId);
+  try {
+    await deleteUserAvatarObjects(userId);
 
-  const filename = `${userId}.${ext}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(AVATAR_DIR, filename), buffer);
+    const key = avatarObjectKey(userId, ext);
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await uploadAvatarObject(key, buffer, file.type);
 
-  // cache-bust so the header updates immediately after upload
-  const image = `/uploads/avatars/${filename}?v=${Date.now()}`;
+    // cache-bust so the header updates immediately after upload
+    const image = avatarPublicUrl(key, Date.now());
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { image },
-  });
+    await prisma.user.update({
+      where: { id: userId },
+      data: { image },
+    });
+  } catch (err) {
+    console.error("Avatar upload failed:", err);
+    return { error: "Could not upload photo. Check S3 settings and try again." };
+  }
 
   revalidatePath("/profile");
   revalidatePath("/");
   return { success: "Photo updated." };
 }
 
-/** Remove the current avatar file and clear User.image. */
+/** Remove the current avatar object and clear User.image. */
 export async function removeAvatar(
   _prev: ProfileFormState,
   _formData: FormData,
@@ -163,7 +157,13 @@ export async function removeAvatar(
     return { error: "You must be signed in." };
   }
 
-  await clearUserAvatarFiles(userId);
+  try {
+    await deleteUserAvatarObjects(userId);
+  } catch (err) {
+    console.error("Avatar delete failed:", err);
+    return { error: "Could not remove photo. Try again." };
+  }
+
   await prisma.user.update({
     where: { id: userId },
     data: { image: null },

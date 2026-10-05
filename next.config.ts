@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         hostname: "image.tmdb.org",
         pathname: "/t/p/**",
       },
+      {
+        protocol: "https",
+        hostname: "blob.ramaki.app",
+        pathname: "/**",
+      },
     ],
   },
 };
