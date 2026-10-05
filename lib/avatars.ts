@@ -7,11 +7,8 @@ import {
 } from "@aws-sdk/client-s3";
 
 /**
- * S3-compatible client (works with AWS S3, R2, MinIO, custom endpoints).
- * Credentials come from env — never import this into a Client Component.
- *
- * This bucket is private (object ACLs / public-read are ignored), so browsers
- * must load avatars through `/api/avatars/[userId]`, which streams GetObject.
+ * Ramaki / S3-compatible avatar storage (blob.ramaki.app).
+ * Bucket is private — browsers load photos via /api/avatars/[userId].
  */
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -48,10 +45,7 @@ export function avatarObjectKey(userId: string, ext: string) {
   return `avatars/${userId}.${ext}`;
 }
 
-/**
- * Same-origin URL served by app/api/avatars/[userId].
- * Prefer this over the raw S3 public URL — the bucket is not anonymously readable.
- */
+/** Same-origin URL served by app/api/avatars/[userId]. */
 export function avatarAppUrl(userId: string, cacheBust?: number) {
   const base = `/api/avatars/${userId}`;
   return cacheBust ? `${base}?v=${cacheBust}` : base;
@@ -92,7 +86,7 @@ export async function findUserAvatarKey(userId: string) {
   );
 }
 
-/** Stream avatar bytes from S3 (authenticated). */
+/** Stream avatar bytes from Ramaki (authenticated). */
 export async function getAvatarObject(key: string) {
   const result = await getS3().send(
     new GetObjectCommand({

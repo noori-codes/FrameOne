@@ -1,17 +1,27 @@
 import { config } from "dotenv";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig } from "prisma/config";
 
 // Next.js keeps secrets in .env.local; Prisma CLI needs them too.
 config({ path: ".env.local" });
 config();
 
 function migrateUrl() {
-  const raw = env("DATABASE_URL");
+  // Prefer DIRECT_URL (5432) for migrations; pooler (6543) often breaks migrate
+  const raw =
+    process.env.DIRECT_URL?.trim() || process.env.DATABASE_URL?.trim();
+
+  if (!raw) {
+    throw new Error(
+      "Missing DATABASE_URL (and DIRECT_URL). Uncomment/add them in .env.local — Supabase Dashboard → Database → Connect → Prisma.",
+    );
+  }
+
   try {
     const url = new URL(raw);
     url.searchParams.delete("channel_binding");
-    url.searchParams.set("sslmode", "require");
-    url.searchParams.set("uselibpqcompat", "true");
+    if (!url.searchParams.has("sslmode")) {
+      url.searchParams.set("sslmode", "require");
+    }
     return url.toString();
   } catch {
     return raw;
@@ -20,7 +30,7 @@ function migrateUrl() {
 
 /**
  * Prisma 7 CLI config (migrate, generate, studio).
- * Use the direct (non-pooled) Neon URL for migrations.
+ * Set DIRECT_URL to Supabase “Session mode” / direct Postgres (port 5432).
  */
 export default defineConfig({
   schema: "prisma/schema.prisma",

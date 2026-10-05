@@ -9,7 +9,7 @@ import {
   avatarObjectKey,
   deleteUserAvatarObjects,
   uploadAvatarObject,
-} from "@/lib/s3";
+} from "@/lib/avatars";
 
 export type ProfileFormState = {
   error?: string;
@@ -102,7 +102,7 @@ export async function changePassword(
   return { success: "Password changed." };
 }
 
-/** Upload a JPEG/PNG/WebP avatar (max 2 MB) to S3; serve via /api/avatars. */
+/** Upload a JPEG/PNG/WebP avatar (max 2 MB) to Ramaki; serve via /api/avatars. */
 export async function updateAvatar(
   _prev: ProfileFormState,
   formData: FormData,

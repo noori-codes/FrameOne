@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { findUserAvatarKey, getAvatarObject } from "@/lib/s3";
+import { findUserAvatarKey, getAvatarObject } from "@/lib/avatars";
 
 export const runtime = "nodejs";
 
@@ -8,8 +8,7 @@ type RouteContext = {
 };
 
 /**
- * Proxy private S3 avatars to the browser.
- * blob.ramaki.app rejects anonymous GETs (403), so <img> must hit this route.
+ * Stream avatars from Ramaki S3 (bucket is private; proxy uses credentials).
  */
 export async function GET(_request: Request, context: RouteContext) {
   const { userId } = await context.params;

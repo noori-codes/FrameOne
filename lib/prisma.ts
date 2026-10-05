@@ -1,45 +1,44 @@
-import { PrismaNeon } from "@prisma/adapter-neon";
-import { neonConfig } from "@neondatabase/serverless";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 import { PrismaClient } from "@/lib/generated/prisma/client";
-import ws from "ws";
 
 /**
- * Prisma 7 + Neon serverless.
+ * Prisma 7 + Supabase Postgres (standard pg pool + @prisma/adapter-pg).
  *
- * PrismaNeon takes PoolConfig `{ connectionString }`, NOT a Pool instance.
- * Passing a Pool made the driver dial 127.0.0.1:443 → ECONNREFUSED and a
- * blank `{ clientVersion }` error on /profile.
+ * Use the Supabase *transaction pooler* URI (port 6543, ?pgbouncer=true) for
+ * DATABASE_URL in the app. Use DIRECT_URL (port 5432) for `prisma migrate`.
  */
-const PRISMA_SCHEMA_VERSION = 10; // v10: PrismaNeon(PoolConfig) fix
-
-// Node needs an explicit WebSocket implementation for Neon WS
-neonConfig.webSocketConstructor = ws;
+const PRISMA_SCHEMA_VERSION = 11;
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
   prismaSchemaVersion?: number;
+  pgPool?: Pool;
 };
 
-function sanitizeNeonUrl(raw: string) {
-  const url = new URL(raw);
-  url.searchParams.delete("channel_binding");
-  return url.toString();
-}
-
 function databaseUrl() {
-  const raw =
-    process.env.DATABASE_URL_POOLED?.trim() ||
-    process.env.DATABASE_URL?.trim();
+  const raw = process.env.DATABASE_URL?.trim();
   if (!raw) {
     throw new Error(
-      "Missing DATABASE_URL (or DATABASE_URL_POOLED). Add it to .env.local.",
+      "Missing DATABASE_URL. In Supabase: Settings → Database → Connection string → URI (pooler for the app).",
     );
   }
-  return sanitizeNeonUrl(raw);
+  return raw;
 }
 
 function createPrismaClient() {
-  const adapter = new PrismaNeon({ connectionString: databaseUrl() });
+  const pool =
+    globalForPrisma.pgPool ??
+    new Pool({
+      connectionString: databaseUrl(),
+      ssl: { rejectUnauthorized: false },
+    });
+
+  if (!globalForPrisma.pgPool) {
+    globalForPrisma.pgPool = pool;
+  }
+
+  const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });
 }
 

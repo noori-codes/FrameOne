@@ -33,7 +33,7 @@ export default async function ProfilePage() {
     redirect("/signin");
   }
 
-  // Neon is empty / user was on old SQLite — kill the ghost session
+  // DB has no row for this session — kill the ghost session
   if (!user) {
     await signOut({ redirectTo: "/signup" });
   }

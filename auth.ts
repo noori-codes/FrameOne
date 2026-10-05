@@ -95,7 +95,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
             session.user.image = image;
           }
         } catch {
-          // Keep JWT values if Neon blips
+          // Keep JWT values if the database blips
         }
       }
       return session;
