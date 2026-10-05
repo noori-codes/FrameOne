@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import {
   changePassword,
   removeAvatar,
@@ -8,6 +8,7 @@ import {
   updateName,
   type ProfileFormState,
 } from "@/app/actions/profile";
+import { AvatarCropModal } from "@/components/avatar-crop-modal";
 import { UserAvatar } from "@/components/user-avatar";
 
 const nameInitial: ProfileFormState = {};
@@ -117,7 +118,7 @@ type AvatarFormProps = {
   image?: string | null;
 };
 
-/** Upload or remove the profile photo. */
+/** Pick a photo → crop in a modal → upload JPEG. */
 export function AvatarForm({ name, email, image }: AvatarFormProps) {
   const [uploadState, uploadAction, uploading] = useActionState(
     updateAvatar,
@@ -127,48 +128,95 @@ export function AvatarForm({ name, email, image }: AvatarFormProps) {
     removeAvatar,
     avatarInitial,
   );
+  const [, startUpload] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
+  const previewUrlRef = useRef<string | null>(null);
+
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    };
+  }, []);
+
+  const clearPreview = () => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+    setCropSrc(null);
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const onFilePicked = (file: File | undefined) => {
+    setLocalError(null);
+    if (!file) return;
+
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setLocalError("Use a JPEG, PNG, or WebP image.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setLocalError("Photo must be 8 MB or smaller before cropping.");
+      return;
+    }
+
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    const url = URL.createObjectURL(file);
+    previewUrlRef.current = url;
+    setCropSrc(url);
+  };
+
+  const onCropped = (file: File) => {
+    clearPreview();
+    const data = new FormData();
+    data.set("avatar", file);
+    startUpload(() => {
+      uploadAction(data);
+    });
+  };
 
   const message =
+    localError ||
     uploadState.error ||
     uploadState.success ||
     removeState.error ||
     removeState.success;
-  const isError = Boolean(uploadState.error || removeState.error);
+  const isError = Boolean(
+    localError || uploadState.error || removeState.error,
+  );
+  const busy = uploading || removing;
 
   return (
     <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
       <UserAvatar name={name} email={email} image={image} size="lg" />
 
       <div className="flex min-w-0 flex-col gap-3">
-        <form action={uploadAction} className="flex flex-wrap items-center gap-2">
-          <input
-            ref={inputRef}
-            type="file"
-            name="avatar"
-            accept="image/jpeg,image/png,image/webp"
-            className="sr-only"
-            onChange={(e) => {
-              if (e.currentTarget.files?.length) {
-                e.currentTarget.form?.requestSubmit();
-              }
-            }}
-          />
-          <button
-            type="button"
-            disabled={uploading || removing}
-            onClick={() => inputRef.current?.click()}
-            className="rounded-full bg-amber px-4 py-2 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60"
-          >
-            {uploading ? "Uploading…" : image ? "Change photo" : "Upload photo"}
-          </button>
-        </form>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="sr-only"
+          onChange={(e) => {
+            onFilePicked(e.currentTarget.files?.[0]);
+          }}
+        />
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
+          className="w-fit rounded-full bg-amber px-4 py-2 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60"
+        >
+          {uploading ? "Uploading…" : image ? "Change photo" : "Upload photo"}
+        </button>
 
         {image ? (
           <form action={removeAction}>
             <button
               type="submit"
-              disabled={uploading || removing}
+              disabled={busy}
               className="rounded-full border border-cream/20 px-4 py-2 text-sm text-cream/70 transition-colors hover:border-cream/40 hover:text-cream disabled:opacity-60"
             >
               {removing ? "Removing…" : "Remove photo"}
@@ -176,7 +224,9 @@ export function AvatarForm({ name, email, image }: AvatarFormProps) {
           </form>
         ) : null}
 
-        <p className="text-xs text-cream/40">JPEG, PNG, or WebP · max 2 MB</p>
+        <p className="text-xs text-cream/40">
+          JPEG, PNG, or WebP · crop to a circle · saved as JPEG
+        </p>
 
         {message ? (
           <p
@@ -187,6 +237,13 @@ export function AvatarForm({ name, email, image }: AvatarFormProps) {
           </p>
         ) : null}
       </div>
+
+      <AvatarCropModal
+        imageSrc={cropSrc ?? ""}
+        open={Boolean(cropSrc)}
+        onCancel={clearPreview}
+        onCropped={onCropped}
+      />
     </div>
   );
 }
