@@ -3,11 +3,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
-import { SaveListButtons } from "@/components/save-list-buttons";
 import { FavoriteMetaForm } from "@/components/favorite-meta-form";
-import { prisma } from "@/lib/prisma";
+import { MovieRow } from "@/components/movie-row";
+import { SaveListButtons } from "@/components/save-list-buttons";
 import { TrailerButton } from "@/components/trailer-button";
-import { backdropUrl, getMovie, getMovieTrailerKey, posterUrl } from "@/lib/tmdb";
+import { prisma } from "@/lib/prisma";
+import {
+  backdropUrl,
+  getMovie,
+  getMovieTrailerKey,
+  getSimilarMovies,
+  posterUrl,
+} from "@/lib/tmdb";
 
 /**
  * Dynamic route: folder name `[id]` → URL `/movie/550`
@@ -37,9 +44,10 @@ export default async function MoviePage({ params }: MoviePageProps) {
 
   const session = await auth();
   const userId = session?.user?.id;
-  const [favorite, watchlistItem] = userId
-    ? await Promise.all([
-        prisma.favorite.findUnique({
+
+  const [favorite, watchlistItem, trailerKey, similar] = await Promise.all([
+    userId
+      ? prisma.favorite.findUnique({
           where: {
             userId_movieId_listType: {
               userId,
@@ -47,8 +55,10 @@ export default async function MoviePage({ params }: MoviePageProps) {
               listType: "favorite",
             },
           },
-        }),
-        prisma.favorite.findUnique({
+        })
+      : Promise.resolve(null),
+    userId
+      ? prisma.favorite.findUnique({
           where: {
             userId_movieId_listType: {
               userId,
@@ -56,11 +66,12 @@ export default async function MoviePage({ params }: MoviePageProps) {
               listType: "watchlist",
             },
           },
-        }),
-      ])
-    : [null, null];
+        })
+      : Promise.resolve(null),
+    getMovieTrailerKey(movie.id),
+    getSimilarMovies(movie.id, 20),
+  ]);
 
-  const trailerKey = await getMovieTrailerKey(movie.id);
   const poster = posterUrl(movie.poster_path, "w500");
   const backdrop = backdropUrl(movie.backdrop_path);
   const year = movie.release_date?.slice(0, 4);
@@ -88,7 +99,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
         <div className="film-grain absolute inset-0" />
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pt-8 pb-16 sm:flex-row sm:items-end sm:gap-8 sm:px-8 sm:pt-10 sm:pb-24">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pt-8 pb-12 sm:flex-row sm:items-end sm:gap-8 sm:px-8 sm:pt-10 sm:pb-16">
         <div className="relative mx-auto aspect-2/3 w-40 shrink-0 overflow-hidden rounded-lg bg-stage shadow-[0_16px_48px_-16px_rgba(0,0,0,0.8)] ring-1 ring-cream/15 sm:mx-0 sm:w-56">
           {poster ? (
             <Image
@@ -184,6 +195,17 @@ export default async function MoviePage({ params }: MoviePageProps) {
           ) : null}
         </div>
       </div>
+
+      {similar.length > 0 ? (
+        <section className="relative z-10 border-t border-cream/8 bg-background pt-12 pb-16 sm:pt-14 sm:pb-20">
+          <MovieRow
+            id="similar"
+            title="More like this"
+            subtitle={`Titles related to ${movie.title}`}
+            movies={similar}
+          />
+        </section>
+      ) : null}
     </main>
   );
 }

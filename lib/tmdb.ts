@@ -321,6 +321,38 @@ export async function getMovieTrailerKey(
 }
 
 /**
+ * Movies similar to a title (TMDB “similar”).
+ * Falls back to recommendations when similar is empty.
+ * TMDB: GET /movie/{id}/similar · GET /movie/{id}/recommendations
+ */
+export async function getSimilarMovies(
+  id: string | number,
+  limit = 20,
+): Promise<TmdbMovie[]> {
+  const movieId = Number(id);
+
+  async function fetchList(path: "similar" | "recommendations") {
+    const url = new URL(`${getBaseUrl()}/movie/${id}/${path}`);
+    url.searchParams.set("api_key", getApiKey());
+    url.searchParams.set("page", "1");
+
+    const res = await tmdbFetch(url.toString(), 3600);
+    if (res.status === 404) return [] as TmdbMovie[];
+    if (!res.ok) {
+      throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    }
+    const data = (await res.json()) as PaginatedMoviesResponse;
+    return data.results.filter((m) => m.id !== movieId);
+  }
+
+  const similar = await fetchList("similar");
+  if (similar.length > 0) return similar.slice(0, limit);
+
+  const recommended = await fetchList("recommendations");
+  return recommended.slice(0, limit);
+}
+
+/**
  * Official movie genre list (Action, Comedy, …).
  * TMDB: GET /genre/movie/list
  */
