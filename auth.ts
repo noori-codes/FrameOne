@@ -58,25 +58,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
+        // JWT fields first — never block the whole page on a slow/cold Neon wake
+        if (typeof token.name === "string") session.user.name = token.name;
+        if (typeof token.email === "string") session.user.email = token.email;
+        if (typeof token.picture === "string") {
+          session.user.image = token.picture;
+        }
 
-        // Prefer live DB values; never let a DB/schema blip kill the whole session
-        // (that surfaces as JWTSessionError and hides the header profile).
         try {
-          const dbUser = await prisma.user.findUnique({
-            where: { id: token.sub },
-            select: { name: true, email: true, image: true },
-          });
+          const dbUser = await Promise.race([
+            prisma.user.findUnique({
+              where: { id: token.sub },
+              select: { name: true, email: true, image: true },
+            }),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
+          ]);
           if (dbUser) {
             session.user.name = dbUser.name;
             session.user.email = dbUser.email;
             session.user.image = dbUser.image;
           }
         } catch {
-          if (typeof token.name === "string") session.user.name = token.name;
-          if (typeof token.email === "string") session.user.email = token.email;
-          if (typeof token.picture === "string") {
-            session.user.image = token.picture;
-          }
+          // Keep JWT values
         }
       }
       return session;

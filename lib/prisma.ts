@@ -1,46 +1,45 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
+import { PrismaNeon } from "@prisma/adapter-neon";
+import { neonConfig } from "@neondatabase/serverless";
 import { PrismaClient } from "@/lib/generated/prisma/client";
+import ws from "ws";
 
 /**
- * Prisma 7 + Neon Postgres.
- * App runtime prefers the pooled URL (DATABASE_URL_POOLED) for serverless-friendly
- * connections; migrations use the direct DATABASE_URL via prisma.config.ts.
+ * Prisma 7 + Neon serverless.
  *
- * Bump PRISMA_SCHEMA_VERSION when the schema changes so the Next.js global
- * cache discards a stale client.
+ * PrismaNeon takes PoolConfig `{ connectionString }`, NOT a Pool instance.
+ * Passing a Pool made the driver dial 127.0.0.1:443 → ECONNREFUSED and a
+ * blank `{ clientVersion }` error on /profile.
  */
-const PRISMA_SCHEMA_VERSION = 5; // v5: Neon Postgres adapter
+const PRISMA_SCHEMA_VERSION = 10; // v10: PrismaNeon(PoolConfig) fix
+
+// Node needs an explicit WebSocket implementation for Neon WS
+neonConfig.webSocketConstructor = ws;
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
-  prismaPool: Pool | undefined;
   prismaSchemaVersion?: number;
 };
 
+function sanitizeNeonUrl(raw: string) {
+  const url = new URL(raw);
+  url.searchParams.delete("channel_binding");
+  return url.toString();
+}
+
 function databaseUrl() {
-  const url =
+  const raw =
     process.env.DATABASE_URL_POOLED?.trim() ||
     process.env.DATABASE_URL?.trim();
-  if (!url) {
+  if (!raw) {
     throw new Error(
       "Missing DATABASE_URL (or DATABASE_URL_POOLED). Add it to .env.local.",
     );
   }
-  return url;
+  return sanitizeNeonUrl(raw);
 }
 
 function createPrismaClient() {
-  const pool =
-    globalForPrisma.prismaPool ??
-    new Pool({
-      connectionString: databaseUrl(),
-      // Neon pooler + serverless: keep the pool small in the app process
-      max: 10,
-    });
-  globalForPrisma.prismaPool = pool;
-
-  const adapter = new PrismaPg(pool);
+  const adapter = new PrismaNeon({ connectionString: databaseUrl() });
   return new PrismaClient({ adapter });
 }
 
