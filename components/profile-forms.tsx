@@ -91,7 +91,7 @@ export function UpdateNameForm({ defaultName }: { defaultName: string }) {
         <button
           type="submit"
           disabled={pending}
-          className="min-h-11 rounded-full bg-amber px-5 py-2 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60 sm:min-h-0 sm:px-4 sm:py-1.5"
+          className="min-h-11 rounded-full bg-amber px-5 py-2 text-sm font-medium text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60 sm:min-h-0 sm:px-4 sm:py-1.5"
         >
           {pending ? "Saving…" : "Save"}
         </button>

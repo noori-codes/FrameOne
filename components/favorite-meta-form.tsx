@@ -78,7 +78,7 @@ export function FavoriteMetaForm({
       <button
         type="submit"
         disabled={pending}
-        className="w-fit rounded-full bg-amber px-4 py-2 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60"
+        className="w-fit rounded-full bg-amber px-4 py-2 text-sm font-medium text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60"
       >
         {pending ? "Saving…" : "Save"}
       </button>

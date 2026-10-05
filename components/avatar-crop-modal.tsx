@@ -157,7 +157,7 @@ function CropBody({ imageSrc, onCancel, onCropped }: CropBodyProps) {
             type="button"
             disabled={saving || !croppedArea}
             onClick={handleSave}
-            className="min-h-11 flex-1 rounded-full bg-amber px-4 py-2.5 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60 sm:min-h-0 sm:flex-none sm:py-2"
+            className="min-h-11 flex-1 rounded-full bg-amber px-4 py-2.5 text-sm font-medium text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60 sm:min-h-0 sm:flex-none sm:py-2"
           >
             {saving ? "Saving…" : "Use photo"}
           </button>

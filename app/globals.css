@@ -1,13 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  /* Cinema palette — charcoal stage + warm amber accent */
-  --background: #0c0b0a;
-  --foreground: #f3efe6;
-  --cream: #f3efe6;
-  --amber: #e8a54b;
-  --amber-dim: #b87a2e;
-  --stage: #161412;
+  /* Cinema palette — deep ink stage + electric teal accent */
+  --background: #070a0b;
+  --foreground: #eaf4f2;
+  --cream: #eaf4f2;
+  --amber: #2fe6c8;
+  --amber-dim: #1ab89e;
+  --on-amber: #041210;
+  --stage: #101617;
   --vignette: rgba(0, 0, 0, 0.65);
 }
 
@@ -27,7 +28,7 @@ body {
   font-family: var(--font-body), system-ui, sans-serif;
 }
 
-/* Site-wide scrollbars — thin, stage track + amber thumb */
+/* Site-wide scrollbars — thin, stage track + teal thumb */
 * {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--amber) 55%, transparent) var(--stage);
@@ -43,7 +44,7 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--amber) 50%, #3a2a18);
+  background: color-mix(in srgb, var(--amber) 45%, #0d3d36);
   border-radius: 999px;
   border: 2px solid var(--stage);
 }
@@ -172,4 +173,3 @@ body {
     opacity: 1;
   }
 }
-

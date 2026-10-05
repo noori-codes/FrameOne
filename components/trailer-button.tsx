@@ -119,7 +119,7 @@ export function TrailerButton({
         className={cn(
           "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors",
           variant === "primary"
-            ? "bg-amber text-[#1a1208] hover:bg-(--amber-dim) hover:text-cream"
+            ? "bg-amber text-[color:var(--on-amber)] hover:bg-(--amber-dim) hover:text-cream"
             : "border border-cream/30 bg-black/20 text-cream/85 backdrop-blur-sm hover:border-cream/50 hover:text-cream",
           className,
         )}

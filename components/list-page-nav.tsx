@@ -14,7 +14,7 @@ export function ListPageNav({ active }: ListPageNavProps) {
         className={cn(
           "rounded-full px-3.5 py-1.5 text-sm transition-colors",
           active === "favorites"
-            ? "bg-amber text-[#1a1208]"
+            ? "bg-amber text-[color:var(--on-amber)]"
             : "border border-cream/15 text-cream/60 hover:border-amber/50 hover:text-amber",
         )}
         aria-current={active === "favorites" ? "page" : undefined}
@@ -26,7 +26,7 @@ export function ListPageNav({ active }: ListPageNavProps) {
         className={cn(
           "rounded-full px-3.5 py-1.5 text-sm transition-colors",
           active === "watchlist"
-            ? "bg-amber text-[#1a1208]"
+            ? "bg-amber text-[color:var(--on-amber)]"
             : "border border-cream/15 text-cream/60 hover:border-amber/50 hover:text-amber",
         )}
         aria-current={active === "watchlist" ? "page" : undefined}
