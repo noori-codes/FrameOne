@@ -1,31 +1,46 @@
-import path from "node:path";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 import { PrismaClient } from "@/lib/generated/prisma/client";
 
 /**
- * Prisma 7 needs a "driver adapter" to talk to the database.
- * better-sqlite3 reads/writes the local .db file on your disk.
+ * Prisma 7 + Neon Postgres.
+ * App runtime prefers the pooled URL (DATABASE_URL_POOLED) for serverless-friendly
+ * connections; migrations use the direct DATABASE_URL via prisma.config.ts.
  *
- * timestampFormat: our existing prisma/dev.db was created with Prisma 6,
- * which stored dates as unix ms — keep that format so old rows still work.
- *
- * In Next.js dev, a global cache avoids opening too many connections on hot reload.
- * Bump PRISMA_SCHEMA_VERSION whenever the schema gains fields/models so the
- * cached client is discarded (otherwise you get “Unknown argument …” errors).
+ * Bump PRISMA_SCHEMA_VERSION when the schema changes so the Next.js global
+ * cache discards a stale client.
  */
-const PRISMA_SCHEMA_VERSION = 4; // v4: force reload after User.image generate
+const PRISMA_SCHEMA_VERSION = 5; // v5: Neon Postgres adapter
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
+  prismaPool: Pool | undefined;
   prismaSchemaVersion?: number;
 };
 
+function databaseUrl() {
+  const url =
+    process.env.DATABASE_URL_POOLED?.trim() ||
+    process.env.DATABASE_URL?.trim();
+  if (!url) {
+    throw new Error(
+      "Missing DATABASE_URL (or DATABASE_URL_POOLED). Add it to .env.local.",
+    );
+  }
+  return url;
+}
+
 function createPrismaClient() {
-  const dbPath = path.join(process.cwd(), "prisma", "dev.db");
-  const adapter = new PrismaBetterSqlite3(
-    { url: `file:${dbPath}` },
-    { timestampFormat: "unixepoch-ms" },
-  );
+  const pool =
+    globalForPrisma.prismaPool ??
+    new Pool({
+      connectionString: databaseUrl(),
+      // Neon pooler + serverless: keep the pool small in the app process
+      max: 10,
+    });
+  globalForPrisma.prismaPool = pool;
+
+  const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });
 }
 

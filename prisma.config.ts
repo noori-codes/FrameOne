@@ -1,9 +1,13 @@
-import "dotenv/config";
+import { config } from "dotenv";
 import { defineConfig, env } from "prisma/config";
+
+// Next.js keeps secrets in .env.local; Prisma CLI needs them too.
+config({ path: ".env.local" });
+config();
 
 /**
  * Prisma 7 CLI config (migrate, generate, studio).
- * The connection string is here — not in schema.prisma anymore.
+ * Use the direct (non-pooled) Neon URL for migrations.
  */
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -11,7 +15,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    // Relative to project root → prisma/dev.db
     url: env("DATABASE_URL"),
   },
 });
