@@ -62,10 +62,27 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
         }
       }
 
+      // DB wiped / user deleted — kill the JWT so ghost "signed in" goes away
+      if (token.sub) {
+        try {
+          const exists = await prisma.user.findUnique({
+            where: { id: token.sub },
+            select: { id: true },
+          });
+          if (!exists) return null;
+        } catch {
+          // Keep token if DB is briefly unreachable
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
-      if (session.user && token.sub) {
+      if (!token?.sub) {
+        return { ...session, user: undefined as never };
+      }
+
+      if (session.user) {
         session.user.id = token.sub;
         if (typeof token.name === "string") session.user.name = token.name;
         if (typeof token.email === "string") session.user.email = token.email;
@@ -77,23 +94,23 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
             where: { id: token.sub },
             select: { name: true, email: true, image: true },
           });
-          if (dbUser) {
-            session.user.name = dbUser.name;
-            session.user.email = dbUser.email;
-            // Rewrite legacy public S3 URLs (403) to the app proxy
-            let image = dbUser.image;
-            if (image && !image.startsWith("/api/avatars/")) {
-              image = `/api/avatars/${token.sub}`;
-              // Persist so we don't keep rewriting every request
-              void prisma.user
-                .update({
-                  where: { id: token.sub },
-                  data: { image },
-                })
-                .catch(() => undefined);
-            }
-            session.user.image = image;
+          if (!dbUser) {
+            return { ...session, user: undefined as never };
           }
+
+          session.user.name = dbUser.name;
+          session.user.email = dbUser.email;
+          let image = dbUser.image;
+          if (image && !image.startsWith("/api/avatars/")) {
+            image = `/api/avatars/${token.sub}`;
+            void prisma.user
+              .update({
+                where: { id: token.sub },
+                data: { image },
+              })
+              .catch(() => undefined);
+          }
+          session.user.image = image;
         } catch {
           // Keep JWT values if the database blips
         }
