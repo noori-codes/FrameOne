@@ -1,6 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import {
   changePassword,
   removeAvatar,
@@ -8,6 +14,7 @@ import {
   updateName,
   type ProfileFormState,
 } from "@/app/actions/profile";
+import { Camera } from "lucide-react";
 import { AvatarCropModal } from "@/components/avatar-crop-modal";
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -16,13 +23,49 @@ const passwordInitial: ProfileFormState = {};
 const avatarInitial: ProfileFormState = {};
 
 const fieldClass =
-  "rounded-sm border border-cream/20 bg-stage px-3 py-2 text-cream outline-none focus:border-amber";
+  "w-full rounded-sm border border-cream/20 bg-stage px-3 py-2 text-cream outline-none focus:border-amber";
 
+/** Display name as text with an inline edit control. */
 export function UpdateNameForm({ defaultName }: { defaultName: string }) {
-  const [state, action, pending] = useActionState(updateName, nameInitial);
+  const [editing, setEditing] = useState(false);
+  const [state, action, pending] = useActionState(
+    async (prev: ProfileFormState, formData: FormData) => {
+      const result = await updateName(prev, formData);
+      if (result.success) setEditing(false);
+      return result;
+    },
+    nameInitial,
+  );
+
+  if (!editing) {
+    return (
+      <div className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 sm:justify-start">
+        <p className="text-2xl font-semibold tracking-tight text-cream">
+          {defaultName.trim() || (
+            <span className="font-normal text-cream/40">No display name</span>
+          )}
+        </p>
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="text-sm text-cream/45 transition-colors hover:text-amber"
+        >
+          Edit
+        </button>
+        {state.success ? (
+          <p className="basis-full text-sm text-amber sm:text-left" role="status">
+            {state.success}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
-    <form action={action} className="flex max-w-sm flex-col gap-4">
+    <form
+      action={action}
+      className="mx-auto flex w-full max-w-sm flex-col gap-3 sm:mx-0"
+    >
       <label className="flex flex-col gap-1.5 text-sm text-cream/70">
         Display name
         <input
@@ -30,6 +73,7 @@ export function UpdateNameForm({ defaultName }: { defaultName: string }) {
           type="text"
           defaultValue={defaultName}
           autoComplete="name"
+          autoFocus
           className={fieldClass}
         />
       </label>
@@ -38,27 +82,35 @@ export function UpdateNameForm({ defaultName }: { defaultName: string }) {
           {state.error}
         </p>
       ) : null}
-      {state.success ? (
-        <p className="text-sm text-amber" role="status">
-          {state.success}
-        </p>
-      ) : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-fit rounded-sm bg-amber px-4 py-2 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60"
-      >
-        {pending ? "Saving…" : "Save name"}
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-full bg-amber px-4 py-1.5 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60"
+        >
+          {pending ? "Saving…" : "Save"}
+        </button>
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => setEditing(false)}
+          className="rounded-full px-3 py-1.5 text-sm text-cream/50 transition-colors hover:text-cream disabled:opacity-60"
+        >
+          Cancel
+        </button>
+      </div>
     </form>
   );
 }
 
 export function ChangePasswordForm() {
-  const [state, action, pending] = useActionState(changePassword, passwordInitial);
+  const [state, action, pending] = useActionState(
+    changePassword,
+    passwordInitial,
+  );
 
   return (
-    <form action={action} className="flex max-w-sm flex-col gap-4">
+    <form action={action} className="flex flex-col gap-4">
       <label className="flex flex-col gap-1.5 text-sm text-cream/70">
         Current password
         <input
@@ -104,7 +156,7 @@ export function ChangePasswordForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-fit rounded-sm border border-cream/25 px-4 py-2 text-sm text-cream transition-colors hover:border-amber hover:text-amber disabled:opacity-60"
+        className="w-fit rounded-full border border-cream/25 px-4 py-2 text-sm text-cream transition-colors hover:border-amber hover:text-amber disabled:opacity-60"
       >
         {pending ? "Updating…" : "Change password"}
       </button>
@@ -118,7 +170,7 @@ type AvatarFormProps = {
   image?: string | null;
 };
 
-/** Pick a photo → crop in a modal → upload JPEG. */
+/** Large photo with glow + hover camera; click opens crop, then uploads. */
 export function AvatarForm({ name, email, image }: AvatarFormProps) {
   const [uploadState, uploadAction, uploading] = useActionState(
     updateAvatar,
@@ -190,43 +242,67 @@ export function AvatarForm({ name, email, image }: AvatarFormProps) {
   const busy = uploading || removing;
 
   return (
-    <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-      <UserAvatar name={name} email={email} image={image} size="lg" />
+    <div className="flex flex-col items-center gap-3 sm:items-start">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="sr-only"
+        onChange={(e) => {
+          onFilePicked(e.currentTarget.files?.[0]);
+        }}
+      />
 
-      <div className="flex min-w-0 flex-col gap-3">
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          className="sr-only"
-          onChange={(e) => {
-            onFilePicked(e.currentTarget.files?.[0]);
-          }}
+      <div className="relative">
+        {/* Soft amber bloom behind the portrait */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -inset-5 rounded-full bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--amber)_28%,transparent),transparent_70%)] blur-md"
         />
+
         <button
           type="button"
           disabled={busy}
           onClick={() => inputRef.current?.click()}
-          className="w-fit rounded-full bg-amber px-4 py-2 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60"
+          aria-label={image ? "Change photo" : "Upload photo"}
+          className="group relative rounded-full outline-none transition-transform duration-300 ease-out hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-amber/60 focus-visible:ring-offset-4 focus-visible:ring-offset-background disabled:opacity-60"
         >
-          {uploading ? "Uploading…" : image ? "Change photo" : "Upload photo"}
+          {/* Outer ring */}
+          <span
+            aria-hidden
+            className="absolute -inset-1 rounded-full bg-linear-to-b from-cream/25 via-amber/20 to-cream/5 opacity-80 transition-opacity group-hover:opacity-100"
+          />
+          <UserAvatar
+            name={name}
+            email={email}
+            image={image}
+            size="xl"
+            className="relative border-cream/10 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)] ring-1 ring-black/40"
+          />
+          {/* Hover camera overlay */}
+          <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-full bg-black/55 opacity-0 backdrop-blur-[2px] transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+            <Camera className="h-5 w-5 text-cream" strokeWidth={1.75} />
+            <span className="text-[11px] font-medium tracking-wide text-cream/90">
+              {uploading ? "Uploading…" : image ? "Edit" : "Add"}
+            </span>
+          </span>
         </button>
+      </div>
 
+      <div className="flex flex-col items-center gap-1.5 sm:items-start">
         {image ? (
           <form action={removeAction}>
             <button
               type="submit"
               disabled={busy}
-              className="rounded-full border border-cream/20 px-4 py-2 text-sm text-cream/70 transition-colors hover:border-cream/40 hover:text-cream disabled:opacity-60"
+              className="text-xs text-cream/35 transition-colors hover:text-cream/65 disabled:opacity-60"
             >
               {removing ? "Removing…" : "Remove photo"}
             </button>
           </form>
-        ) : null}
-
-        <p className="text-xs text-cream/40">
-          JPEG, PNG, or WebP · crop to a circle · saved as JPEG
-        </p>
+        ) : (
+          <p className="text-xs text-cream/35">Click the portrait to add a photo</p>
+        )}
 
         {message ? (
           <p

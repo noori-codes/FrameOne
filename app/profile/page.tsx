@@ -18,49 +18,46 @@ export default async function ProfilePage() {
 
   if (!user) redirect("/signin");
 
+  const memberSince = user.createdAt.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   return (
-    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-8 pb-16">
+    <main className="relative mx-auto flex min-h-dvh w-full max-w-xl flex-col px-6 pt-8 pb-16">
       <h1 className="text-4xl font-semibold tracking-tight text-cream sm:text-5xl">
-        Profile
+        Account
       </h1>
       <p className="mt-2 text-cream/60">Manage your FrameOne account.</p>
 
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold tracking-tight text-cream">
-          Photo
-        </h2>
-        <p className="mt-1 mb-6 text-sm text-cream/50">
-          Shown in the header and on your profile.
-        </p>
-        <AvatarForm name={user.name} email={user.email} image={user.image} />
+      {/* You — identity hero */}
+      <section className="relative mt-10 overflow-hidden rounded-2xl">
+        {/* Stage wash behind the portrait */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_40%,color-mix(in_srgb,var(--amber)_12%,transparent),transparent_55%),linear-gradient(180deg,color-mix(in_srgb,var(--stage)_80%,transparent),transparent)]"
+        />
+
+        <div className="relative flex flex-col items-center gap-6 px-2 py-6 sm:flex-row sm:items-center sm:gap-8 sm:px-4 sm:py-8">
+          <AvatarForm
+            name={user.name}
+            email={user.email}
+            image={user.image}
+          />
+
+          <div className="min-w-0 flex-1 space-y-2 text-center sm:space-y-3 sm:text-left">
+            <UpdateNameForm defaultName={user.name ?? ""} />
+            <p className="truncate text-sm text-cream/55">{user.email}</p>
+            <p className="text-sm text-cream/35">Member since {memberSince}</p>
+          </div>
+        </div>
       </section>
 
-      <dl className="mt-12 space-y-2 border-t border-cream/10 pt-8 text-sm">
-        <div className="flex flex-wrap gap-x-3">
-          <dt className="text-cream/40">Email</dt>
-          <dd className="text-cream/80">{user.email}</dd>
-        </div>
-        <div className="flex flex-wrap gap-x-3">
-          <dt className="text-cream/40">Member since</dt>
-          <dd className="text-cream/80">
-            {user.createdAt.toLocaleDateString()}
-          </dd>
-        </div>
-      </dl>
-
-      <section className="mt-12 border-t border-cream/10 pt-8">
+      {/* Security */}
+      <section className="mt-14 border-t border-cream/10 pt-10">
         <h2 className="text-xl font-semibold tracking-tight text-cream">
-          Display name
-        </h2>
-        <p className="mt-1 mb-6 text-sm text-cream/50">
-          Shown on the home welcome message when set.
-        </p>
-        <UpdateNameForm defaultName={user.name ?? ""} />
-      </section>
-
-      <section className="mt-12 border-t border-cream/10 pt-8">
-        <h2 className="text-xl font-semibold tracking-tight text-cream">
-          Password
+          Security
         </h2>
         <p className="mt-1 mb-6 text-sm text-cream/50">
           Enter your current password, then choose a new one (min 6 characters).
@@ -68,13 +65,8 @@ export default async function ProfilePage() {
         <ChangePasswordForm />
       </section>
 
-      <section className="mt-12 border-t border-cream/10 pt-8">
-        <h2 className="text-xl font-semibold tracking-tight text-cream">
-          Session
-        </h2>
-        <p className="mt-1 mb-6 text-sm text-cream/50">
-          Sign out of FrameOne on this device.
-        </p>
+      {/* Quiet session action */}
+      <div className="mt-14 border-t border-cream/10 pt-8">
         <form
           action={async () => {
             "use server";
@@ -83,12 +75,12 @@ export default async function ProfilePage() {
         >
           <button
             type="submit"
-            className="rounded-full border border-cream/25 px-4 py-2 text-sm text-cream transition-colors hover:border-amber hover:text-amber"
+            className="text-sm text-cream/40 transition-colors hover:text-cream"
           >
             Sign out
           </button>
         </form>
-      </section>
+      </div>
     </main>
   );
 }

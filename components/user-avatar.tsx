@@ -5,7 +5,7 @@ type UserAvatarProps = {
   name?: string | null;
   email?: string | null;
   image?: string | null;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 };
 
@@ -13,6 +13,7 @@ const sizes = {
   sm: { px: 32, className: "h-8 w-8 text-sm" },
   md: { px: 64, className: "h-16 w-16 text-xl" },
   lg: { px: 96, className: "h-24 w-24 text-3xl" },
+  xl: { px: 128, className: "h-32 w-32 text-4xl" },
 } as const;
 
 function userInitial(name?: string | null, email?: string | null) {
