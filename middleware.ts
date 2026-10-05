@@ -23,7 +23,7 @@ export default auth((req) => {
     return NextResponse.redirect(signInUrl);
   }
 
-  // Already signed in — no need to see auth forms
+  // Already signed in — skip auth forms (unless JWT is stale; AUTH_SECRET rotation clears that)
   if (isAuthPage && isLoggedIn) {
     return NextResponse.redirect(new URL("/", req.nextUrl.origin));
   }

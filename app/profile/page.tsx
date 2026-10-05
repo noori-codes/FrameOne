@@ -11,14 +11,29 @@ export default async function ProfilePage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin");
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { email: true, name: true, image: true, createdAt: true },
-  });
+  let user: {
+    email: string;
+    name: string | null;
+    image: string | null;
+    createdAt: Date;
+  } | null = null;
 
-  if (!user) redirect("/signin");
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { email: true, name: true, image: true, createdAt: true },
+    });
+  } catch (err) {
+    console.error("Profile DB error:", err);
+    redirect("/signin");
+  }
 
-  const memberSince = user.createdAt.toLocaleDateString(undefined, {
+  // Neon is empty / user was on old SQLite — kill the ghost session
+  if (!user) {
+    await signOut({ redirectTo: "/signup" });
+  }
+
+  const memberSince = user!.createdAt.toLocaleDateString(undefined, {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -33,7 +48,6 @@ export default async function ProfilePage() {
         Manage your FrameOne account.
       </p>
 
-      {/* You — identity hero */}
       <section className="relative mt-8 overflow-hidden rounded-2xl sm:mt-10">
         <div
           aria-hidden
@@ -42,15 +56,15 @@ export default async function ProfilePage() {
 
         <div className="relative flex flex-col items-center gap-5 px-3 py-6 sm:flex-row sm:items-center sm:gap-8 sm:px-5 sm:py-8">
           <AvatarForm
-            name={user.name}
-            email={user.email}
-            image={user.image}
+            name={user!.name}
+            email={user!.email}
+            image={user!.image}
           />
 
           <div className="min-w-0 w-full flex-1 space-y-2 text-center sm:w-auto sm:space-y-3 sm:text-left">
-            <UpdateNameForm defaultName={user.name ?? ""} />
+            <UpdateNameForm defaultName={user!.name ?? ""} />
             <p className="break-all text-sm text-cream/55 sm:truncate sm:break-normal">
-              {user.email}
+              {user!.email}
             </p>
             <p className="text-xs text-cream/35 sm:text-sm">
               Member since {memberSince}
@@ -59,7 +73,6 @@ export default async function ProfilePage() {
         </div>
       </section>
 
-      {/* Security */}
       <section className="mt-10 border-t border-cream/10 pt-8 sm:mt-14 sm:pt-10">
         <h2 className="text-lg font-semibold tracking-tight text-cream sm:text-xl">
           Security
@@ -70,7 +83,6 @@ export default async function ProfilePage() {
         <ChangePasswordForm />
       </section>
 
-      {/* Quiet session action */}
       <div className="mt-10 border-t border-cream/10 pt-6 text-center sm:mt-14 sm:pt-8 sm:text-left">
         <form
           action={async () => {

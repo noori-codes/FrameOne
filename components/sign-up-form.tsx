@@ -6,33 +6,39 @@ import { signup, type AuthFormState } from "@/app/actions/auth";
 
 const initial: AuthFormState = {};
 
+const fieldClass =
+  "w-full rounded-sm border border-cream/20 bg-stage/80 px-3.5 py-2.5 text-cream outline-none transition-[border-color,box-shadow] placeholder:text-cream/25 focus:border-amber/60 focus:ring-1 focus:ring-amber/40";
+
 export function SignUpForm() {
   const [state, action, pending] = useActionState(signup, initial);
 
   return (
-    <form action={action} className="mt-8 flex w-full max-w-sm flex-col gap-4">
-      <label className="flex flex-col gap-1.5 text-sm text-cream/70">
-        Name (optional)
+    <form action={action} className="flex w-full flex-col gap-5">
+      <label className="flex flex-col gap-1.5 text-sm text-cream/65">
+        Name{" "}
+        <span className="font-normal text-cream/35">(optional)</span>
         <input
           name="name"
           type="text"
           autoComplete="name"
-          className="rounded-sm border border-cream/20 bg-stage px-3 py-2 text-cream outline-none focus:border-amber"
+          placeholder="How we greet you"
+          className={fieldClass}
         />
       </label>
 
-      <label className="flex flex-col gap-1.5 text-sm text-cream/70">
+      <label className="flex flex-col gap-1.5 text-sm text-cream/65">
         Email
         <input
           name="email"
           type="email"
           required
           autoComplete="email"
-          className="rounded-sm border border-cream/20 bg-stage px-3 py-2 text-cream outline-none focus:border-amber"
+          placeholder="you@example.com"
+          className={fieldClass}
         />
       </label>
 
-      <label className="flex flex-col gap-1.5 text-sm text-cream/70">
+      <label className="flex flex-col gap-1.5 text-sm text-cream/65">
         Password
         <input
           name="password"
@@ -40,7 +46,8 @@ export function SignUpForm() {
           required
           minLength={6}
           autoComplete="new-password"
-          className="rounded-sm border border-cream/20 bg-stage px-3 py-2 text-cream outline-none focus:border-amber"
+          placeholder="At least 6 characters"
+          className={fieldClass}
         />
       </label>
 
@@ -53,14 +60,17 @@ export function SignUpForm() {
       <button
         type="submit"
         disabled={pending}
-        className="mt-2 rounded-sm bg-amber px-5 py-2.5 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60"
+        className="mt-1 min-h-11 w-full rounded-full bg-amber px-5 py-2.5 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60"
       >
         {pending ? "Creating account…" : "Create account"}
       </button>
 
-      <p className="text-sm text-cream/50">
+      <p className="text-center text-sm text-cream/45">
         Already have an account?{" "}
-        <Link href="/signin" className="text-amber hover:text-cream">
+        <Link
+          href="/signin"
+          className="text-cream/80 transition-colors hover:text-amber"
+        >
           Sign in
         </Link>
       </p>

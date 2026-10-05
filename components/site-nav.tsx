@@ -2,7 +2,7 @@
 
 import { Menu, Search, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { BrandLogo } from "@/components/brand-logo";
 import { UserAvatar } from "@/components/user-avatar";
@@ -29,12 +29,12 @@ const links = [
  */
 export function SiteNav({ user }: SiteNavProps) {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const titleId = useId();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -55,7 +55,7 @@ export function SiteNav({ user }: SiteNavProps) {
   const visibleLinks = links.filter((l) => !("auth" in l && l.auth) || user);
 
   const menu =
-    open && mounted
+    open && isClient
       ? createPortal(
           <div
             className="fixed inset-0 z-50 md:hidden"
