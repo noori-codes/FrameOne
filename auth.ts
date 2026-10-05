@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
  * Auth.js (NextAuth v5) — Node runtime (API routes + Server Components).
  * Middleware uses `auth.config.ts` only so it stays Edge-safe.
  */
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
@@ -45,41 +45,57 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     ...authConfig.callbacks,
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user?.id) {
         token.sub = user.id;
         token.name = user.name;
         token.email = user.email;
-        // Auth.js uses `picture` on the JWT for the avatar URL
         token.picture = user.image ?? token.picture;
       }
+
+      // Profile updates (name / avatar) call unstable_update()
+      if (trigger === "update" && session?.user) {
+        if ("name" in session.user) token.name = session.user.name;
+        if ("image" in session.user) token.picture = session.user.image;
+        if ("email" in session.user && session.user.email) {
+          token.email = session.user.email;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
-        // JWT fields first — never block the whole page on a slow/cold Neon wake
         if (typeof token.name === "string") session.user.name = token.name;
         if (typeof token.email === "string") session.user.email = token.email;
-        if (typeof token.picture === "string") {
-          session.user.image = token.picture;
-        }
+        session.user.image =
+          typeof token.picture === "string" ? token.picture : null;
 
         try {
-          const dbUser = await Promise.race([
-            prisma.user.findUnique({
-              where: { id: token.sub },
-              select: { name: true, email: true, image: true },
-            }),
-            new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
-          ]);
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.sub },
+            select: { name: true, email: true, image: true },
+          });
           if (dbUser) {
             session.user.name = dbUser.name;
             session.user.email = dbUser.email;
-            session.user.image = dbUser.image;
+            // Rewrite legacy public S3 URLs (403) to the app proxy
+            let image = dbUser.image;
+            if (image && !image.startsWith("/api/avatars/")) {
+              image = `/api/avatars/${token.sub}`;
+              // Persist so we don't keep rewriting every request
+              void prisma.user
+                .update({
+                  where: { id: token.sub },
+                  data: { image },
+                })
+                .catch(() => undefined);
+            }
+            session.user.image = image;
           }
         } catch {
-          // Keep JWT values
+          // Keep JWT values if Neon blips
         }
       }
       return session;

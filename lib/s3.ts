@@ -1,5 +1,6 @@
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
@@ -8,6 +9,9 @@ import {
 /**
  * S3-compatible client (works with AWS S3, R2, MinIO, custom endpoints).
  * Credentials come from env — never import this into a Client Component.
+ *
+ * This bucket is private (object ACLs / public-read are ignored), so browsers
+ * must load avatars through `/api/avatars/[userId]`, which streams GetObject.
  */
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -19,10 +23,6 @@ function requireEnv(name: string): string {
 
 function getBucket() {
   return requireEnv("S3_BUCKET");
-}
-
-function getPublicBase() {
-  return requireEnv("S3_PUBLIC_URL").replace(/\/$/, "");
 }
 
 let client: S3Client | null = null;
@@ -37,7 +37,6 @@ function getS3(): S3Client {
       accessKeyId: requireEnv("S3_ACCESS_KEY_ID"),
       secretAccessKey: requireEnv("S3_SECRET_ACCESS_KEY"),
     },
-    // Path-style works with most custom/S3-compatible hosts
     forcePathStyle: true,
   });
 
@@ -49,9 +48,12 @@ export function avatarObjectKey(userId: string, ext: string) {
   return `avatars/${userId}.${ext}`;
 }
 
-/** Public URL served by the bucket CDN / public endpoint. */
-export function avatarPublicUrl(key: string, cacheBust?: number) {
-  const base = `${getPublicBase()}/${key}`;
+/**
+ * Same-origin URL served by app/api/avatars/[userId].
+ * Prefer this over the raw S3 public URL — the bucket is not anonymously readable.
+ */
+export function avatarAppUrl(userId: string, cacheBust?: number) {
+  const base = `/api/avatars/${userId}`;
   return cacheBust ? `${base}?v=${cacheBust}` : base;
 }
 
@@ -73,6 +75,43 @@ export async function uploadAvatarObject(
   return key;
 }
 
+/** Find the stored object key for a user (avatars/{userId}.*). */
+export async function findUserAvatarKey(userId: string) {
+  const listed = await getS3().send(
+    new ListObjectsV2Command({
+      Bucket: getBucket(),
+      Prefix: `avatars/${userId}.`,
+      MaxKeys: 5,
+    }),
+  );
+
+  return (
+    listed.Contents?.map((obj) => obj.Key).find(
+      (key): key is string => Boolean(key),
+    ) ?? null
+  );
+}
+
+/** Stream avatar bytes from S3 (authenticated). */
+export async function getAvatarObject(key: string) {
+  const result = await getS3().send(
+    new GetObjectCommand({
+      Bucket: getBucket(),
+      Key: key,
+    }),
+  );
+
+  if (!result.Body) {
+    return null;
+  }
+
+  const bytes = Buffer.from(await result.Body.transformToByteArray());
+  return {
+    bytes,
+    contentType: result.ContentType ?? "application/octet-stream",
+  };
+}
+
 /** Delete every object under avatars/{userId}.* */
 export async function deleteUserAvatarObjects(userId: string) {
   const s3 = getS3();
@@ -92,7 +131,9 @@ export async function deleteUserAvatarObjects(userId: string) {
 
   await Promise.all(
     keys.map((Key) =>
-      s3.send(new DeleteObjectCommand({ Bucket: bucket, Key })).catch(() => undefined),
+      s3
+        .send(new DeleteObjectCommand({ Bucket: bucket, Key }))
+        .catch(() => undefined),
     ),
   );
 }

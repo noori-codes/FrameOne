@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 type UserAvatarProps = {
@@ -23,6 +26,7 @@ function userInitial(name?: string | null, email?: string | null) {
 
 /**
  * Circular avatar — photo when set, otherwise first letter of name/email.
+ * Falls back to the initial if the image URL 403s / fails to load.
  */
 export function UserAvatar({
   name,
@@ -33,6 +37,8 @@ export function UserAvatar({
 }: UserAvatarProps) {
   const { px, className: sizeClass } = sizes[size];
   const initial = userInitial(name, email);
+  const [brokenSrc, setBrokenSrc] = useState<string | null>(null);
+  const showImage = Boolean(image) && image !== brokenSrc;
 
   return (
     <span
@@ -42,14 +48,16 @@ export function UserAvatar({
         className,
       )}
     >
-      {image ? (
+      {showImage ? (
         <Image
-          src={image}
+          key={image}
+          src={image!}
           alt=""
           width={px}
           height={px}
           unoptimized
           className="h-full w-full object-cover"
+          onError={() => setBrokenSrc(image!)}
         />
       ) : (
         <span aria-hidden>{initial}</span>

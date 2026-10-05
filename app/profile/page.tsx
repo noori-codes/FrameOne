@@ -8,7 +8,12 @@ import {
 import { prisma } from "@/lib/prisma";
 
 export default async function ProfilePage() {
-  const session = await auth();
+  let session;
+  try {
+    session = await auth();
+  } catch {
+    redirect("/signin");
+  }
   if (!session?.user?.id) redirect("/signin");
 
   let user: {
@@ -31,6 +36,18 @@ export default async function ProfilePage() {
   // Neon is empty / user was on old SQLite — kill the ghost session
   if (!user) {
     await signOut({ redirectTo: "/signup" });
+  }
+
+  // Old direct S3 URLs 403 in the browser — rewrite to the app proxy
+  let image = user!.image;
+  if (image && !image.startsWith("/api/avatars/")) {
+    image = `/api/avatars/${session.user.id}?v=${Date.now()}`;
+    await prisma.user
+      .update({
+        where: { id: session.user.id },
+        data: { image },
+      })
+      .catch(() => undefined);
   }
 
   const memberSince = user!.createdAt.toLocaleDateString(undefined, {
@@ -58,7 +75,7 @@ export default async function ProfilePage() {
           <AvatarForm
             name={user!.name}
             email={user!.email}
-            image={user!.image}
+            image={image}
           />
 
           <div className="min-w-0 w-full flex-1 space-y-2 text-center sm:w-auto sm:space-y-3 sm:text-left">

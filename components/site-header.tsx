@@ -9,12 +9,9 @@ import { SiteNav } from "@/components/site-nav";
 export async function SiteHeader() {
   let session: Session | null = null;
   try {
-    session = (await Promise.race([
-      auth(),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
-    ])) as Session | null;
+    session = (await auth()) as Session | null;
   } catch {
-    // Bad/expired session cookie — show signed-out chrome instead of crashing
+    // Bad/expired session cookie (e.g. AUTH_SECRET rotated) — signed-out chrome
     session = null;
   }
 

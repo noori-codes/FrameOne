@@ -2,11 +2,11 @@
 
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
+import { auth, unstable_update } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import {
+  avatarAppUrl,
   avatarObjectKey,
-  avatarPublicUrl,
   deleteUserAvatarObjects,
   uploadAvatarObject,
 } from "@/lib/s3";
@@ -41,12 +41,14 @@ export async function updateName(
     return { error: "You must be signed in." };
   }
 
-  const name = String(formData.get("name") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim() || null;
 
   await prisma.user.update({
     where: { id: userId },
-    data: { name: name || null },
+    data: { name },
   });
+
+  await unstable_update({ user: { name } });
 
   revalidatePath("/profile");
   revalidatePath("/");
@@ -100,7 +102,7 @@ export async function changePassword(
   return { success: "Password changed." };
 }
 
-/** Upload a JPEG/PNG/WebP avatar (max 2 MB) to S3. */
+/** Upload a JPEG/PNG/WebP avatar (max 2 MB) to S3; serve via /api/avatars. */
 export async function updateAvatar(
   _prev: ProfileFormState,
   formData: FormData,
@@ -123,6 +125,7 @@ export async function updateAvatar(
     return { error: "Use a JPEG, PNG, or WebP image." };
   }
 
+  let image: string;
   try {
     await deleteUserAvatarObjects(userId);
 
@@ -130,16 +133,18 @@ export async function updateAvatar(
     const buffer = Buffer.from(await file.arrayBuffer());
     await uploadAvatarObject(key, buffer, file.type);
 
-    // cache-bust so the header updates immediately after upload
-    const image = avatarPublicUrl(key, Date.now());
+    // Same-origin proxy — bucket objects are not anonymously readable
+    image = avatarAppUrl(userId, Date.now());
 
     await prisma.user.update({
       where: { id: userId },
       data: { image },
     });
+
+    await unstable_update({ user: { image } });
   } catch (err) {
     console.error("Avatar upload failed:", err);
-    return { error: "Could not upload photo. Check S3 settings and try again." };
+    return { error: "Could not upload photo. Try again." };
   }
 
   revalidatePath("/profile");
@@ -168,6 +173,8 @@ export async function removeAvatar(
     where: { id: userId },
     data: { image: null },
   });
+
+  await unstable_update({ user: { image: null } });
 
   revalidatePath("/profile");
   revalidatePath("/");

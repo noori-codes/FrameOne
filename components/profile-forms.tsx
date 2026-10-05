@@ -7,6 +7,7 @@ import {
   useState,
   useTransition,
 } from "react";
+import { useRouter } from "next/navigation";
 import {
   changePassword,
   removeAvatar,
@@ -27,11 +28,15 @@ const fieldClass =
 
 /** Display name as text with an inline edit control. */
 export function UpdateNameForm({ defaultName }: { defaultName: string }) {
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [state, action, pending] = useActionState(
     async (prev: ProfileFormState, formData: FormData) => {
       const result = await updateName(prev, formData);
-      if (result.success) setEditing(false);
+      if (result.success) {
+        setEditing(false);
+        router.refresh();
+      }
       return result;
     },
     nameInitial,
@@ -172,6 +177,7 @@ type AvatarFormProps = {
 
 /** Large photo with glow + hover camera; click opens crop, then uploads. */
 export function AvatarForm({ name, email, image }: AvatarFormProps) {
+  const router = useRouter();
   const [uploadState, uploadAction, uploading] = useActionState(
     updateAvatar,
     avatarInitial,
@@ -192,6 +198,13 @@ export function AvatarForm({ name, email, image }: AvatarFormProps) {
       if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
     };
   }, []);
+
+  // Keep header + portrait in sync after upload/remove
+  useEffect(() => {
+    if (uploadState.success || removeState.success) {
+      router.refresh();
+    }
+  }, [uploadState.success, removeState.success, router]);
 
   const clearPreview = () => {
     if (previewUrlRef.current) {
