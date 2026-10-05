@@ -40,7 +40,7 @@ export function UpdateNameForm({ defaultName }: { defaultName: string }) {
   if (!editing) {
     return (
       <div className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 sm:justify-start">
-        <p className="text-2xl font-semibold tracking-tight text-cream">
+        <p className="max-w-full text-xl font-semibold tracking-tight wrap-break-word text-cream sm:text-2xl">
           {defaultName.trim() || (
             <span className="font-normal text-cream/40">No display name</span>
           )}
@@ -48,7 +48,7 @@ export function UpdateNameForm({ defaultName }: { defaultName: string }) {
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="text-sm text-cream/45 transition-colors hover:text-amber"
+          className="min-h-11 shrink-0 px-1 text-sm text-cream/45 transition-colors hover:text-amber sm:min-h-0 sm:px-0"
         >
           Edit
         </button>
@@ -82,11 +82,11 @@ export function UpdateNameForm({ defaultName }: { defaultName: string }) {
           {state.error}
         </p>
       ) : null}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
         <button
           type="submit"
           disabled={pending}
-          className="rounded-full bg-amber px-4 py-1.5 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60"
+          className="min-h-11 rounded-full bg-amber px-5 py-2 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60 sm:min-h-0 sm:px-4 sm:py-1.5"
         >
           {pending ? "Saving…" : "Save"}
         </button>
@@ -94,7 +94,7 @@ export function UpdateNameForm({ defaultName }: { defaultName: string }) {
           type="button"
           disabled={pending}
           onClick={() => setEditing(false)}
-          className="rounded-full px-3 py-1.5 text-sm text-cream/50 transition-colors hover:text-cream disabled:opacity-60"
+          className="min-h-11 rounded-full px-4 py-2 text-sm text-cream/50 transition-colors hover:text-cream disabled:opacity-60 sm:min-h-0 sm:px-3 sm:py-1.5"
         >
           Cancel
         </button>
@@ -156,7 +156,7 @@ export function ChangePasswordForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-fit rounded-full border border-cream/25 px-4 py-2 text-sm text-cream transition-colors hover:border-amber hover:text-amber disabled:opacity-60"
+        className="min-h-11 w-full rounded-full border border-cream/25 px-4 py-2.5 text-sm text-cream transition-colors hover:border-amber hover:text-amber disabled:opacity-60 sm:min-h-0 sm:w-fit sm:py-2"
       >
         {pending ? "Updating…" : "Change password"}
       </button>
@@ -242,7 +242,7 @@ export function AvatarForm({ name, email, image }: AvatarFormProps) {
   const busy = uploading || removing;
 
   return (
-    <div className="flex flex-col items-center gap-3 sm:items-start">
+    <div className="flex w-full shrink-0 flex-col items-center gap-3 sm:items-start">
       <input
         ref={inputRef}
         type="file"
@@ -257,7 +257,7 @@ export function AvatarForm({ name, email, image }: AvatarFormProps) {
         {/* Soft amber bloom behind the portrait */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -inset-5 rounded-full bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--amber)_28%,transparent),transparent_70%)] blur-md"
+          className="pointer-events-none absolute -inset-3 rounded-full bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--amber)_28%,transparent),transparent_70%)] blur-md sm:-inset-5"
         />
 
         <button
@@ -265,7 +265,7 @@ export function AvatarForm({ name, email, image }: AvatarFormProps) {
           disabled={busy}
           onClick={() => inputRef.current?.click()}
           aria-label={image ? "Change photo" : "Upload photo"}
-          className="group relative rounded-full outline-none transition-transform duration-300 ease-out hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-amber/60 focus-visible:ring-offset-4 focus-visible:ring-offset-background disabled:opacity-60"
+          className="group relative rounded-full outline-none transition-transform duration-300 ease-out active:scale-[0.98] hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-amber/60 focus-visible:ring-offset-4 focus-visible:ring-offset-background disabled:opacity-60"
         >
           {/* Outer ring */}
           <span
@@ -279,8 +279,8 @@ export function AvatarForm({ name, email, image }: AvatarFormProps) {
             size="xl"
             className="relative border-cream/10 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)] ring-1 ring-black/40"
           />
-          {/* Hover camera overlay */}
-          <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-full bg-black/55 opacity-0 backdrop-blur-[2px] transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+          {/* Always visible on touch; hover-reveal on fine pointers */}
+          <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-full bg-black/50 opacity-100 backdrop-blur-[2px] transition-opacity duration-200 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-visible:opacity-100">
             <Camera className="h-5 w-5 text-cream" strokeWidth={1.75} />
             <span className="text-[11px] font-medium tracking-wide text-cream/90">
               {uploading ? "Uploading…" : image ? "Edit" : "Add"}
@@ -289,19 +289,19 @@ export function AvatarForm({ name, email, image }: AvatarFormProps) {
         </button>
       </div>
 
-      <div className="flex flex-col items-center gap-1.5 sm:items-start">
+      <div className="flex max-w-[16rem] flex-col items-center gap-1.5 text-center sm:max-w-none sm:items-start sm:text-left">
         {image ? (
           <form action={removeAction}>
             <button
               type="submit"
               disabled={busy}
-              className="text-xs text-cream/35 transition-colors hover:text-cream/65 disabled:opacity-60"
+              className="min-h-10 px-2 text-xs text-cream/35 transition-colors hover:text-cream/65 disabled:opacity-60 sm:min-h-0 sm:px-0"
             >
               {removing ? "Removing…" : "Remove photo"}
             </button>
           </form>
         ) : (
-          <p className="text-xs text-cream/35">Click the portrait to add a photo</p>
+          <p className="text-xs text-cream/35">Tap the portrait to add a photo</p>
         )}
 
         {message ? (

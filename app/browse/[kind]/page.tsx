@@ -65,7 +65,7 @@ export default async function BrowsePage({
   const { totalPages, totalResults } = moviesPage;
 
   return (
-    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-10 pb-20 sm:px-8">
+    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-4 pt-8 pb-16 sm:px-8 sm:pt-10 sm:pb-20">
       <Link
         href="/"
         className="text-sm text-cream/50 transition-colors hover:text-amber"
@@ -73,7 +73,7 @@ export default async function BrowsePage({
         ← Home
       </Link>
 
-      <h1 className="mt-4 font-display text-5xl tracking-wide text-cream uppercase sm:text-6xl">
+      <h1 className="mt-4 font-display text-4xl tracking-wide wrap-break-word text-cream uppercase sm:text-6xl">
         {meta.title}
       </h1>
       <p className="mt-2 text-sm text-cream/55">

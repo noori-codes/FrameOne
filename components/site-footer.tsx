@@ -9,7 +9,7 @@ export function SiteFooter() {
 
   return (
     <footer className="relative z-10 mt-auto border-t border-cream/10 bg-stage/40">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 sm:px-8 sm:py-14">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:gap-10 sm:px-8 sm:py-14">
         <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-sm space-y-3">
             <Link

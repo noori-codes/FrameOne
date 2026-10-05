@@ -70,7 +70,7 @@ export default async function GenrePage({
 
           <div className="mt-5 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h1 className="text-4xl font-semibold tracking-tight text-cream sm:text-5xl md:text-6xl">
+              <h1 className="text-3xl font-semibold tracking-tight wrap-break-word text-cream sm:text-5xl md:text-6xl">
                 {genre.name}
               </h1>
               <p className="mt-2 text-sm text-cream/50">

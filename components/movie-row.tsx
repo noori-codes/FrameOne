@@ -77,15 +77,15 @@ export function MovieRow({
 
   return (
     <section id={id} aria-label={title} className="space-y-6">
-      <div className="flex items-end justify-between gap-4 px-6 sm:px-8 lg:px-10">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-cream sm:text-3xl md:text-4xl">
+      <div className="flex items-end justify-between gap-3 px-4 sm:gap-4 sm:px-6 lg:px-10">
+        <div className="min-w-0">
+          <h2 className="text-xl font-semibold tracking-tight text-cream sm:text-3xl md:text-4xl">
             {href ? (
               <Link
                 href={href}
-                className="group inline-flex items-center gap-1 text-cream transition-colors duration-200 hover:text-amber"
+                className="group inline-flex max-w-full items-center gap-1 text-cream transition-colors duration-200 hover:text-amber"
               >
-                <span>{title}</span>
+                <span className="truncate">{title}</span>
                 <ChevronRight
                   aria-hidden
                   strokeWidth={2.5}
@@ -103,7 +103,7 @@ export function MovieRow({
           ) : null}
         </div>
 
-        <div className="mb-1 flex shrink-0 items-center gap-2">
+        <div className="mb-0.5 flex shrink-0 items-center gap-1.5 sm:mb-1 sm:gap-2">
           <span
             aria-hidden
             className="hidden h-px w-10 bg-amber/70 sm:block"
@@ -130,21 +130,21 @@ export function MovieRow({
       </div>
 
       <div
-        className="overflow-hidden px-6 pt-2 pb-4 sm:px-8 lg:px-10"
+        className="overflow-hidden px-4 pt-2 pb-4 sm:px-6 lg:px-10"
         ref={emblaRef}
       >
-        <ul className="flex gap-4 sm:gap-5">
+        <ul className="flex gap-3 sm:gap-5">
           {row.map((movie) => (
             <li
               key={movie.id}
-              className="min-w-0 shrink-0 grow-0 basis-34 sm:basis-39 md:basis-44"
+              className="min-w-0 shrink-0 grow-0 basis-30 sm:basis-39 md:basis-44"
             >
               <MovieCard
                 id={movie.id}
                 title={movie.title}
                 posterPath={movie.poster_path}
                 voteAverage={movie.vote_average}
-                sizes="(max-width: 640px) 136px, (max-width: 768px) 156px, 176px"
+                sizes="(max-width: 640px) 120px, (max-width: 768px) 156px, 176px"
               />
             </li>
           ))}

@@ -19,12 +19,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const totalPages = data?.totalPages ?? 0;
 
   return (
-    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pt-10 pb-20 sm:px-8">
-      <h1 className="font-display text-5xl tracking-wide text-cream uppercase sm:text-6xl">
+    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-4 pt-8 pb-16 sm:px-8 sm:pt-10 sm:pb-20">
+      <h1 className="font-display text-4xl tracking-wide text-cream uppercase sm:text-6xl">
         Search
       </h1>
 
-      <form action="/search" method="get" className="mt-8 flex max-w-lg gap-2">
+      <form
+        action="/search"
+        method="get"
+        className="mt-6 flex w-full max-w-lg flex-col gap-2 sm:mt-8 sm:flex-row"
+      >
         <input
           type="search"
           name="q"
@@ -35,7 +39,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         />
         <button
           type="submit"
-          className="rounded-full bg-amber px-5 py-2.5 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream"
+          className="rounded-full bg-amber px-5 py-2.5 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream sm:shrink-0"
         >
           Search
         </button>

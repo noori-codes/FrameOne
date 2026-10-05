@@ -19,30 +19,35 @@ export function PaginationNav({
 
   return (
     <nav
-      className="mt-10 flex items-center justify-between gap-4 border-t border-cream/10 pt-6"
+      className="mt-8 flex items-center justify-between gap-2 border-t border-cream/10 pt-5 sm:mt-10 sm:gap-4 sm:pt-6"
       aria-label="Pagination"
     >
       {prevHref ? (
         <Link
           href={prevHref}
-          className="rounded-full border border-cream/20 px-4 py-1.5 text-sm text-cream transition-colors hover:border-amber hover:text-amber"
+          className="min-h-10 rounded-full border border-cream/20 px-3 py-1.5 text-sm text-cream transition-colors hover:border-amber hover:text-amber sm:px-4"
         >
-          ← Previous
+          <span className="sm:hidden">← Prev</span>
+          <span className="hidden sm:inline">← Previous</span>
         </Link>
       ) : (
-        <span className="px-4 py-1.5 text-sm text-cream/25">← Previous</span>
+        <span className="px-3 py-1.5 text-sm text-cream/25 sm:px-4">
+          <span className="sm:hidden">← Prev</span>
+          <span className="hidden sm:inline">← Previous</span>
+        </span>
       )}
 
-      <p className="text-sm text-cream/50">
-        Page {page} of {totalPages}
+      <p className="shrink-0 text-xs tabular-nums text-cream/50 sm:text-sm">
+        {page} / {totalPages}
       </p>
 
       {nextHref ? (
         <Link
           href={nextHref}
-          className="rounded-full border border-cream/20 px-4 py-1.5 text-sm text-cream transition-colors hover:border-amber hover:text-amber"
+          className="min-h-10 rounded-full border border-cream/20 px-3 py-1.5 text-sm text-cream transition-colors hover:border-amber hover:text-amber sm:px-4"
         >
-          Next →
+          <span className="sm:hidden">Next →</span>
+          <span className="hidden sm:inline">Next →</span>
         </Link>
       ) : (
         <span className="px-3 py-1.5 text-sm text-cream/25">Next →</span>

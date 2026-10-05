@@ -27,7 +27,7 @@ export default async function GenresPage() {
     <main className="relative flex min-h-dvh w-full flex-1 flex-col">
       <div className="border-b border-cream/8 bg-stage/30">
         <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-10">
-          <h1 className="text-4xl font-semibold tracking-tight text-cream sm:text-5xl md:text-6xl">
+          <h1 className="text-3xl font-semibold tracking-tight text-cream sm:text-5xl md:text-6xl">
             Genres
           </h1>
           <p className="mt-3 max-w-lg text-sm text-cream/50 sm:text-base">

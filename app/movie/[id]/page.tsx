@@ -88,14 +88,14 @@ export default async function MoviePage({ params }: MoviePageProps) {
         <div className="film-grain absolute inset-0" />
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 pt-10 pb-20 sm:flex-row sm:items-end sm:px-8 sm:pb-24">
-        <div className="relative mx-auto aspect-2/3 w-48 shrink-0 overflow-hidden rounded-lg bg-stage shadow-[0_16px_48px_-16px_rgba(0,0,0,0.8)] ring-1 ring-cream/15 sm:mx-0 sm:w-56">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pt-8 pb-16 sm:flex-row sm:items-end sm:gap-8 sm:px-8 sm:pt-10 sm:pb-24">
+        <div className="relative mx-auto aspect-2/3 w-40 shrink-0 overflow-hidden rounded-lg bg-stage shadow-[0_16px_48px_-16px_rgba(0,0,0,0.8)] ring-1 ring-cream/15 sm:mx-0 sm:w-56">
           {poster ? (
             <Image
               src={poster}
               alt={movie.title}
               fill
-              sizes="224px"
+              sizes="(max-width: 640px) 160px, 224px"
               className="object-cover"
               priority
               // Bypass /_next/image — TMDB CDN can exceed Next’s 7s upstream timeout
@@ -104,7 +104,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
           ) : null}
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 text-center sm:text-left">
           <Link
             href="/#trending"
             className="text-sm text-cream/50 transition-colors hover:text-amber"
@@ -112,7 +112,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
             ← Back to browse
           </Link>
 
-          <h1 className="mt-4 font-display text-5xl tracking-wide text-cream uppercase sm:text-7xl">
+          <h1 className="mt-4 font-display text-4xl tracking-wide wrap-break-word text-cream uppercase sm:text-6xl md:text-7xl">
             {movie.title}
           </h1>
 
@@ -120,7 +120,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
             <p className="mt-2 text-base text-amber/80 italic">{movie.tagline}</p>
           ) : null}
 
-          <p className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-sm text-cream/55 sm:text-base">
+          <p className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1 text-sm text-cream/55 sm:justify-start sm:text-base">
             {year ? <span>{year}</span> : null}
             {runtime ? <span>{runtime}</span> : null}
             <span className="text-amber">★ {movie.vote_average.toFixed(1)}</span>
@@ -130,7 +130,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
           </p>
 
           {movie.genres.length > 0 ? (
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap justify-center gap-2 sm:justify-start">
               {movie.genres.map((g) => (
                 <Link
                   key={g.id}
@@ -143,17 +143,17 @@ export default async function MoviePage({ params }: MoviePageProps) {
             </div>
           ) : null}
 
-          <p className="mt-6 max-w-2xl text-base leading-relaxed text-cream/70">
+          <p className="mt-6 max-w-2xl text-sm leading-relaxed text-cream/70 sm:mx-0 sm:text-base">
             {movie.overview || "No overview available."}
           </p>
 
           {favorite?.note ? (
-            <p className="mt-4 max-w-md rounded-xl border border-cream/10 bg-black/25 px-4 py-3 text-sm text-cream/65 italic">
+            <p className="mt-4 max-w-md rounded-xl border border-cream/10 bg-black/25 px-4 py-3 text-sm text-cream/65 italic sm:mx-0">
               “{favorite.note}”
             </p>
           ) : null}
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
             <TrailerButton
               youtubeKey={trailerKey}
               title={movie.title}
@@ -161,15 +161,17 @@ export default async function MoviePage({ params }: MoviePageProps) {
             />
           </div>
 
-          <SaveListButtons
-            key={`${movie.id}-${Boolean(favorite)}-${Boolean(watchlistItem)}`}
-            movieId={movie.id}
-            title={movie.title}
-            posterPath={movie.poster_path}
-            initialFavorite={Boolean(favorite)}
-            initialWatchlist={Boolean(watchlistItem)}
-            signedIn={Boolean(session?.user)}
-          />
+          <div className="flex justify-center sm:justify-start">
+            <SaveListButtons
+              key={`${movie.id}-${Boolean(favorite)}-${Boolean(watchlistItem)}`}
+              movieId={movie.id}
+              title={movie.title}
+              posterPath={movie.poster_path}
+              initialFavorite={Boolean(favorite)}
+              initialWatchlist={Boolean(watchlistItem)}
+              signedIn={Boolean(session?.user)}
+            />
+          </div>
 
           {favorite ? (
             <FavoriteMetaForm

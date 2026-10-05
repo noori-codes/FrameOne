@@ -21,7 +21,7 @@ export default async function WatchlistPage() {
         <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h1 className="text-4xl font-semibold tracking-tight text-cream sm:text-5xl md:text-6xl">
+              <h1 className="text-3xl font-semibold tracking-tight text-cream sm:text-5xl md:text-6xl">
                 Watchlist
               </h1>
               <p className="mt-2 text-sm text-cream/50">

@@ -44,6 +44,8 @@ export function BrandLogo({
             "inline-flex items-center font-display leading-none tracking-[0.2em] text-cream uppercase",
             // Bebas sits a hair high in the em-box — nudge to match the mark
             "translate-y-[0.06em]",
+            // Drop the wordmark on very narrow phones so the header doesn’t overflow
+            "max-[380px]:hidden",
             word,
           )}
         >

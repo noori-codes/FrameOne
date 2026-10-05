@@ -98,11 +98,11 @@ function CropBody({ imageSrc, onCancel, onCropped }: CropBodyProps) {
   };
 
   return (
-    <div className="flex w-full max-w-md flex-col overflow-hidden rounded-2xl border border-cream/10 bg-stage shadow-[0_24px_64px_-24px_rgba(0,0,0,0.9)]">
-      <div className="flex items-center justify-between gap-3 border-b border-cream/10 px-5 py-4">
+    <div className="flex max-h-[min(92dvh,40rem)] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-cream/10 bg-stage shadow-[0_24px_64px_-24px_rgba(0,0,0,0.9)] sm:max-h-[min(90dvh,40rem)] sm:rounded-2xl">
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-cream/10 px-4 py-3.5 sm:px-5 sm:py-4">
         <h2
           id="avatar-crop-title"
-          className="text-lg font-semibold tracking-tight text-cream"
+          className="text-base font-semibold tracking-tight text-cream sm:text-lg"
         >
           Edit photo
         </h2>
@@ -110,13 +110,13 @@ function CropBody({ imageSrc, onCancel, onCropped }: CropBodyProps) {
           type="button"
           onClick={onCancel}
           aria-label="Close"
-          className="rounded-full border border-cream/20 p-1.5 text-cream/60 transition-colors hover:border-cream/40 hover:text-cream"
+          className="rounded-full border border-cream/20 p-2 text-cream/60 transition-colors hover:border-cream/40 hover:text-cream sm:p-1.5"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
-      <div className="relative aspect-square w-full bg-background">
+      <div className="relative mx-auto aspect-square w-[min(100%,52dvh)] shrink-0 bg-background sm:w-full sm:max-w-none">
         <Cropper
           image={imageSrc}
           crop={crop}
@@ -130,7 +130,7 @@ function CropBody({ imageSrc, onCancel, onCropped }: CropBodyProps) {
         />
       </div>
 
-      <div className="flex flex-col gap-4 px-5 py-4">
+      <div className="flex shrink-0 flex-col gap-3 px-4 py-4 sm:gap-4 sm:px-5">
         <label className="flex flex-col gap-2 text-sm text-cream/60">
           Zoom
           <input
@@ -140,26 +140,26 @@ function CropBody({ imageSrc, onCancel, onCropped }: CropBodyProps) {
             step={0.05}
             value={zoom}
             onChange={(e) => setZoom(Number(e.target.value))}
-            className="accent-amber"
+            className="h-8 w-full accent-amber sm:h-auto"
           />
         </label>
 
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={saving || !croppedArea}
-            onClick={handleSave}
-            className="rounded-full bg-amber px-4 py-2 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60"
-          >
-            {saving ? "Saving…" : "Use photo"}
-          </button>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap">
           <button
             type="button"
             disabled={saving}
             onClick={onCancel}
-            className="rounded-full border border-cream/20 px-4 py-2 text-sm text-cream/70 transition-colors hover:border-cream/40 hover:text-cream disabled:opacity-60"
+            className="min-h-11 rounded-full border border-cream/20 px-4 py-2.5 text-sm text-cream/70 transition-colors hover:border-cream/40 hover:text-cream disabled:opacity-60 sm:min-h-0 sm:py-2"
           >
             Cancel
+          </button>
+          <button
+            type="button"
+            disabled={saving || !croppedArea}
+            onClick={handleSave}
+            className="min-h-11 flex-1 rounded-full bg-amber px-4 py-2.5 text-sm font-medium text-[#1a1208] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60 sm:min-h-0 sm:flex-none sm:py-2"
+          >
+            {saving ? "Saving…" : "Use photo"}
           </button>
         </div>
       </div>
@@ -194,7 +194,7 @@ export function AvatarCropModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-100 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm sm:p-6"
+      className="fixed inset-0 z-100 flex items-end justify-center bg-black/80 p-0 backdrop-blur-sm sm:items-center sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="avatar-crop-title"

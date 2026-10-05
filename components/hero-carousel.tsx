@@ -147,7 +147,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             </p>
           ) : null}
 
-          <h1 className="hero-line hero-line-2 font-display text-5xl leading-[0.92] tracking-wide text-cream sm:text-6xl md:text-7xl lg:text-[5.25rem]">
+          <h1 className="hero-line hero-line-2 font-display text-4xl leading-[0.92] tracking-wide wrap-break-word text-cream sm:text-6xl md:text-7xl lg:text-[5.25rem]">
             {slide.title}
           </h1>
 

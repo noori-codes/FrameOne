@@ -13,7 +13,7 @@ const sizes = {
   sm: { px: 32, className: "h-8 w-8 text-sm" },
   md: { px: 64, className: "h-16 w-16 text-xl" },
   lg: { px: 96, className: "h-24 w-24 text-3xl" },
-  xl: { px: 128, className: "h-32 w-32 text-4xl" },
+  xl: { px: 128, className: "h-28 w-28 text-3xl sm:h-32 sm:w-32 sm:text-4xl" },
 } as const;
 
 function userInitial(name?: string | null, email?: string | null) {

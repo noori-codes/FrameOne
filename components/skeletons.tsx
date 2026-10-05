@@ -40,11 +40,14 @@ export function MovieGridSkeleton({
 /** One horizontal row of posters (home category strips). */
 export function MovieRowSkeleton() {
   return (
-    <div className="px-6 sm:px-8 lg:px-10">
-      <Skeleton className="h-10 w-56 rounded-sm sm:h-12 sm:w-72" />
-      <ul className="mt-6 flex gap-4 overflow-hidden sm:gap-5">
+    <div className="px-4 sm:px-6 lg:px-10">
+      <Skeleton className="h-8 w-40 rounded-sm sm:h-12 sm:w-72" />
+      <ul className="mt-5 flex gap-3 overflow-hidden sm:mt-6 sm:gap-5">
         {Array.from({ length: 8 }).map((_, i) => (
-          <li key={i} className="shrink-0 basis-34 sm:basis-39 md:basis-44">
+          <li
+            key={i}
+            className="shrink-0 basis-30 sm:basis-39 md:basis-44"
+          >
             <Skeleton className="aspect-2/3 w-full" />
           </li>
         ))}

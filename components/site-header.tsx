@@ -1,87 +1,31 @@
-import Link from "next/link";
-import { Search } from "lucide-react";
+import type { Session } from "next-auth";
 import { auth } from "@/auth";
-import { BrandLogo } from "@/components/brand-logo";
-import { UserAvatar } from "@/components/user-avatar";
+import { SiteNav } from "@/components/site-nav";
 
 /**
  * Full-width sticky header. `auth()` reads the session cookie on the server.
- * Search is icon-only → /search (query lives on that page).
+ * Nav collapses into a menu on small screens.
  */
 export async function SiteHeader() {
-  let session: Awaited<ReturnType<typeof auth>> = null;
+  let session: Session | null = null;
   try {
-    session = await auth();
+    session = (await auth()) as Session | null;
   } catch {
     // Bad/expired session cookie — show signed-out chrome instead of crashing
     session = null;
   }
 
+  const user = session?.user
+    ? {
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image,
+      }
+    : null;
+
   return (
     <header className="sticky top-0 z-30 border-b border-cream/10 bg-background/90 backdrop-blur-md">
-      <div className="flex h-14 w-full items-center gap-4 px-4 sm:h-16 sm:gap-6 sm:px-6 lg:px-10">
-        <Link
-          href="/"
-          className="inline-flex h-full shrink-0 items-center transition-opacity hover:opacity-90"
-          aria-label="FrameOne home"
-        >
-          <BrandLogo size="sm" withWordmark priority />
-        </Link>
-
-        <nav className="ml-auto flex shrink-0 items-center gap-3 text-sm text-cream/70 md:gap-5">
-          <Link
-            href="/search"
-            aria-label="Search movies"
-            className="rounded-full p-2 text-cream/70 transition-colors hover:bg-cream/5 hover:text-cream"
-          >
-            <Search className="h-5 w-5" strokeWidth={1.75} />
-          </Link>
-          <Link href="/" className="transition-colors hover:text-cream">
-            Browse
-          </Link>
-          <Link href="/genres" className="transition-colors hover:text-cream">
-            Genres
-          </Link>
-
-          {session?.user ? (
-            <div className="flex items-center gap-2.5 md:gap-3">
-              <Link
-                href="/favorites"
-                className="transition-colors hover:text-cream"
-              >
-                Favorites
-              </Link>
-              <Link
-                href="/watchlist"
-                className="hidden transition-colors hover:text-cream sm:inline"
-              >
-                Watchlist
-              </Link>
-              <Link
-                href="/profile"
-                aria-label="Profile"
-                title={session.user.name ?? session.user.email ?? "Profile"}
-                className="rounded-full transition-opacity hover:opacity-90"
-              >
-                <UserAvatar
-                  name={session.user.name}
-                  email={session.user.email}
-                  image={session.user.image}
-                  size="sm"
-                  className="hover:border-amber"
-                />
-              </Link>
-            </div>
-          ) : (
-            <Link
-              href="/signin"
-              className="rounded-full border border-cream/20 px-3 py-1 text-cream transition-colors hover:border-amber hover:text-amber"
-            >
-              Sign in
-            </Link>
-          )}
-        </nav>
-      </div>
+      <SiteNav user={user} />
     </header>
   );
 }

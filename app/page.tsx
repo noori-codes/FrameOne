@@ -239,7 +239,7 @@ export default async function Home() {
     <main className="relative flex min-h-dvh flex-1 flex-col overflow-x-hidden">
       <HeroCarousel slides={slides} />
 
-      <div className="relative z-10 flex w-full flex-col gap-20 border-t border-cream/8 pt-16 pb-16 sm:gap-24 sm:pt-20 sm:pb-20">
+      <div className="relative z-10 flex w-full flex-col gap-14 border-t border-cream/8 pt-12 pb-12 sm:gap-24 sm:pt-20 sm:pb-20">
         <MovieRow
           id="trending"
           title="Trending now"
