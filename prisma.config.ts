@@ -6,14 +6,13 @@ config({ path: ".env.local" });
 config();
 
 function migrateUrl() {
-  // Prefer DIRECT_URL (5432) for migrations; pooler (6543) often breaks migrate
+  // Prefer DIRECT_URL (5432) for migrations; pooler (6543) often breaks migrate.
+  // Placeholder is enough for `prisma generate` (no network); migrate needs a real URL.
   const raw =
     process.env.DIRECT_URL?.trim() || process.env.DATABASE_URL?.trim();
 
   if (!raw) {
-    throw new Error(
-      "Missing DATABASE_URL (and DIRECT_URL). Uncomment/add them in .env.local — Supabase Dashboard → Database → Connect → Prisma.",
-    );
+    return "postgresql://postgres:postgres@127.0.0.1:5432/postgres";
   }
 
   try {
