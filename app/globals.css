@@ -28,6 +28,16 @@ body {
   font-family: var(--font-body), system-ui, sans-serif;
 }
 
+.movie-detail-hero {
+  min-height: calc(100svh - 3.5rem);
+}
+
+@media (min-width: 640px) {
+  .movie-detail-hero {
+    min-height: calc(100svh - 4rem);
+  }
+}
+
 button:not(:disabled) {
   cursor: pointer;
 }
@@ -39,7 +49,8 @@ button:disabled {
 /* Site-wide scrollbars — thin, stage track + teal thumb */
 * {
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--amber) 55%, transparent) var(--stage);
+  scrollbar-color: color-mix(in srgb, var(--amber) 55%, transparent)
+    var(--stage);
 }
 
 *::-webkit-scrollbar {

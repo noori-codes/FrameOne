@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, CalendarDays, Clock3, Star } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  CalendarDays,
+  Clock3,
+  Star,
+} from "lucide-react";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { FavoriteMetaForm } from "@/components/favorite-meta-form";
@@ -61,7 +67,9 @@ function Fact({
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-cream/10 py-3 last:border-0">
       <dt className="shrink-0 text-sm text-cream/45">{label}</dt>
-      <dd className="text-right text-sm leading-relaxed text-cream/85">{value}</dd>
+      <dd className="min-w-0 wrap-break-word text-right text-sm leading-relaxed text-cream/85">
+        {value}
+      </dd>
     </div>
   );
 }
@@ -117,7 +125,9 @@ export default async function MoviePage({ params }: MoviePageProps) {
   const backdrop = backdropUrl(movie.backdrop_path);
   const releaseDate = formatReleaseDate(movie.release_date);
   const runtime = formatRuntime(movie.runtime);
-  const director = movie.credits?.crew.find((person) => person.job === "Director");
+  const director = movie.credits?.crew.find(
+    (person) => person.job === "Director",
+  );
   const writers = movie.credits?.crew
     .filter((person) => ["Writer", "Screenplay", "Story"].includes(person.job))
     .slice(0, 3);
@@ -135,7 +145,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
 
   return (
     <main className="flex min-h-dvh flex-1 flex-col">
-      <section className="relative isolate flex min-h-[610px] flex-col justify-end overflow-hidden sm:min-h-[690px] lg:min-h-[760px]">
+      <section className="movie-detail-hero relative isolate flex flex-col overflow-hidden border-b border-cream/10">
         {backdrop ? (
           <Image
             src={backdrop}
@@ -144,7 +154,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
             priority
             sizes="100vw"
             unoptimized
-            className="pointer-events-none object-cover object-center"
+            className="pointer-events-none object-cover object-[center_28%]"
           />
         ) : null}
         <div
@@ -160,94 +170,87 @@ export default async function MoviePage({ params }: MoviePageProps) {
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(7,10,11,0.42)_0%,transparent_22%)]"
         />
 
-        <div className="relative mx-auto w-full max-w-7xl px-5 pb-12 pt-8 sm:px-8 sm:pb-16 lg:px-12 lg:pb-20">
+        <div className="relative mx-auto flex w-full max-w-screen-2xl flex-1 flex-col px-4 pb-6 pt-16 sm:px-6 sm:pb-10 sm:pt-20 lg:px-8 lg:pb-12 lg:pt-24">
           <Link
             href="/#trending"
-            className="inline-flex items-center gap-2 text-sm text-cream/60 transition-colors hover:text-cream"
+            className="inline-flex min-h-10 w-fit items-center gap-2 border-b border-cream/25 pb-2 text-xs font-medium text-cream/75 transition-colors hover:border-amber hover:text-amber sm:text-sm"
           >
-            <span aria-hidden>←</span> Back to browse
+            <ArrowLeft className="size-4" aria-hidden />
+            Back to browse
           </Link>
 
-          <div className="mt-12 grid grid-cols-[112px_minmax(0,1fr)] items-end gap-5 sm:mt-16 sm:grid-cols-[200px_minmax(0,1fr)] sm:gap-8 lg:mt-20 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-12">
-            <div className="relative aspect-2/3 w-full overflow-hidden rounded-md bg-stage shadow-[0_28px_80px_-20px_rgba(0,0,0,0.9)] ring-1 ring-white/15">
-              {poster ? (
-                <Image
-                  src={poster}
-                  alt={movie.title}
-                  fill
-                  sizes="(max-width: 640px) 112px, (max-width: 1024px) 200px, 270px"
-                  className="object-cover"
-                  priority
-                  unoptimized
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center p-3 text-center font-display text-xl text-cream/45">
-                  {movie.title}
-                </div>
-              )}
-            </div>
-
-            <div className="min-w-0 pb-1 sm:pb-2 lg:pb-3">
-              <p className="mb-2 text-[10px] font-semibold tracking-[0.26em] text-amber uppercase sm:text-xs">
+          <div className="mt-auto grid grid-cols-1 items-end gap-7 pt-8 sm:gap-10 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-12 lg:pt-16">
+            <div className="min-w-0 lg:pb-2">
+              <p className="mb-3 text-[10px] font-semibold tracking-[0.2em] text-amber uppercase sm:text-xs">
                 FrameOne <span className="px-1 text-cream/35">/</span> Film
-                {movie.release_date ? ` · ${movie.release_date.slice(0, 4)}` : ""}
+                {movie.release_date
+                  ? ` · ${movie.release_date.slice(0, 4)}`
+                  : ""}
               </p>
-              <h1 className="max-w-4xl font-display text-4xl leading-[0.92] tracking-wide wrap-break-word text-cream uppercase sm:text-6xl md:text-7xl lg:text-8xl">
+              <h1 className="max-w-4xl font-display text-4xl leading-[0.9] text-balance wrap-break-word text-cream uppercase sm:text-6xl md:text-7xl lg:text-8xl">
                 {movie.title}
               </h1>
               {movie.tagline ? (
-                <p className="mt-3 max-w-2xl text-sm text-cream/70 italic sm:mt-5 sm:text-lg">
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-cream/75 italic sm:mt-4 sm:text-lg">
                   “{movie.tagline}”
                 </p>
               ) : null}
 
-              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-cream/65 sm:mt-6 sm:gap-x-5 sm:text-sm">
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-cream/80 sm:mt-5 sm:gap-x-5 sm:gap-y-3 sm:text-sm">
                 {releaseDate ? (
-                  <span className="inline-flex items-center gap-1.5">
-                    <CalendarDays className="size-3.5 text-amber sm:size-4" aria-hidden />
+                  <span className="inline-flex items-center gap-2">
+                    <CalendarDays
+                      className="size-3.5 text-amber sm:size-4"
+                      aria-hidden
+                    />
                     {releaseDate}
                   </span>
                 ) : null}
                 {runtime ? (
-                  <span className="inline-flex items-center gap-1.5">
-                    <Clock3 className="size-3.5 text-amber sm:size-4" aria-hidden />
+                  <span className="inline-flex items-center gap-2">
+                    <Clock3
+                      className="size-3.5 text-amber sm:size-4"
+                      aria-hidden
+                    />
                     {runtime}
                   </span>
                 ) : null}
-                <span className="inline-flex items-center gap-1.5 text-amber">
-                  <Star className="size-3.5 fill-current sm:size-4" aria-hidden />
+                <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-amber/35 bg-background/55 px-2.5 text-amber backdrop-blur-sm sm:min-h-9 sm:px-3">
+                  <Star
+                    className="size-3.5 fill-current sm:size-4"
+                    aria-hidden
+                  />
                   <strong>{movie.vote_average.toFixed(1)}</strong>
-                  {movie.vote_count != null ? (
-                    <span className="text-cream/50">
-                      · {movie.vote_count.toLocaleString()} ratings
-                    </span>
-                  ) : null}
+                  <span className="text-amber/65">/ 10</span>
                 </span>
+                {movie.vote_count != null ? (
+                  <span className="text-xs text-cream/55 sm:text-sm">
+                    {movie.vote_count.toLocaleString()} ratings
+                  </span>
+                ) : null}
               </div>
 
               {movie.genres.length > 0 ? (
-                <div className="mt-3 flex flex-wrap gap-x-2 gap-y-1 text-xs text-cream/65 sm:mt-4 sm:text-sm">
-                  {movie.genres.map((genre, index) => (
-                    <span key={genre.id}>
-                      {index > 0 ? <span className="mr-2 text-cream/30">·</span> : null}
-                      <Link
-                        href={`/genres/${genre.id}`}
-                        className="transition-colors hover:text-amber"
-                      >
-                        {genre.name}
-                      </Link>
-                    </span>
+                <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 sm:mt-4 sm:gap-2">
+                  {movie.genres.map((genre) => (
+                    <Link
+                      key={genre.id}
+                      href={`/genres/${genre.id}`}
+                      className="inline-flex min-h-8 items-center border-b border-cream/25 px-1 text-xs text-cream/75 transition-colors hover:border-amber hover:text-amber sm:min-h-9 sm:px-1.5 sm:text-sm"
+                    >
+                      {genre.name}
+                    </Link>
                   ))}
                 </div>
               ) : null}
 
-              <div className="mt-5 flex flex-wrap items-center gap-2.5 sm:mt-7">
+              <div className="mt-4 flex flex-wrap items-center gap-2.5 sm:mt-6 sm:gap-3">
                 {trailerKey ? (
                   <TrailerButton
                     youtubeKey={trailerKey}
                     title={movie.title}
                     label="Watch trailer"
-                    className="min-h-10 px-4 py-2 text-xs sm:min-h-11 sm:px-5 sm:text-sm"
+                    className="min-h-10 px-5 text-sm sm:min-h-12 sm:px-6"
                   />
                 ) : null}
                 <SaveListButtons
@@ -261,29 +264,48 @@ export default async function MoviePage({ params }: MoviePageProps) {
                 />
               </div>
             </div>
+
+            <div className="relative hidden aspect-2/3 w-full overflow-hidden rounded-sm bg-stage shadow-[0_32px_90px_-24px_rgba(0,0,0,0.95)] ring-1 ring-white/25 lg:block">
+              {poster ? (
+                <Image
+                  src={poster}
+                  alt={movie.title}
+                  fill
+                  sizes="300px"
+                  className="object-cover"
+                  priority
+                  unoptimized
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center p-5 text-center font-display text-3xl text-cream/45">
+                  {movie.title}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="mx-auto grid w-full max-w-7xl gap-12 px-5 pb-14 pt-10 sm:px-8 sm:pb-20 sm:pt-14 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-16 lg:px-12 lg:pt-16">
-        <div className="min-w-0">
+      <div className="mx-auto grid w-full max-w-screen-2xl gap-10 border-t border-cream/10 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-12 lg:px-8 lg:py-16">
+        <div className="min-w-0 space-y-14 sm:space-y-20">
           <section aria-labelledby="overview-heading">
-            <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
+            <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase sm:text-xs">
               The story
             </p>
             <h2
               id="overview-heading"
-              className="mt-2 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl"
+              className="mt-2 font-display text-4xl text-cream uppercase sm:text-5xl"
             >
               Overview
             </h2>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-cream/70 sm:text-base sm:leading-8">
+            <p className="mt-5 max-w-3xl text-base leading-8 text-cream/75 sm:text-lg sm:leading-9">
               {movie.overview || "No synopsis is available for this movie yet."}
             </p>
             {director ? (
-              <div className="mt-6 flex flex-wrap gap-x-8 gap-y-3 border-t border-cream/10 pt-5">
+              <div className="mt-7 flex flex-wrap gap-x-8 gap-y-3 border-t border-cream/10 pt-5">
                 <p className="text-sm text-cream/50">
-                  Director <span className="ml-2 text-cream/85">{director.name}</span>
+                  Director{" "}
+                  <span className="ml-2 text-cream/85">{director.name}</span>
                 </p>
                 {writers && writers.length > 0 ? (
                   <p className="text-sm text-cream/50">
@@ -300,7 +322,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
           {cast.length > 0 ? (
             <section
               aria-labelledby="cast-heading"
-              className="mt-12 border-t border-cream/10 pt-8 sm:mt-16 sm:pt-10"
+              className="border-t border-cream/10 pt-8 sm:pt-10"
             >
               <div className="flex items-baseline justify-between gap-4">
                 <div>
@@ -309,7 +331,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
                   </p>
                   <h2
                     id="cast-heading"
-                    className="mt-2 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl"
+                    className="mt-2 font-display text-4xl text-cream uppercase sm:text-5xl"
                   >
                     Cast
                   </h2>
@@ -322,8 +344,11 @@ export default async function MoviePage({ params }: MoviePageProps) {
                 {cast.map((person) => {
                   const profile = profileUrl(person.profile_path);
                   return (
-                    <li key={`${person.id}-${person.character}`} className="min-w-0">
-                      <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-stage">
+                    <li
+                      key={`${person.id}-${person.character}`}
+                      className="min-w-0"
+                    >
+                      <div className="relative aspect-4/5 overflow-hidden rounded-sm bg-stage">
                         {profile ? (
                           <Image
                             src={profile}
@@ -355,14 +380,14 @@ export default async function MoviePage({ params }: MoviePageProps) {
           {favorite ? (
             <section
               aria-labelledby="your-notes-heading"
-              className="mt-12 border-t border-cream/10 pt-8 sm:mt-16 sm:pt-10"
+              className="border-t border-cream/10 pt-8 sm:pt-10"
             >
               <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
                 Your collection
               </p>
               <h2
                 id="your-notes-heading"
-                className="mt-2 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl"
+                className="mt-2 font-display text-4xl text-cream uppercase sm:text-5xl"
               >
                 Your notes
               </h2>
@@ -377,14 +402,14 @@ export default async function MoviePage({ params }: MoviePageProps) {
           ) : null}
         </div>
 
-        <aside className="h-fit border-t border-cream/10 pt-7 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+        <aside className="h-fit border-t border-cream/10 pt-7 lg:sticky lg:top-24 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
           <section aria-labelledby="details-heading">
             <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
               At a glance
             </p>
             <h2
               id="details-heading"
-              className="mt-2 font-display text-3xl tracking-wide text-cream uppercase"
+              className="mt-2 font-display text-4xl text-cream uppercase"
             >
               Details
             </h2>
@@ -395,7 +420,10 @@ export default async function MoviePage({ params }: MoviePageProps) {
               <Fact label="Countries" value={countries} />
               <Fact label="Studio" value={companies} />
               <Fact label="Budget" value={formatMoney(movie.budget)} />
-              <Fact label="Worldwide gross" value={formatMoney(movie.revenue)} />
+              <Fact
+                label="Worldwide gross"
+                value={formatMoney(movie.revenue)}
+              />
             </dl>
 
             {favorite?.rating != null ? (
@@ -417,7 +445,8 @@ export default async function MoviePage({ params }: MoviePageProps) {
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 text-sm text-cream/70 transition-colors hover:text-amber"
                   >
-                    Official site <ArrowUpRight className="size-3.5" aria-hidden />
+                    Official site{" "}
+                    <ArrowUpRight className="size-3.5" aria-hidden />
                   </a>
                 ) : null}
                 {movie.imdb_id ? (
