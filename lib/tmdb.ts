@@ -31,6 +31,44 @@ export type TmdbMovieDetails = TmdbMovie & {
   runtime: number | null;
   tagline: string | null;
   genres: { id: number; name: string }[];
+  original_title?: string;
+  original_language?: string;
+  status?: string;
+  vote_count?: number;
+  popularity?: number;
+  budget?: number;
+  revenue?: number;
+  homepage?: string;
+  imdb_id?: string | null;
+  production_companies?: {
+    id: number;
+    name: string;
+    origin_country: string;
+  }[];
+  production_countries?: { iso_3166_1: string; name: string }[];
+  spoken_languages?: {
+    english_name: string;
+    iso_639_1: string;
+    name: string;
+  }[];
+  credits?: {
+    cast: TmdbCastMember[];
+    crew: TmdbCrewMember[];
+  };
+};
+
+export type TmdbCastMember = {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string | null;
+};
+
+export type TmdbCrewMember = {
+  id: number;
+  name: string;
+  job: string;
+  department: string;
 };
 
 export type TmdbGenre = {
@@ -153,6 +191,11 @@ export function posterUrl(
   return `${getImageBase()}/${size}${posterPath}`;
 }
 
+export function profileUrl(profilePath: string | null) {
+  if (!profilePath) return null;
+  return `${getImageBase()}/w185${profilePath}`;
+}
+
 export function backdropUrl(
   backdropPath: string | null,
   size: "w780" | "w1280" | "original" = "w1280",
@@ -268,6 +311,7 @@ export async function getMovie(
 ): Promise<TmdbMovieDetails | null> {
   const url = new URL(`${getBaseUrl()}/movie/${id}`);
   url.searchParams.set("api_key", getApiKey());
+  url.searchParams.set("append_to_response", "credits");
 
   const res = await tmdbFetch(url.toString(), 3600);
 
