@@ -11,6 +11,7 @@ import {
   getTopRatedMovies,
   getTrendingMovies,
   mapPool,
+  posterUrl,
   type TmdbMovie,
 } from "@/lib/tmdb";
 
@@ -215,12 +216,7 @@ export default async function Home() {
         ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m`
         : null;
     const genres = movie.genres?.map((g) => g.name).join(" / ");
-    const meta = [
-      year,
-      genres,
-      runtime,
-      `★ ${movie.vote_average.toFixed(1)}`,
-    ]
+    const meta = [year, genres, runtime]
       .filter(Boolean)
       .join(" · ");
 
@@ -230,7 +226,9 @@ export default async function Home() {
       overview: movie.overview,
       tagline: movie.tagline,
       backdropUrl: backdropUrl(movie.backdrop_path),
+      posterUrl: posterUrl(movie.poster_path, "w500"),
       meta,
+      rating: movie.vote_average,
       trailerKey: trailerKeys[i] ?? null,
     };
   });

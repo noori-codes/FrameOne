@@ -130,38 +130,14 @@ button:disabled {
   animation-delay: 280ms;
 }
 
-@keyframes heroProgress {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
-.hero-progress {
-  width: 100%;
-  transform: scaleX(0);
-  animation: heroProgress 9s linear forwards;
-}
-
-.hero-progress-paused {
-  animation-play-state: paused;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .hero-backdrop,
-  .hero-progress {
+  .hero-backdrop {
     animation: none;
   }
 
   .hero-backdrop {
     opacity: 1;
     transform: none;
-  }
-
-  .hero-progress {
-    transform: scaleX(1);
   }
 
   .hero-line {

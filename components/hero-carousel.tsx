@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Info } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info, Sparkles, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -13,7 +13,9 @@ export type HeroSlide = {
   overview: string;
   tagline: string | null;
   backdropUrl: string | null;
+  posterUrl: string | null;
   meta: string;
+  rating: number;
   /** YouTube key from TMDB videos (null if none). */
   trailerKey: string | null;
 };
@@ -27,7 +29,6 @@ const AUTO_MS = 9000;
 
 /**
  * Full-bleed hero that cycles a few daily-picked movies.
- * One aligned column: copy → CTAs → progress/controls.
  */
 export function HeroCarousel({ slides }: HeroCarouselProps) {
   const [index, setIndex] = useState(0);
@@ -41,7 +42,9 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
   const elapsedBeforePauseRef = useRef(0);
   const progressRef = useRef<HTMLDivElement>(null);
 
-  trailerOpenRef.current = trailerOpen;
+  useEffect(() => {
+    trailerOpenRef.current = trailerOpen;
+  }, [trailerOpen]);
 
   const setBar = useCallback((ratio: number) => {
     const el = progressRef.current;
@@ -151,7 +154,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           </p>
           <Link
             href="#trending"
-            className="mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-amber px-5 py-2.5 text-sm font-medium text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim) hover:text-cream"
+            className="mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-amber px-5 py-2.5 text-sm font-medium text-(--on-amber) transition-colors hover:bg-(--amber-dim) hover:text-cream"
           >
             Start browsing
           </Link>
@@ -162,7 +165,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
   return (
     <section
-      className="relative flex min-h-[calc(100dvh-3.5rem)] w-full flex-col sm:min-h-[calc(100dvh-4rem)]"
+      className="relative flex min-h-[min(760px,calc(100dvh-3rem))] w-full flex-col overflow-hidden sm:min-h-[min(820px,calc(100dvh-3.5rem))] lg:min-h-[min(860px,calc(100dvh-4rem))]"
       aria-roledescription="carousel"
       aria-label="Featured movies"
     >
@@ -181,66 +184,120 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
         ) : (
           <div className="absolute inset-0 bg-stage" />
         )}
-        <div className="absolute inset-0 bg-background/40" />
-        <div className="absolute inset-0 bg-linear-to-t from-background via-background/50 to-background/20" />
-        <div className="absolute inset-0 bg-linear-to-r from-background/80 via-background/25 to-transparent" />
+        <div className="absolute inset-0 bg-background/30" />
+        <div className="absolute inset-0 bg-linear-to-t from-background via-background/45 to-background/10" />
+        <div className="absolute inset-0 bg-linear-to-r from-background/85 via-background/35 to-background/5" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_76%_42%,rgba(47,230,200,0.12),transparent_42%)]" />
         <div className="film-grain absolute inset-0" />
       </div>
 
-      {/* One column: copy + controls share the same left edge as the header */}
-      <div className="relative z-10 mt-auto flex w-full flex-col gap-8 px-4 pb-8 pt-28 sm:gap-10 sm:px-6 sm:pb-10 lg:px-10">
-        <div key={slide.id} className="w-full max-w-2xl">
-          {slide.tagline ? (
-            <p className="hero-line hero-line-1 mb-3 text-xs tracking-[0.28em] text-amber/80 uppercase">
+      <div className="relative z-10 mt-auto mx-auto flex w-full max-w-screen-2xl flex-col px-4 pb-7 pt-16 sm:px-6 sm:pb-10 sm:pt-20 lg:px-8 lg:pt-18">
+        <div
+          key={slide.id}
+          className="grid w-full items-center gap-9 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.65fr)] lg:gap-12"
+        >
+          <div className="w-full max-w-3xl">
+            <p className="hero-line hero-line-1 mb-4 inline-flex items-center gap-2 rounded-full border border-amber/30 bg-background/30 px-3 py-1.5 text-[10px] font-semibold tracking-[0.2em] text-amber uppercase backdrop-blur-sm sm:text-xs">
+              <Sparkles className="size-3.5" aria-hidden />
+              Today’s featured film
+            </p>
+            <p className="hero-line hero-line-2 mb-3 min-h-[1.5em] text-xs leading-normal tracking-[0.2em] text-cream/60 uppercase sm:text-sm">
               {slide.tagline}
             </p>
-          ) : null}
 
-          <h1 className="hero-line hero-line-2 font-display text-4xl leading-[0.92] tracking-wide wrap-break-word text-cream sm:text-6xl md:text-7xl lg:text-[5.25rem]">
-            {slide.title}
-          </h1>
+            <h1 className="hero-line hero-line-3 line-clamp-2 min-h-[1.76em] max-w-3xl font-display text-5xl leading-[0.88] tracking-wide wrap-break-word text-cream uppercase drop-shadow-[0_8px_30px_rgba(0,0,0,0.5)] sm:text-7xl md:text-8xl lg:text-[6.75rem]">
+              {slide.title}
+            </h1>
 
-          {slide.meta ? (
-            <p className="hero-line hero-line-3 mt-4 text-sm text-cream/55 sm:text-[15px]">
-              {slide.meta}
+            <p className="hero-line hero-line-4 mt-5 flex min-h-10 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-medium text-cream/75 sm:mt-6 sm:min-h-6 sm:text-sm">
+              <span className="inline-flex items-center gap-1.5 text-amber">
+                <Star className="size-4 fill-current" aria-hidden />
+                {slide.rating.toFixed(1)}
+              </span>
+              {slide.meta
+                ? slide.meta.split(" · ").map((item, i) => (
+                    <span
+                      key={`${item}-${i}`}
+                      className="inline-flex items-center gap-2.5"
+                    >
+                      <span aria-hidden className="text-cream/30">·</span>
+                      {item}
+                    </span>
+                  ))
+                : null}
             </p>
-          ) : null}
 
-          <p className="hero-line hero-line-4 mt-3 line-clamp-2 max-w-xl text-sm leading-relaxed text-cream/60 sm:text-base">
-            {slide.overview}
-          </p>
+            <p className="hero-line hero-line-5 mt-4 line-clamp-3 min-h-18 max-w-xl text-sm leading-relaxed text-cream/75 sm:mt-5 sm:min-h-21 sm:text-base sm:leading-7">
+              {slide.overview}
+            </p>
 
-          <div className="hero-line hero-line-5 mt-7 flex flex-wrap items-center gap-3">
-            <TrailerButton
-              youtubeKey={slide.trailerKey}
-              title={slide.title}
-              label="Watch trailer"
-              onOpenChange={setTrailerOpen}
-            />
+            <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8">
+              <TrailerButton
+                youtubeKey={slide.trailerKey}
+                title={slide.title}
+                label="Watch trailer"
+                onOpenChange={setTrailerOpen}
+                className="shadow-[0_10px_30px_-12px_rgba(47,230,200,0.6)]"
+              />
+              <Link
+                href={`/movie/${slide.id}`}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-cream/30 bg-black/25 px-5 py-2.5 text-sm text-cream/90 backdrop-blur-sm transition-[border-color,background-color,color] hover:border-cream/60 hover:bg-black/40 hover:text-cream"
+              >
+                <Info className="h-4 w-4" aria-hidden />
+                More info
+              </Link>
+            </div>
+          </div>
+
+          {slide.posterUrl ? (
             <Link
               href={`/movie/${slide.id}`}
-              className="inline-flex items-center gap-2 rounded-full border border-cream/30 bg-black/25 px-5 py-2.5 text-sm text-cream/90 backdrop-blur-sm transition-colors hover:border-cream/50 hover:text-cream"
+              aria-label={`View details for ${slide.title}`}
+              className="group relative mx-auto hidden w-full max-w-72.5 justify-self-center lg:block"
             >
-              <Info className="h-4 w-4" aria-hidden />
-              More info
+              <span
+                aria-hidden
+                className="absolute -inset-4 rotate-3 rounded-sm border border-cream/15 bg-cream/2.5 transition-transform duration-500 group-hover:rotate-5 motion-reduce:transition-none"
+              />
+              <div className="relative aspect-2/3 overflow-hidden rounded-sm bg-stage shadow-[0_32px_90px_-24px_rgba(0,0,0,0.9)] ring-1 ring-white/25 transition-transform duration-500 group-hover:-translate-y-2 group-hover:rotate-1 motion-reduce:transition-none">
+                <Image
+                  src={slide.posterUrl}
+                  alt=""
+                  fill
+                  sizes="290px"
+                  unoptimized
+                  className="object-cover"
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/35 to-transparent px-5 pb-5 pt-20">
+                  <p className="text-[10px] font-semibold tracking-[0.22em] text-amber uppercase">
+                    The FrameOne pick
+                  </p>
+                  <p className="mt-1 font-display text-2xl tracking-wide text-white uppercase">
+                    {slide.title}
+                  </p>
+                </div>
+              </div>
+              <span className="absolute -right-5 -bottom-5 inline-flex size-19 flex-col items-center justify-center rounded-full border border-amber/50 bg-background/90 text-amber shadow-xl backdrop-blur-md">
+                <span className="text-[9px] tracking-[0.16em] uppercase">Rated</span>
+                <span className="mt-0.5 font-display text-2xl leading-none">
+                  {slide.rating.toFixed(1)}
+                </span>
+              </span>
             </Link>
-          </div>
+          ) : null}
         </div>
 
         {count > 1 ? (
-          <div className="flex w-full items-center gap-4 sm:gap-5">
+          <div className="mt-9 flex w-full items-center gap-4 border-t border-cream/15 pt-5 sm:mt-12 sm:gap-6 sm:pt-6">
+            <span className="shrink-0 text-xs font-medium tracking-[0.18em] text-cream/65 uppercase">
+              <span className="text-amber">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="mx-2 text-cream/30">/</span>
+              {String(count).padStart(2, "0")}
+            </span>
             <div
-              className="h-px min-w-0 flex-1 overflow-hidden bg-cream/15"
-              aria-hidden
-            >
-              <div
-                ref={progressRef}
-                className="h-full origin-left scale-x-0 bg-amber will-change-transform"
-              />
-            </div>
-
-            <div
-              className="flex shrink-0 items-center gap-1.5"
+              className="flex min-w-0 flex-1 items-center gap-2.5"
               role="tablist"
               aria-label="Featured slides"
             >
@@ -253,26 +310,25 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                   aria-label={`Show ${s.title}`}
                   onClick={() => goTo(i)}
                   className={cn(
-                    "h-1.5 rounded-full transition-all duration-300",
-                    i === index
-                      ? "w-6 bg-amber"
-                      : "w-1.5 bg-cream/30 hover:bg-cream/50",
+                    "relative h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-cream/20 transition-colors hover:bg-cream/35",
+                    i === index && "bg-cream/30",
                   )}
-                />
+                >
+                  {i === index ? (
+                    <span
+                      ref={progressRef}
+                      className="absolute inset-0 origin-left scale-x-0 bg-amber"
+                    />
+                  ) : null}
+                </button>
               ))}
             </div>
-
-            <span className="hidden text-xs tabular-nums text-cream/40 sm:inline">
-              {String(index + 1).padStart(2, "0")} /{" "}
-              {String(count).padStart(2, "0")}
-            </span>
-
             <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
                 aria-label="Previous featured movie"
                 onClick={() => go(-1)}
-                className="rounded-full border border-cream/25 p-2 text-cream/80 transition-colors hover:border-amber/60 hover:text-amber"
+                className="rounded-full border border-cream/25 bg-background/20 p-2 text-cream/80 backdrop-blur-sm transition-colors hover:border-amber/60 hover:text-amber"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -280,7 +336,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                 type="button"
                 aria-label="Next featured movie"
                 onClick={() => go(1)}
-                className="rounded-full border border-cream/25 p-2 text-cream/80 transition-colors hover:border-amber/60 hover:text-amber"
+                className="rounded-full border border-cream/25 bg-background/20 p-2 text-cream/80 backdrop-blur-sm transition-colors hover:border-amber/60 hover:text-amber"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
