@@ -150,9 +150,7 @@ async function tmdbFetch(
     }
   }
 
-  throw lastError instanceof Error
-    ? lastError
-    : new Error("TMDB fetch failed");
+  throw lastError instanceof Error ? lastError : new Error("TMDB fetch failed");
 }
 
 /** Run async work with a concurrency cap (avoids blasting TMDB). */
@@ -205,9 +203,7 @@ export function backdropUrl(
 }
 
 /** Popular movies from TMDB (page 1 by default). */
-export async function getPopularMoviesPage(
-  page = 1,
-): Promise<PaginatedMovies> {
+export async function getPopularMoviesPage(page = 1): Promise<PaginatedMovies> {
   const url = new URL(`${getBaseUrl()}/movie/popular`);
   url.searchParams.set("api_key", getApiKey());
   url.searchParams.set("page", String(page));
@@ -251,6 +247,28 @@ export async function getTrendingMovies(
   page = 1,
 ): Promise<TmdbMovie[]> {
   return (await getTrendingMoviesPage(window, page)).results;
+}
+
+/** Recently released movies, newest first. */
+export async function getLatestMovies(page = 1): Promise<TmdbMovie[]> {
+  const url = new URL(`${getBaseUrl()}/discover/movie`);
+  url.searchParams.set("api_key", getApiKey());
+  url.searchParams.set("page", String(page));
+  url.searchParams.set("sort_by", "primary_release_date.desc");
+  url.searchParams.set(
+    "primary_release_date.lte",
+    new Date().toISOString().slice(0, 10),
+  );
+  url.searchParams.set("vote_count.gte", "10");
+  url.searchParams.set("include_adult", "false");
+
+  const res = await tmdbFetch(url.toString(), 3600);
+
+  if (!res.ok) {
+    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+  }
+
+  return toPaginated((await res.json()) as PaginatedMoviesResponse).results;
 }
 
 /**
@@ -442,8 +460,7 @@ export async function getMoviesByGenre(
   page = 1,
   sort: GenreSort = "popular",
 ): Promise<PaginatedMovies> {
-  const sortConfig =
-    GENRE_SORTS.find((s) => s.id === sort) ?? GENRE_SORTS[0]!;
+  const sortConfig = GENRE_SORTS.find((s) => s.id === sort) ?? GENRE_SORTS[0]!;
 
   const url = new URL(`${getBaseUrl()}/discover/movie`);
   url.searchParams.set("api_key", getApiKey());

@@ -1,11 +1,11 @@
 import { HeroCarousel, type HeroSlide } from "@/components/hero-carousel";
 import { MovieRow } from "@/components/movie-row";
 import { SiteFooter } from "@/components/site-footer";
-import { HERO_COUNT, pickDailyHeroMovies, todayKey } from "@/lib/daily-hero";
 import {
   backdropUrl,
   getMovie,
   getMovieTrailerKey,
+  getLatestMovies,
   getMoviesByGenre,
   getPopularMovies,
   getTopRatedMovies,
@@ -65,20 +65,29 @@ const GENRE_PAGE_MAX = 20; // keep paging short rows until full
 const GENRE_FETCH_CONCURRENCY = 8; // don’t open 100+ sockets to TMDB at once
 const GENRE_ROW_SIZE = 50;
 const DISCOVERY_ROW_SIZE = 28;
+const HERO_GROUP_SIZE = 3;
 
 /**
  * Home: daily hero carousel + discovery rows + genre strips.
  */
 export default async function Home() {
-  const [popularP1, popularP2, trendingP1, trendingP2, topRatedP1, topRatedP2] =
-    await Promise.all([
-      getPopularMovies(1),
-      getPopularMovies(2),
-      getTrendingMovies("day", 1),
-      getTrendingMovies("day", 2),
-      getTopRatedMovies(1),
-      getTopRatedMovies(2),
-    ]);
+  const [
+    latestMovies,
+    popularP1,
+    popularP2,
+    trendingP1,
+    trendingP2,
+    topRatedP1,
+    topRatedP2,
+  ] = await Promise.all([
+    getLatestMovies(),
+    getPopularMovies(1),
+    getPopularMovies(2),
+    getTrendingMovies("day", 1),
+    getTrendingMovies("day", 2),
+    getTopRatedMovies(1),
+    getTopRatedMovies(2),
+  ]);
 
   // Cap concurrency — a full Promise.all of every genre page was timing out
   const genreJobs = HOME_GENRE_ROWS.flatMap((g) =>
@@ -155,11 +164,7 @@ export default async function Home() {
   for (const genreId of GENRE_CLAIM_PRIORITY) {
     genreBuckets.set(
       genreId,
-      takeUnique(
-        genrePools.get(genreId) ?? [],
-        usedInGenres,
-        GENRE_ROW_SIZE,
-      ),
+      takeUnique(genrePools.get(genreId) ?? [], usedInGenres, GENRE_ROW_SIZE),
     );
   }
 
@@ -169,10 +174,9 @@ export default async function Home() {
     let nextPage = GENRE_PAGES_INITIAL + 1;
 
     while (bucket.length < GENRE_ROW_SIZE && nextPage <= GENRE_PAGE_MAX) {
-      const batch = Array.from(
-        { length: 3 },
-        (_, i) => nextPage + i,
-      ).filter((p) => p <= GENRE_PAGE_MAX);
+      const batch = Array.from({ length: 3 }, (_, i) => nextPage + i).filter(
+        (p) => p <= GENRE_PAGE_MAX,
+      );
 
       const pages = await mapPool(batch, GENRE_FETCH_CONCURRENCY, (page) =>
         getMoviesByGenre(genreId, page),
@@ -196,13 +200,30 @@ export default async function Home() {
     movies: genreBuckets.get(genre.id) ?? [],
   }));
 
-  const heroPicks = pickDailyHeroMovies(
-    [trendingP1, popularP1],
-    HERO_COUNT,
-    todayKey(),
+  const usedInHero = new Set<number>();
+  function pickHeroGroup(movies: TmdbMovie[], categoryLabel: string) {
+    const picks: { movie: TmdbMovie; categoryLabel: string }[] = [];
+
+    for (const movie of movies) {
+      if (usedInHero.has(movie.id) || !movie.backdrop_path) continue;
+      usedInHero.add(movie.id);
+      picks.push({ movie, categoryLabel });
+      if (picks.length === HERO_GROUP_SIZE) break;
+    }
+
+    return picks;
+  }
+
+  const heroPicks = [
+    ...pickHeroGroup(latestMovies, "Latest releases"),
+    ...pickHeroGroup(mergePages(topRatedP1, topRatedP2), "Top rated"),
+    ...pickHeroGroup(genreBuckets.get(16) ?? [], "Animation"),
+  ];
+  const heroCategoryById = new Map(
+    heroPicks.map(({ movie, categoryLabel }) => [movie.id, categoryLabel]),
   );
   const heroDetails = (
-    await Promise.all(heroPicks.map((m) => getMovie(m.id)))
+    await Promise.all(heroPicks.map(({ movie }) => getMovie(movie.id)))
   ).filter((m): m is NonNullable<typeof m> => m != null);
 
   const trailerKeys = await Promise.all(
@@ -216,13 +237,12 @@ export default async function Home() {
         ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m`
         : null;
     const genres = movie.genres?.map((g) => g.name).join(" / ");
-    const meta = [year, genres, runtime]
-      .filter(Boolean)
-      .join(" · ");
+    const meta = [year, genres, runtime].filter(Boolean).join(" · ");
 
     return {
       id: movie.id,
       title: movie.title,
+      categoryLabel: heroCategoryById.get(movie.id) ?? "Featured film",
       overview: movie.overview,
       tagline: movie.tagline,
       backdropUrl: backdropUrl(movie.backdrop_path),

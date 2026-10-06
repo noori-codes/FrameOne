@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 export type HeroSlide = {
   id: number;
   title: string;
+  categoryLabel: string;
   overview: string;
   tagline: string | null;
   backdropUrl: string | null;
@@ -232,7 +233,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           <div className="w-full max-w-3xl">
             <p className="hero-line hero-line-1 mb-4 inline-flex items-center gap-2 rounded-full border border-amber/30 bg-background/30 px-3 py-1.5 text-[10px] font-semibold tracking-[0.2em] text-amber uppercase backdrop-blur-sm sm:text-xs">
               <Sparkles className="size-3.5" aria-hidden />
-              Today’s featured film
+              {slide.categoryLabel}
             </p>
             <p className="hero-line hero-line-2 mb-3 min-h-[1.5em] text-xs leading-normal tracking-[0.2em] text-cream/60 uppercase sm:text-sm">
               {slide.tagline}
