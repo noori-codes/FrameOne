@@ -24,8 +24,6 @@ export async function SiteHeader() {
     : null;
 
   return (
-    <header className="sticky top-0 z-30 border-b border-cream/10 bg-background/90 backdrop-blur-md">
-      <SiteNav user={user} />
-    </header>
+    <SiteNav user={user} />
   );
 }

@@ -2,10 +2,12 @@
 
 import { Menu, Search, X } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useId, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { BrandLogo } from "@/components/brand-logo";
 import { UserAvatar } from "@/components/user-avatar";
+import { cn } from "@/lib/utils";
 
 export type SiteNavUser = {
   name?: string | null;
@@ -29,6 +31,7 @@ const links = [
  */
 export function SiteNav({ user }: SiteNavProps) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
   const isClient = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -53,6 +56,8 @@ export function SiteNav({ user }: SiteNavProps) {
   const close = () => setOpen(false);
 
   const visibleLinks = links.filter((l) => !("auth" in l && l.auth) || user);
+  const isActive = (href: string) =>
+    pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
 
   const menu =
     open && isClient
@@ -93,7 +98,13 @@ export function SiteNav({ user }: SiteNavProps) {
                     key={link.href}
                     href={link.href}
                     onClick={close}
-                    className="rounded-lg px-3 py-3 text-base text-cream/80 transition-colors hover:bg-cream/5 hover:text-cream"
+                    aria-current={isActive(link.href) ? "page" : undefined}
+                    className={cn(
+                      "rounded-lg px-3 py-3 text-base transition-colors hover:bg-cream/5 hover:text-cream",
+                      isActive(link.href)
+                        ? "bg-amber/10 text-amber"
+                        : "text-cream/80",
+                    )}
                   >
                     {link.label}
                   </Link>
@@ -124,7 +135,15 @@ export function SiteNav({ user }: SiteNavProps) {
 
   return (
     <>
-      <div className="flex h-14 w-full items-center gap-3 px-4 sm:h-16 sm:gap-4 sm:px-6 lg:px-10">
+      <header
+        className={cn(
+          "z-30 border-b border-cream/10 bg-background/25 backdrop-blur-xl",
+          pathname === "/"
+            ? "fixed inset-x-0 top-0"
+            : "sticky top-0",
+        )}
+      >
+      <div className="mx-auto flex h-14 w-full max-w-screen-2xl items-center gap-3 px-4 sm:h-16 sm:gap-4 sm:px-6 lg:px-8">
         <Link
           href="/"
           className="inline-flex h-full min-w-0 shrink items-center transition-opacity hover:opacity-90"
@@ -132,31 +151,44 @@ export function SiteNav({ user }: SiteNavProps) {
         >
           <BrandLogo size="sm" withWordmark priority />
         </Link>
-
         {/* Desktop links */}
-        <nav className="ml-auto hidden items-center gap-5 text-sm text-cream/70 md:flex">
+        <div className="ml-auto hidden items-center gap-6 md:flex">
           <Link
             href="/search"
             aria-label="Search movies"
-            className="rounded-full p-2 text-cream/70 transition-colors hover:bg-cream/5 hover:text-cream"
+            aria-current={pathname === "/search" ? "page" : undefined}
+            className={cn(
+              "inline-flex size-9 items-center justify-center rounded-full transition-colors",
+              pathname === "/search"
+                ? "text-amber"
+                : "text-cream/60 hover:bg-cream/5 hover:text-cream",
+            )}
           >
             <Search className="h-5 w-5" strokeWidth={1.75} />
           </Link>
-          {visibleLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="transition-colors hover:text-cream"
-            >
-              {link.label}
-            </Link>
-          ))}
+          <nav aria-label="Main navigation" className="flex items-center gap-6 text-sm">
+            {visibleLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={isActive(link.href) ? "page" : undefined}
+                className={cn(
+                  "border-b-2 border-transparent py-2 transition-colors",
+                  isActive(link.href)
+                    ? "border-amber text-amber"
+                    : "text-cream/65 hover:text-cream",
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
           {user ? (
             <Link
               href="/profile"
               aria-label="Profile"
               title={user.name ?? user.email ?? "Profile"}
-              className="rounded-full transition-opacity hover:opacity-90"
+              className="rounded-full transition-opacity hover:opacity-80"
             >
               <UserAvatar
                 name={user.name}
@@ -169,12 +201,12 @@ export function SiteNav({ user }: SiteNavProps) {
           ) : (
             <Link
               href="/signin"
-              className="rounded-full border border-cream/20 px-3 py-1 text-cream transition-colors hover:border-amber hover:text-amber"
+              className="text-sm text-cream/75 transition-colors hover:text-amber"
             >
               Sign in
             </Link>
           )}
-        </nav>
+        </div>
 
         {/* Mobile actions */}
         <div className="ml-auto flex items-center gap-1.5 md:hidden">
@@ -212,6 +244,7 @@ export function SiteNav({ user }: SiteNavProps) {
           </button>
         </div>
       </div>
+      </header>
       {menu}
     </>
   );

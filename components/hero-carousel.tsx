@@ -142,7 +142,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
   if (!slide) {
     return (
-      <section className="relative flex min-h-[calc(100dvh-3.5rem)] w-full flex-col justify-end sm:min-h-[calc(100dvh-4rem)]">
+      <section className="relative flex min-h-dvh w-full flex-col justify-end">
         <div aria-hidden className="absolute inset-0 bg-stage" />
         <div className="relative z-10 flex w-full flex-col px-4 pb-10 pt-16 sm:px-6 sm:pb-12 lg:px-10">
           <h1 className="max-w-xl font-display text-5xl leading-none tracking-wide text-cream sm:text-7xl">
@@ -165,7 +165,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
   return (
     <section
-      className="relative flex min-h-[min(760px,calc(100dvh-3rem))] w-full flex-col overflow-hidden sm:min-h-[min(820px,calc(100dvh-3.5rem))] lg:min-h-[min(860px,calc(100dvh-4rem))]"
+      className="relative flex min-h-[min(760px,100dvh)] w-full flex-col overflow-hidden sm:min-h-[min(820px,100dvh)] lg:min-h-[min(860px,100dvh)]"
       aria-roledescription="carousel"
       aria-label="Featured movies"
     >
@@ -184,9 +184,9 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
         ) : (
           <div className="absolute inset-0 bg-stage" />
         )}
-        <div className="absolute inset-0 bg-background/30" />
-        <div className="absolute inset-0 bg-linear-to-t from-background via-background/45 to-background/10" />
-        <div className="absolute inset-0 bg-linear-to-r from-background/85 via-background/35 to-background/5" />
+        <div className="absolute inset-0 bg-background/10" />
+        <div className="absolute inset-0 bg-linear-to-t from-background via-background/30 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-background/45 via-background/15 to-transparent" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_76%_42%,rgba(47,230,200,0.12),transparent_42%)]" />
         <div className="film-grain absolute inset-0" />
       </div>
