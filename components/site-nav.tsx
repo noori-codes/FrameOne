@@ -137,113 +137,114 @@ export function SiteNav({ user }: SiteNavProps) {
     <>
       <header
         className={cn(
-          "z-30 border-b border-cream/10 bg-background/25 backdrop-blur-xl",
-          pathname === "/"
-            ? "fixed inset-x-0 top-0"
-            : "sticky top-0",
+          "z-30 border-b border-cream/10 bg-background/80 shadow-[0_8px_30px_-18px_rgba(0,0,0,0.95)] backdrop-blur-xl",
+          pathname === "/" ? "fixed inset-x-0 top-0" : "sticky top-0",
         )}
       >
-      <div className="mx-auto flex h-14 w-full max-w-screen-2xl items-center gap-3 px-4 sm:h-16 sm:gap-4 sm:px-6 lg:px-8">
-        <Link
-          href="/"
-          className="inline-flex h-full min-w-0 shrink items-center transition-opacity hover:opacity-90"
-          aria-label="FrameOne home"
-        >
-          <BrandLogo size="sm" withWordmark priority />
-        </Link>
-        {/* Desktop links */}
-        <div className="ml-auto hidden items-center gap-6 md:flex">
+        <div className="mx-auto flex h-14 w-full max-w-screen-2xl items-center gap-3 px-4 sm:h-16 sm:gap-4 sm:px-6 lg:px-8">
           <Link
-            href="/search"
-            aria-label="Search movies"
-            aria-current={pathname === "/search" ? "page" : undefined}
-            className={cn(
-              "inline-flex size-9 items-center justify-center rounded-full transition-colors",
-              pathname === "/search"
-                ? "text-amber"
-                : "text-cream/60 hover:bg-cream/5 hover:text-cream",
-            )}
+            href="/"
+            className="inline-flex h-full min-w-0 shrink items-center transition-opacity hover:opacity-90"
+            aria-label="FrameOne home"
           >
-            <Search className="h-5 w-5" strokeWidth={1.75} />
+            <BrandLogo size="sm" withWordmark priority />
           </Link>
-          <nav aria-label="Main navigation" className="flex items-center gap-6 text-sm">
-            {visibleLinks.map((link) => (
+          {/* Desktop links */}
+          <div className="ml-auto hidden items-center gap-6 md:flex">
+            <Link
+              href="/search"
+              aria-label="Search movies"
+              aria-current={pathname === "/search" ? "page" : undefined}
+              className={cn(
+                "inline-flex size-9 items-center justify-center rounded-full transition-colors",
+                pathname === "/search"
+                  ? "text-amber"
+                  : "text-cream/60 hover:bg-cream/5 hover:text-cream",
+              )}
+            >
+              <Search className="h-5 w-5" strokeWidth={1.75} />
+            </Link>
+            <nav
+              aria-label="Main navigation"
+              className="flex items-center gap-6 text-sm"
+            >
+              {visibleLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={isActive(link.href) ? "page" : undefined}
+                  className={cn(
+                    "border-b-2 border-transparent py-2 transition-colors",
+                    isActive(link.href)
+                      ? "border-amber text-amber"
+                      : "text-cream/75 hover:text-cream",
+                  )}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+            {user ? (
               <Link
-                key={link.href}
-                href={link.href}
-                aria-current={isActive(link.href) ? "page" : undefined}
-                className={cn(
-                  "border-b-2 border-transparent py-2 transition-colors",
-                  isActive(link.href)
-                    ? "border-amber text-amber"
-                    : "text-cream/65 hover:text-cream",
-                )}
+                href="/profile"
+                aria-label="Profile"
+                title={user.name ?? user.email ?? "Profile"}
+                className="rounded-full transition-opacity hover:opacity-80"
               >
-                {link.label}
+                <UserAvatar
+                  name={user.name}
+                  email={user.email}
+                  image={user.image}
+                  size="sm"
+                  className="hover:border-amber"
+                />
               </Link>
-            ))}
-          </nav>
-          {user ? (
-            <Link
-              href="/profile"
-              aria-label="Profile"
-              title={user.name ?? user.email ?? "Profile"}
-              className="rounded-full transition-opacity hover:opacity-80"
-            >
-              <UserAvatar
-                name={user.name}
-                email={user.email}
-                image={user.image}
-                size="sm"
-                className="hover:border-amber"
-              />
-            </Link>
-          ) : (
-            <Link
-              href="/signin"
-              className="text-sm text-cream/75 transition-colors hover:text-amber"
-            >
-              Sign in
-            </Link>
-          )}
-        </div>
+            ) : (
+              <Link
+                href="/signin"
+                className="text-sm text-cream/75 transition-colors hover:text-amber"
+              >
+                Sign in
+              </Link>
+            )}
+          </div>
 
-        {/* Mobile actions */}
-        <div className="ml-auto flex items-center gap-1.5 md:hidden">
-          <Link
-            href="/search"
-            aria-label="Search movies"
-            className="rounded-full p-2.5 text-cream/70 transition-colors hover:bg-cream/5 hover:text-cream"
-          >
-            <Search className="h-5 w-5" strokeWidth={1.75} />
-          </Link>
-          {user ? (
+          {/* Mobile actions */}
+          <div className="ml-auto flex items-center gap-1.5 md:hidden">
             <Link
-              href="/profile"
-              aria-label="Profile"
-              title={user.name ?? user.email ?? "Profile"}
-              className="rounded-full p-0.5 transition-opacity hover:opacity-90"
+              href="/search"
+              aria-label="Search movies"
+              className="rounded-full p-2.5 text-cream/70 transition-colors hover:bg-cream/5 hover:text-cream"
             >
-              <UserAvatar
-                name={user.name}
-                email={user.email}
-                image={user.image}
-                size="sm"
-                className="hover:border-amber"
-              />
+              <Search className="h-5 w-5" strokeWidth={1.75} />
             </Link>
-          ) : null}
-          <button
-            type="button"
-            aria-label="Open menu"
-            aria-expanded={open}
-            onClick={() => setOpen(true)}
-            className="rounded-full p-2.5 text-cream/70 transition-colors hover:bg-cream/5 hover:text-cream"
-          >
-            <Menu className="h-5 w-5" strokeWidth={1.75} />
-          </button>
+            {user ? (
+              <Link
+                href="/profile"
+                aria-label="Profile"
+                title={user.name ?? user.email ?? "Profile"}
+                className="rounded-full p-0.5 transition-opacity hover:opacity-90"
+              >
+                <UserAvatar
+                  name={user.name}
+                  email={user.email}
+                  image={user.image}
+                  size="sm"
+                  className="hover:border-amber"
+                />
+              </Link>
+            ) : null}
+            <button
+              type="button"
+              aria-label="Open menu"
+              aria-expanded={open}
+              onClick={() => setOpen(true)}
+              className="rounded-full p-2.5 text-cream/70 transition-colors hover:bg-cream/5 hover:text-cream"
+            >
+              <Menu className="h-5 w-5" strokeWidth={1.75} />
+            </button>
+          </div>
         </div>
-      </div>
       </header>
       {menu}
     </>

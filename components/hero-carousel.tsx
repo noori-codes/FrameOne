@@ -1,6 +1,14 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Info, Sparkles, Star } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  Pause,
+  Play,
+  Sparkles,
+  Star,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -27,12 +35,34 @@ type HeroCarouselProps = {
 /** Every slide stays this long — progress bar and advance share the same clock. */
 const AUTO_MS = 9000;
 
+function splitHeroTitle(title: string): [string, string | null] {
+  const words = title.trim().split(/\s+/);
+  if (words.length < 2) return [title, null];
+
+  let splitAt = 1;
+  let shortestDifference = Infinity;
+
+  for (let i = 1; i < words.length; i += 1) {
+    const firstLine = words.slice(0, i).join(" ");
+    const secondLine = words.slice(i).join(" ");
+    const difference = Math.abs(firstLine.length - secondLine.length);
+
+    if (difference < shortestDifference) {
+      splitAt = i;
+      shortestDifference = difference;
+    }
+  }
+
+  return [words.slice(0, splitAt).join(" "), words.slice(splitAt).join(" ")];
+}
+
 /**
  * Full-bleed hero that cycles a few daily-picked movies.
  */
 export function HeroCarousel({ slides }: HeroCarouselProps) {
   const [index, setIndex] = useState(0);
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const count = slides.length;
   const slide = slides[index] ?? null;
 
@@ -102,6 +132,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
     function tick(now: number) {
       const paused =
+        isPaused ||
         trailerOpenRef.current ||
         (typeof document !== "undefined" && document.hidden);
 
@@ -138,7 +169,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [count, resetClock, setBar]);
+  }, [count, isPaused, resetClock, setBar]);
 
   if (!slide) {
     return (
@@ -163,6 +194,8 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
     );
   }
 
+  const titleLines = splitHeroTitle(slide.title);
+
   return (
     <section
       className="relative flex min-h-[min(760px,100dvh)] w-full flex-col overflow-hidden sm:min-h-[min(820px,100dvh)] lg:min-h-[min(860px,100dvh)]"
@@ -186,7 +219,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
         )}
         <div className="absolute inset-0 bg-background/10" />
         <div className="absolute inset-0 bg-linear-to-t from-background via-background/30 to-transparent" />
-        <div className="absolute inset-0 bg-linear-to-r from-background/45 via-background/15 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-background/80 via-background/40 to-transparent" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_76%_42%,rgba(47,230,200,0.12),transparent_42%)]" />
         <div className="film-grain absolute inset-0" />
       </div>
@@ -205,8 +238,17 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               {slide.tagline}
             </p>
 
-            <h1 className="hero-line hero-line-3 line-clamp-2 min-h-[1.76em] max-w-3xl font-display text-5xl leading-[0.88] tracking-wide wrap-break-word text-cream uppercase drop-shadow-[0_8px_30px_rgba(0,0,0,0.5)] sm:text-7xl md:text-8xl lg:text-[6.75rem]">
-              {slide.title}
+            <h1
+              aria-label={slide.title}
+              className="hero-line hero-line-3 line-clamp-2 min-h-[1.76em] max-w-3xl font-display text-5xl leading-[0.88] tracking-wide wrap-break-word text-cream uppercase drop-shadow-[0_8px_30px_rgba(0,0,0,0.5)] sm:text-7xl md:text-8xl lg:text-[6.75rem]"
+            >
+              {titleLines.map((line, i) =>
+                line ? (
+                  <span key={i} aria-hidden="true" className="block">
+                    {line}
+                  </span>
+                ) : null,
+              )}
             </h1>
 
             <p className="hero-line hero-line-4 mt-5 flex min-h-10 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-medium text-cream/75 sm:mt-6 sm:min-h-6 sm:text-sm">
@@ -220,7 +262,9 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                       key={`${item}-${i}`}
                       className="inline-flex items-center gap-2.5"
                     >
-                      <span aria-hidden className="text-cream/30">·</span>
+                      <span aria-hidden className="text-cream/30">
+                        ·
+                      </span>
                       {item}
                     </span>
                   ))
@@ -253,12 +297,8 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             <Link
               href={`/movie/${slide.id}`}
               aria-label={`View details for ${slide.title}`}
-              className="group relative mx-auto hidden w-full max-w-72.5 justify-self-center lg:block"
+              className="group relative mx-auto hidden w-full max-w-64 justify-self-center lg:block"
             >
-              <span
-                aria-hidden
-                className="absolute -inset-4 rotate-3 rounded-sm border border-cream/15 bg-cream/2.5 transition-transform duration-500 group-hover:rotate-5 motion-reduce:transition-none"
-              />
               <div className="relative aspect-2/3 overflow-hidden rounded-sm bg-stage shadow-[0_32px_90px_-24px_rgba(0,0,0,0.9)] ring-1 ring-white/25 transition-transform duration-500 group-hover:-translate-y-2 group-hover:rotate-1 motion-reduce:transition-none">
                 <Image
                   src={slide.posterUrl}
@@ -268,21 +308,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                   unoptimized
                   className="object-cover"
                 />
-                <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/35 to-transparent px-5 pb-5 pt-20">
-                  <p className="text-[10px] font-semibold tracking-[0.22em] text-amber uppercase">
-                    The FrameOne pick
-                  </p>
-                  <p className="mt-1 font-display text-2xl tracking-wide text-white uppercase">
-                    {slide.title}
-                  </p>
-                </div>
               </div>
-              <span className="absolute -right-5 -bottom-5 inline-flex size-19 flex-col items-center justify-center rounded-full border border-amber/50 bg-background/90 text-amber shadow-xl backdrop-blur-md">
-                <span className="text-[9px] tracking-[0.16em] uppercase">Rated</span>
-                <span className="mt-0.5 font-display text-2xl leading-none">
-                  {slide.rating.toFixed(1)}
-                </span>
-              </span>
             </Link>
           ) : null}
         </div>
@@ -309,26 +335,40 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                   aria-selected={i === index}
                   aria-label={`Show ${s.title}`}
                   onClick={() => goTo(i)}
-                  className={cn(
-                    "relative h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-cream/20 transition-colors hover:bg-cream/35",
-                    i === index && "bg-cream/30",
-                  )}
+                  className={cn("group relative h-8 min-w-0 flex-1")}
                 >
-                  {i === index ? (
-                    <span
-                      ref={progressRef}
-                      className="absolute inset-0 origin-left scale-x-0 bg-amber"
-                    />
-                  ) : null}
+                  <span className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 overflow-hidden rounded-full bg-cream/20 transition-colors group-hover:bg-cream/40">
+                    {i === index ? (
+                      <span
+                        ref={progressRef}
+                        className="absolute inset-0 origin-left scale-x-0 bg-amber"
+                      />
+                    ) : null}
+                  </span>
                 </button>
               ))}
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
+                aria-label={
+                  isPaused ? "Play featured slides" : "Pause featured slides"
+                }
+                aria-pressed={isPaused}
+                onClick={() => setIsPaused((paused) => !paused)}
+                className="inline-flex size-11 items-center justify-center rounded-full border border-cream/25 bg-background/20 text-cream/80 backdrop-blur-sm transition-colors hover:border-amber/60 hover:text-amber"
+              >
+                {isPaused ? (
+                  <Play className="size-4" />
+                ) : (
+                  <Pause className="size-4" />
+                )}
+              </button>
+              <button
+                type="button"
                 aria-label="Previous featured movie"
                 onClick={() => go(-1)}
-                className="rounded-full border border-cream/25 bg-background/20 p-2 text-cream/80 backdrop-blur-sm transition-colors hover:border-amber/60 hover:text-amber"
+                className="inline-flex size-11 items-center justify-center rounded-full border border-cream/25 bg-background/20 text-cream/80 backdrop-blur-sm transition-colors hover:border-amber/60 hover:text-amber"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -336,7 +376,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                 type="button"
                 aria-label="Next featured movie"
                 onClick={() => go(1)}
-                className="rounded-full border border-cream/25 bg-background/20 p-2 text-cream/80 backdrop-blur-sm transition-colors hover:border-amber/60 hover:text-amber"
+                className="inline-flex size-11 items-center justify-center rounded-full border border-cream/25 bg-background/20 text-cream/80 backdrop-blur-sm transition-colors hover:border-amber/60 hover:text-amber"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
