@@ -1,19 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  Building2,
-  CalendarDays,
-  CircleDollarSign,
-  Clock3,
-  Film,
-  Globe2,
-  Languages,
-  Star,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { ArrowUpRight, CalendarDays, Clock3, Star } from "lucide-react";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { FavoriteMetaForm } from "@/components/favorite-meta-form";
@@ -62,20 +50,18 @@ function formatMoney(amount: number | undefined) {
   }).format(amount);
 }
 
-function DetailItem({
+function Fact({
   label,
   value,
 }: {
   label: string;
-  value: string | null | undefined;
+  value: string | number | null | undefined;
 }) {
-  if (!value) return null;
+  if (value == null || value === "") return null;
   return (
-    <div className="min-w-0 border-b border-cream/8 py-3 last:border-b-0">
-      <dt className="text-xs tracking-wide text-cream/40 uppercase">{label}</dt>
-      <dd className="mt-1 break-words text-sm leading-relaxed text-cream/80">
-        {value}
-      </dd>
+    <div className="flex items-baseline justify-between gap-4 border-b border-cream/10 py-3 last:border-0">
+      <dt className="shrink-0 text-sm text-cream/45">{label}</dt>
+      <dd className="text-right text-sm leading-relaxed text-cream/85">{value}</dd>
     </div>
   );
 }
@@ -95,7 +81,6 @@ export async function generateMetadata({
 export default async function MoviePage({ params }: MoviePageProps) {
   const { id } = await params;
   const movie = await getMovie(id);
-
   if (!movie) notFound();
 
   const session = await auth();
@@ -130,46 +115,27 @@ export default async function MoviePage({ params }: MoviePageProps) {
 
   const poster = posterUrl(movie.poster_path, "w500");
   const backdrop = backdropUrl(movie.backdrop_path);
-  const runtime = formatRuntime(movie.runtime);
   const releaseDate = formatReleaseDate(movie.release_date);
-  const audienceScore = Math.min(Math.max(movie.vote_average * 10, 0), 100);
+  const runtime = formatRuntime(movie.runtime);
   const director = movie.credits?.crew.find((person) => person.job === "Director");
   const writers = movie.credits?.crew
-    .filter((person) =>
-      ["Writer", "Screenplay", "Story"].includes(person.job),
-    )
-    .slice(0, 4);
+    .filter((person) => ["Writer", "Screenplay", "Story"].includes(person.job))
+    .slice(0, 3);
   const cast = movie.credits?.cast.slice(0, 10) ?? [];
-  const details = [
-    { label: "Release date", value: releaseDate },
-    { label: "Status", value: movie.status },
-    { label: "Original title", value: movie.original_title },
-    {
-      label: "Original language",
-      value: movie.spoken_languages?.find(
-        (language) => language.iso_639_1 === movie.original_language,
-      )?.english_name ?? movie.original_language?.toUpperCase(),
-    },
-    {
-      label: "Spoken languages",
-      value: movie.spoken_languages
-        ?.map((language) => language.english_name || language.name)
-        .filter(Boolean)
-        .join(", "),
-    },
-    {
-      label: "Production countries",
-      value: movie.production_countries?.map((country) => country.name).join(", "),
-    },
-    {
-      label: "Production companies",
-      value: movie.production_companies?.map((company) => company.name).join(", "),
-    },
-  ];
+  const language =
+    movie.spoken_languages?.find(
+      (item) => item.iso_639_1 === movie.original_language,
+    )?.english_name ?? movie.original_language?.toUpperCase();
+  const companies = movie.production_companies
+    ?.map((company) => company.name)
+    .join(", ");
+  const countries = movie.production_countries
+    ?.map((country) => country.name)
+    .join(", ");
 
   return (
     <main className="flex min-h-dvh flex-1 flex-col">
-      <section className="relative isolate overflow-hidden border-b border-cream/8">
+      <section className="relative isolate flex min-h-[610px] flex-col justify-end overflow-hidden sm:min-h-[690px] lg:min-h-[760px]">
         {backdrop ? (
           <Image
             src={backdrop}
@@ -178,219 +144,207 @@ export default async function MoviePage({ params }: MoviePageProps) {
             priority
             sizes="100vw"
             unoptimized
-            className="pointer-events-none object-cover object-center opacity-35"
+            className="pointer-events-none object-cover object-center"
           />
         ) : null}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-linear-to-r from-background via-background/90 to-background/60"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(7,10,11,0.96)_0%,rgba(7,10,11,0.72)_48%,rgba(7,10,11,0.24)_100%)]"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-linear-to-t from-background via-transparent to-background/30"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,#070a0b_0%,rgba(7,10,11,0.48)_28%,transparent_72%)]"
         />
-        <div className="film-grain pointer-events-none absolute inset-0" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(7,10,11,0.42)_0%,transparent_22%)]"
+        />
 
-        <div className="relative mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:grid-cols-[220px_minmax(0,1fr)] sm:items-center sm:gap-10 sm:px-8 sm:py-14 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-14 lg:py-20">
-          <div className="relative mx-auto aspect-2/3 w-40 shrink-0 overflow-hidden rounded-xl bg-stage shadow-[0_24px_70px_-20px_rgba(0,0,0,0.9)] ring-1 ring-cream/20 sm:mx-0 sm:w-full">
-            {poster ? (
-              <Image
-                src={poster}
-                alt={movie.title}
-                fill
-                sizes="(max-width: 640px) 160px, 260px"
-                className="object-cover"
-                priority
-                unoptimized
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center p-5 text-center font-display text-xl text-cream/40">
-                {movie.title}
-              </div>
-            )}
-          </div>
+        <div className="relative mx-auto w-full max-w-7xl px-5 pb-12 pt-8 sm:px-8 sm:pb-16 lg:px-12 lg:pb-20">
+          <Link
+            href="/#trending"
+            className="inline-flex items-center gap-2 text-sm text-cream/60 transition-colors hover:text-cream"
+          >
+            <span aria-hidden>←</span> Back to browse
+          </Link>
 
-          <div className="min-w-0 text-center sm:text-left">
-            <Link
-              href="/#trending"
-              className="text-sm text-cream/55 transition-colors hover:text-amber"
-            >
-              ← Back to browse
-            </Link>
-
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs font-medium tracking-[0.18em] text-amber uppercase sm:justify-start">
-              <span>Movie</span>
-              {movie.status ? (
-                <>
-                  <span aria-hidden className="text-cream/30">·</span>
-                  <span className="text-cream/55">{movie.status}</span>
-                </>
-              ) : null}
+          <div className="mt-12 grid grid-cols-[112px_minmax(0,1fr)] items-end gap-5 sm:mt-16 sm:grid-cols-[200px_minmax(0,1fr)] sm:gap-8 lg:mt-20 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-12">
+            <div className="relative aspect-2/3 w-full overflow-hidden rounded-md bg-stage shadow-[0_28px_80px_-20px_rgba(0,0,0,0.9)] ring-1 ring-white/15">
+              {poster ? (
+                <Image
+                  src={poster}
+                  alt={movie.title}
+                  fill
+                  sizes="(max-width: 640px) 112px, (max-width: 1024px) 200px, 270px"
+                  className="object-cover"
+                  priority
+                  unoptimized
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center p-3 text-center font-display text-xl text-cream/45">
+                  {movie.title}
+                </div>
+              )}
             </div>
-            <h1 className="mt-2 font-display text-4xl leading-[0.98] tracking-wide wrap-break-word text-cream uppercase sm:text-6xl md:text-7xl">
-              {movie.title}
-            </h1>
-            {movie.tagline ? (
-              <p className="mt-4 text-base text-amber/85 italic sm:text-lg">
-                “{movie.tagline}”
-              </p>
-            ) : null}
 
-            <div className="mt-5 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm text-cream/65 sm:justify-start">
-              {releaseDate ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <CalendarDays className="size-4 text-amber/80" aria-hidden />
-                  {releaseDate}
-                </span>
+            <div className="min-w-0 pb-1 sm:pb-2 lg:pb-3">
+              <p className="mb-2 text-[10px] font-semibold tracking-[0.26em] text-amber uppercase sm:text-xs">
+                FrameOne <span className="px-1 text-cream/35">/</span> Film
+                {movie.release_date ? ` · ${movie.release_date.slice(0, 4)}` : ""}
+              </p>
+              <h1 className="max-w-4xl font-display text-4xl leading-[0.92] tracking-wide wrap-break-word text-cream uppercase sm:text-6xl md:text-7xl lg:text-8xl">
+                {movie.title}
+              </h1>
+              {movie.tagline ? (
+                <p className="mt-3 max-w-2xl text-sm text-cream/70 italic sm:mt-5 sm:text-lg">
+                  “{movie.tagline}”
+                </p>
               ) : null}
-              {runtime ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <Clock3 className="size-4 text-amber/80" aria-hidden />
-                  {runtime}
-                </span>
-              ) : null}
-              <span className="inline-flex items-center gap-1.5 text-amber">
-                <Star className="size-4 fill-current" aria-hidden />
-                {movie.vote_average.toFixed(1)}
-                {movie.vote_count != null ? (
-                  <span className="text-cream/45">
-                    ({movie.vote_count.toLocaleString()} ratings)
+
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-cream/65 sm:mt-6 sm:gap-x-5 sm:text-sm">
+                {releaseDate ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <CalendarDays className="size-3.5 text-amber sm:size-4" aria-hidden />
+                    {releaseDate}
                   </span>
                 ) : null}
-              </span>
-            </div>
-
-            {movie.genres.length > 0 ? (
-              <div className="mt-5 flex flex-wrap justify-center gap-2 sm:justify-start">
-                {movie.genres.map((genre) => (
-                  <Link
-                    key={genre.id}
-                    href={`/genres/${genre.id}`}
-                    className="rounded-full border border-cream/20 bg-black/20 px-3 py-1.5 text-xs text-cream/75 transition-colors hover:border-amber/60 hover:text-amber"
-                  >
-                    {genre.name}
-                  </Link>
-                ))}
+                {runtime ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Clock3 className="size-3.5 text-amber sm:size-4" aria-hidden />
+                    {runtime}
+                  </span>
+                ) : null}
+                <span className="inline-flex items-center gap-1.5 text-amber">
+                  <Star className="size-3.5 fill-current sm:size-4" aria-hidden />
+                  <strong>{movie.vote_average.toFixed(1)}</strong>
+                  {movie.vote_count != null ? (
+                    <span className="text-cream/50">
+                      · {movie.vote_count.toLocaleString()} ratings
+                    </span>
+                  ) : null}
+                </span>
               </div>
-            ) : null}
 
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
-              <TrailerButton
-                youtubeKey={trailerKey}
-                title={movie.title}
-                label="Watch trailer"
-              />
+              {movie.genres.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-x-2 gap-y-1 text-xs text-cream/65 sm:mt-4 sm:text-sm">
+                  {movie.genres.map((genre, index) => (
+                    <span key={genre.id}>
+                      {index > 0 ? <span className="mr-2 text-cream/30">·</span> : null}
+                      <Link
+                        href={`/genres/${genre.id}`}
+                        className="transition-colors hover:text-amber"
+                      >
+                        {genre.name}
+                      </Link>
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+
+              <div className="mt-5 flex flex-wrap items-center gap-2.5 sm:mt-7">
+                {trailerKey ? (
+                  <TrailerButton
+                    youtubeKey={trailerKey}
+                    title={movie.title}
+                    label="Watch trailer"
+                    className="min-h-10 px-4 py-2 text-xs sm:min-h-11 sm:px-5 sm:text-sm"
+                  />
+                ) : null}
+                <SaveListButtons
+                  key={`${movie.id}-${Boolean(favorite)}-${Boolean(watchlistItem)}`}
+                  movieId={movie.id}
+                  title={movie.title}
+                  posterPath={movie.poster_path}
+                  initialFavorite={Boolean(favorite)}
+                  initialWatchlist={Boolean(watchlistItem)}
+                  signedIn={Boolean(session?.user)}
+                />
+              </div>
             </div>
-            <SaveListButtons
-              key={`${movie.id}-${Boolean(favorite)}-${Boolean(watchlistItem)}`}
-              movieId={movie.id}
-              title={movie.title}
-              posterPath={movie.poster_path}
-              initialFavorite={Boolean(favorite)}
-              initialWatchlist={Boolean(watchlistItem)}
-              signedIn={Boolean(session?.user)}
-            />
-
-            {favorite ? (
-              <FavoriteMetaForm
-                key={`${favorite.id}-${favorite.rating}-${favorite.note}`}
-                movieId={movie.id}
-                initialRating={favorite.rating}
-                initialNote={favorite.note}
-                className="mt-6 text-left"
-              />
-            ) : null}
-            {favorite?.note ? (
-              <p className="mx-auto mt-4 max-w-md rounded-xl border border-cream/10 bg-black/25 px-4 py-3 text-left text-sm text-cream/65 italic sm:mx-0">
-                “{favorite.note}”
-              </p>
-            ) : null}
           </div>
         </div>
       </section>
 
-      <div className="mx-auto grid w-full max-w-6xl flex-1 gap-6 px-4 py-8 sm:px-8 sm:py-12 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8">
-        <div className="min-w-0 space-y-6">
-          <section className="rounded-2xl border border-cream/10 bg-stage/65 p-5 sm:p-7">
-            <div className="flex items-center gap-3">
-              <span className="rounded-xl bg-amber/10 p-2.5 text-amber">
-                <Film className="size-5" aria-hidden />
-              </span>
-              <div>
-                <p className="text-xs tracking-[0.18em] text-amber uppercase">
-                  The story
-                </p>
-                <h2 className="mt-1 text-xl font-semibold text-cream sm:text-2xl">
-                  Synopsis
-                </h2>
-              </div>
-            </div>
-            <p className="mt-5 max-w-3xl text-sm leading-7 text-cream/75 sm:text-base sm:leading-8">
+      <div className="mx-auto grid w-full max-w-7xl gap-12 px-5 pb-14 pt-10 sm:px-8 sm:pb-20 sm:pt-14 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-16 lg:px-12 lg:pt-16">
+        <div className="min-w-0">
+          <section aria-labelledby="overview-heading">
+            <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
+              The story
+            </p>
+            <h2
+              id="overview-heading"
+              className="mt-2 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl"
+            >
+              Overview
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-cream/70 sm:text-base sm:leading-8">
               {movie.overview || "No synopsis is available for this movie yet."}
             </p>
             {director ? (
-              <p className="mt-5 border-t border-cream/8 pt-4 text-sm text-cream/55">
-                Directed by <span className="font-medium text-cream/85">{director.name}</span>
+              <div className="mt-6 flex flex-wrap gap-x-8 gap-y-3 border-t border-cream/10 pt-5">
+                <p className="text-sm text-cream/50">
+                  Director <span className="ml-2 text-cream/85">{director.name}</span>
+                </p>
                 {writers && writers.length > 0 ? (
-                  <>
-                    <span className="mx-2 text-cream/25">·</span>
+                  <p className="text-sm text-cream/50">
                     Written by{" "}
-                    <span className="font-medium text-cream/85">
+                    <span className="ml-2 text-cream/85">
                       {writers.map((writer) => writer.name).join(", ")}
                     </span>
-                  </>
+                  </p>
                 ) : null}
-              </p>
+              </div>
             ) : null}
           </section>
 
           {cast.length > 0 ? (
-            <section className="rounded-2xl border border-cream/10 bg-stage/65 p-5 sm:p-7">
-              <div className="flex items-center gap-3">
-                <span className="rounded-xl bg-amber/10 p-2.5 text-amber">
-                  <Users className="size-5" aria-hidden />
-                </span>
+            <section
+              aria-labelledby="cast-heading"
+              className="mt-12 border-t border-cream/10 pt-8 sm:mt-16 sm:pt-10"
+            >
+              <div className="flex items-baseline justify-between gap-4">
                 <div>
-                  <p className="text-xs tracking-[0.18em] text-amber uppercase">
-                    On screen
+                  <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
+                    The people
                   </p>
-                  <h2 className="mt-1 text-xl font-semibold text-cream sm:text-2xl">
+                  <h2
+                    id="cast-heading"
+                    className="mt-2 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl"
+                  >
                     Cast
                   </h2>
                 </div>
+                <span className="text-xs text-cream/40">
+                  {cast.length} featured
+                </span>
               </div>
-              <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+              <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4 xl:grid-cols-5">
                 {cast.map((person) => {
                   const profile = profileUrl(person.profile_path);
                   return (
-                    <li
-                      key={`${person.id}-${person.character}`}
-                      className="flex min-w-0 items-center gap-3 rounded-xl border border-cream/8 bg-background/40 p-2.5"
-                    >
-                      <div className="relative size-11 shrink-0 overflow-hidden rounded-full bg-cream/10">
+                    <li key={`${person.id}-${person.character}`} className="min-w-0">
+                      <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-stage">
                         {profile ? (
                           <Image
                             src={profile}
-                            alt=""
+                            alt={person.name}
                             fill
-                            sizes="44px"
+                            sizes="(max-width: 640px) 42vw, (max-width: 1024px) 25vw, 180px"
                             unoptimized
-                            className="object-cover"
+                            className="object-cover transition-transform duration-500 hover:scale-[1.04]"
                           />
                         ) : (
-                          <span className="flex h-full items-center justify-center text-sm font-semibold text-cream/45">
+                          <div className="flex h-full items-center justify-center font-display text-4xl text-cream/30">
                             {person.name.slice(0, 1)}
-                          </span>
+                          </div>
                         )}
                       </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-medium text-cream/90">
-                          {person.name}
-                        </p>
-                        <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-cream/45">
-                          {person.character || "Cast"}
-                        </p>
-                      </div>
+                      <p className="mt-2.5 truncate text-sm font-medium text-cream/90">
+                        {person.name}
+                      </p>
+                      <p className="mt-0.5 line-clamp-1 text-xs text-cream/45">
+                        {person.character || "Cast"}
+                      </p>
                     </li>
                   );
                 })}
@@ -398,36 +352,72 @@ export default async function MoviePage({ params }: MoviePageProps) {
             </section>
           ) : null}
 
-          <section className="rounded-2xl border border-cream/10 bg-stage/65 p-5 sm:p-7">
-            <div className="flex items-center gap-3">
-              <span className="rounded-xl bg-amber/10 p-2.5 text-amber">
-                <Building2 className="size-5" aria-hidden />
-              </span>
-              <div>
-                <p className="text-xs tracking-[0.18em] text-amber uppercase">
-                  Behind the scenes
-                </p>
-                <h2 className="mt-1 text-xl font-semibold text-cream sm:text-2xl">
-                  Movie details
-                </h2>
-              </div>
-            </div>
-            <dl className="mt-4 grid gap-x-8 sm:grid-cols-2">
-              {details.map((item) => (
-                <DetailItem key={item.label} {...item} />
-              ))}
+          {favorite ? (
+            <section
+              aria-labelledby="your-notes-heading"
+              className="mt-12 border-t border-cream/10 pt-8 sm:mt-16 sm:pt-10"
+            >
+              <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
+                Your collection
+              </p>
+              <h2
+                id="your-notes-heading"
+                className="mt-2 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl"
+              >
+                Your notes
+              </h2>
+              <FavoriteMetaForm
+                key={`${favorite.id}-${favorite.rating}-${favorite.note}`}
+                movieId={movie.id}
+                initialRating={favorite.rating}
+                initialNote={favorite.note}
+                className="mt-5 max-w-xl"
+              />
+            </section>
+          ) : null}
+        </div>
+
+        <aside className="h-fit border-t border-cream/10 pt-7 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+          <section aria-labelledby="details-heading">
+            <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
+              At a glance
+            </p>
+            <h2
+              id="details-heading"
+              className="mt-2 font-display text-3xl tracking-wide text-cream uppercase"
+            >
+              Details
+            </h2>
+            <dl className="mt-4">
+              <Fact label="Status" value={movie.status} />
+              <Fact label="Original title" value={movie.original_title} />
+              <Fact label="Language" value={language} />
+              <Fact label="Countries" value={countries} />
+              <Fact label="Studio" value={companies} />
+              <Fact label="Budget" value={formatMoney(movie.budget)} />
+              <Fact label="Worldwide gross" value={formatMoney(movie.revenue)} />
             </dl>
+
+            {favorite?.rating != null ? (
+              <div className="mt-7 flex items-center justify-between border-t border-cream/10 pt-5">
+                <span className="text-sm text-cream/50">Your rating</span>
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber">
+                  <Star className="size-4 fill-current" aria-hidden />
+                  {favorite.rating}/10
+                </span>
+              </div>
+            ) : null}
+
             {movie.homepage || movie.imdb_id ? (
-              <div className="mt-4 flex flex-wrap gap-3 border-t border-cream/8 pt-4">
+              <div className="mt-7 flex flex-wrap gap-x-5 gap-y-3 border-t border-cream/10 pt-5">
                 {movie.homepage ? (
                   <a
                     href={movie.homepage}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm text-amber transition-colors hover:text-cream"
+                    className="inline-flex items-center gap-1.5 text-sm text-cream/70 transition-colors hover:text-amber"
                   >
-                    Official website
-                    <ArrowUpRight className="size-4" aria-hidden />
+                    Official site <ArrowUpRight className="size-3.5" aria-hidden />
                   </a>
                 ) : null}
                 {movie.imdb_id ? (
@@ -435,145 +425,23 @@ export default async function MoviePage({ params }: MoviePageProps) {
                     href={`https://www.imdb.com/title/${movie.imdb_id}/`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm text-amber transition-colors hover:text-cream"
+                    className="inline-flex items-center gap-1.5 text-sm text-cream/70 transition-colors hover:text-amber"
                   >
-                    IMDb
-                    <ArrowUpRight className="size-4" aria-hidden />
+                    IMDb <ArrowUpRight className="size-3.5" aria-hidden />
                   </a>
                 ) : null}
               </div>
             ) : null}
           </section>
-        </div>
-
-        <aside className="space-y-6">
-          <section
-            aria-label="Audience rating"
-            className="rounded-2xl border border-cream/10 bg-stage/65 p-5 sm:p-6"
-          >
-            <p className="text-xs tracking-[0.18em] text-amber uppercase">
-              Audience rating
-            </p>
-            <div className="mt-4 flex items-end gap-2">
-              <Star className="mb-1 size-6 fill-amber text-amber" aria-hidden />
-              <span className="font-display text-5xl text-cream">
-                {movie.vote_average.toFixed(1)}
-              </span>
-              <span className="mb-1 text-sm text-cream/45">/ 10</span>
-            </div>
-            <div
-              className="mt-4 h-2 overflow-hidden rounded-full bg-cream/10"
-              role="meter"
-              aria-label="Audience score"
-              aria-valuemin={0}
-              aria-valuemax={10}
-              aria-valuenow={movie.vote_average}
-            >
-              <div
-                className="h-full rounded-full bg-amber"
-                style={{ width: `${audienceScore}%` }}
-              />
-            </div>
-            {movie.vote_count != null ? (
-              <p className="mt-2 text-xs text-cream/45">
-                Based on {movie.vote_count.toLocaleString()} ratings
-              </p>
-            ) : null}
-            {favorite?.rating != null ? (
-              <p className="mt-4 border-t border-cream/8 pt-4 text-sm text-cream/65">
-                Your rating <span className="float-right font-medium text-amber">{favorite.rating}/10</span>
-              </p>
-            ) : null}
-          </section>
-
-          {movie.budget || movie.revenue ? (
-            <section className="rounded-2xl border border-cream/10 bg-stage/65 p-5 sm:p-6">
-              <div className="flex items-center gap-3">
-                <span className="rounded-xl bg-amber/10 p-2.5 text-amber">
-                  <CircleDollarSign className="size-5" aria-hidden />
-                </span>
-                <div>
-                  <p className="text-xs tracking-[0.18em] text-amber uppercase">
-                    The numbers
-                  </p>
-                  <h2 className="mt-1 text-lg font-semibold text-cream">
-                    Box office
-                  </h2>
-                </div>
-              </div>
-              <dl className="mt-4 divide-y divide-cream/8">
-                {formatMoney(movie.budget) ? (
-                  <div className="flex items-center justify-between gap-3 py-3">
-                    <dt className="text-sm text-cream/50">Budget</dt>
-                    <dd className="text-sm font-medium text-cream">
-                      {formatMoney(movie.budget)}
-                    </dd>
-                  </div>
-                ) : null}
-                {formatMoney(movie.revenue) ? (
-                  <div className="flex items-center justify-between gap-3 py-3">
-                    <dt className="text-sm text-cream/50">Worldwide gross</dt>
-                    <dd className="text-sm font-medium text-cream">
-                      {formatMoney(movie.revenue)}
-                    </dd>
-                  </div>
-                ) : null}
-              </dl>
-            </section>
-          ) : null}
-
-          <section className="rounded-2xl border border-cream/10 bg-stage/65 p-5 sm:p-6">
-            <p className="text-xs tracking-[0.18em] text-amber uppercase">
-              At a glance
-            </p>
-            <dl className="mt-3 divide-y divide-cream/8">
-              {runtime ? (
-                <div className="flex items-center gap-3 py-3">
-                  <Clock3 className="size-4 shrink-0 text-amber/80" aria-hidden />
-                  <dt className="text-sm text-cream/50">Runtime</dt>
-                  <dd className="ml-auto text-right text-sm text-cream/85">{runtime}</dd>
-                </div>
-              ) : null}
-              {movie.original_language ? (
-                <div className="flex items-center gap-3 py-3">
-                  <Languages className="size-4 shrink-0 text-amber/80" aria-hidden />
-                  <dt className="text-sm text-cream/50">Language</dt>
-                  <dd className="ml-auto text-right text-sm uppercase text-cream/85">
-                    {movie.original_language}
-                  </dd>
-                </div>
-              ) : null}
-              {movie.popularity != null ? (
-                <div className="flex items-center gap-3 py-3">
-                  <TrendingUp className="size-4 shrink-0 text-amber/80" aria-hidden />
-                  <dt className="text-sm text-cream/50">Popularity</dt>
-                  <dd className="ml-auto text-right text-sm text-cream/85">
-                    {movie.popularity.toLocaleString(undefined, {
-                      maximumFractionDigits: 1,
-                    })}
-                  </dd>
-                </div>
-              ) : null}
-              {movie.production_countries?.length ? (
-                <div className="flex items-start gap-3 py-3">
-                  <Globe2 className="mt-0.5 size-4 shrink-0 text-amber/80" aria-hidden />
-                  <dt className="text-sm text-cream/50">Origin</dt>
-                  <dd className="ml-auto max-w-[60%] text-right text-sm text-cream/85">
-                    {movie.production_countries.map((country) => country.name).join(", ")}
-                  </dd>
-                </div>
-              ) : null}
-            </dl>
-          </section>
         </aside>
       </div>
 
       {similar.length > 0 ? (
-        <section className="border-t border-cream/8 bg-background pt-10 pb-16 sm:pt-14 sm:pb-20">
+        <section className="border-t border-cream/10 pt-10 pb-16 sm:pt-14 sm:pb-20">
           <MovieRow
             id="similar"
             title="More like this"
-            subtitle={`Titles related to ${movie.title}`}
+            subtitle={`Because you watched ${movie.title}`}
             movies={similar}
           />
         </section>

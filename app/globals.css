@@ -28,6 +28,14 @@ body {
   font-family: var(--font-body), system-ui, sans-serif;
 }
 
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 /* Site-wide scrollbars — thin, stage track + teal thumb */
 * {
   scrollbar-width: thin;

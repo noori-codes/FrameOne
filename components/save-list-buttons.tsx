@@ -55,11 +55,11 @@ function ListToggle({
         className={
           iconOnly
             ? saved
-              ? "inline-flex h-11 w-11 items-center justify-center rounded-full border border-amber/50 bg-amber/10 text-amber transition-colors hover:border-amber hover:bg-amber/15 disabled:opacity-60"
-              : "inline-flex h-11 w-11 items-center justify-center rounded-full border border-cream/25 text-cream transition-colors hover:border-cream/45 hover:text-cream disabled:opacity-60"
+              ? "inline-flex h-10 w-10 items-center justify-center rounded-full border border-amber/50 bg-amber/10 text-amber transition-colors hover:border-amber hover:bg-amber/15 disabled:opacity-60 sm:h-11 sm:w-11"
+                : "inline-flex h-10 w-10 items-center justify-center rounded-full border border-cream/25 text-cream transition-colors hover:border-cream/45 hover:text-cream disabled:opacity-60 sm:h-11 sm:w-11"
             : saved
-              ? "rounded-full border border-amber/50 bg-amber/10 px-4 py-2 text-sm text-amber transition-colors hover:border-amber hover:bg-amber/15 disabled:opacity-60"
-              : "rounded-full border border-cream/25 px-4 py-2 text-sm text-cream transition-colors hover:border-cream/45 hover:text-cream disabled:opacity-60"
+                ? "min-h-10 rounded-full border border-amber/50 bg-amber/10 px-3.5 py-2 text-xs text-amber transition-colors hover:border-amber hover:bg-amber/15 disabled:opacity-60 sm:min-h-11 sm:px-4 sm:text-sm"
+                : "min-h-10 rounded-full border border-cream/25 px-3.5 py-2 text-xs text-cream transition-colors hover:border-cream/45 hover:text-cream disabled:opacity-60 sm:min-h-11 sm:px-4 sm:text-sm"
         }
       >
         {iconOnly ? (
@@ -98,7 +98,7 @@ export function SaveListButtons({
     return (
       <Link
         href="/signin"
-        className="mt-6 inline-flex rounded-full border border-cream/25 px-4 py-2 text-sm text-cream/80 transition-colors hover:border-amber hover:text-amber"
+        className="inline-flex min-h-10 items-center rounded-full border border-cream/25 px-3.5 py-2 text-xs text-cream/80 transition-colors hover:border-amber hover:text-amber sm:min-h-11 sm:px-4 sm:text-sm"
       >
         Sign in to save
       </Link>
@@ -106,7 +106,7 @@ export function SaveListButtons({
   }
 
   return (
-    <div className="mt-6 flex flex-wrap gap-3">
+    <div className="flex flex-wrap items-center gap-2.5">
       <ListToggle
         key={`fav-${movieId}-${initialFavorite}`}
         movieId={movieId}
