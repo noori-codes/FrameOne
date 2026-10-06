@@ -42,13 +42,13 @@ function splitHeroTitle(title: string): [string, string | null] {
   let splitAt = 1;
   let shortestDifference = Infinity;
 
-  for (let i = 1; i < words.length; i += 1) {
-    const firstLine = words.slice(0, i).join(" ");
-    const secondLine = words.slice(i).join(" ");
+  for (let wordBoundary = 1; wordBoundary < words.length; wordBoundary += 1) {
+    const firstLine = words.slice(0, wordBoundary).join(" ");
+    const secondLine = words.slice(wordBoundary).join(" ");
     const difference = Math.abs(firstLine.length - secondLine.length);
 
     if (difference < shortestDifference) {
-      splitAt = i;
+      splitAt = wordBoundary;
       shortestDifference = difference;
     }
   }
@@ -242,9 +242,9 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               aria-label={slide.title}
               className="hero-line hero-line-3 line-clamp-2 min-h-[1.76em] max-w-3xl font-display text-5xl leading-[0.88] tracking-wide wrap-break-word text-cream uppercase drop-shadow-[0_8px_30px_rgba(0,0,0,0.5)] sm:text-7xl md:text-8xl lg:text-[6.75rem]"
             >
-              {titleLines.map((line, i) =>
+              {titleLines.map((line, lineIndex) =>
                 line ? (
-                  <span key={i} aria-hidden="true" className="block">
+                  <span key={lineIndex} aria-hidden="true" className="block">
                     {line}
                   </span>
                 ) : null,
