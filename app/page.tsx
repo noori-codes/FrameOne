@@ -1,6 +1,7 @@
 import { HeroCarousel, type HeroSlide } from "@/components/hero-carousel";
 import { MovieRow } from "@/components/movie-row";
 import { SiteFooter } from "@/components/site-footer";
+import { shuffleHeroPicks } from "@/lib/daily-hero";
 import {
   backdropUrl,
   getMovie,
@@ -214,11 +215,11 @@ export default async function Home() {
     return picks;
   }
 
-  const heroPicks = [
+  const heroPicks = shuffleHeroPicks([
     ...pickHeroGroup(latestMovies, "Latest releases"),
     ...pickHeroGroup(mergePages(topRatedP1, topRatedP2), "Top rated"),
     ...pickHeroGroup(genreBuckets.get(16) ?? [], "Animation"),
-  ];
+  ]);
   const heroCategoryById = new Map(
     heroPicks.map(({ movie, categoryLabel }) => [movie.id, categoryLabel]),
   );

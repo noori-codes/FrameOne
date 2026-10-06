@@ -29,6 +29,10 @@ function seededShuffle<T>(items: T[], seed: number): T[] {
   return arr;
 }
 
+export function shuffleHeroPicks<T>(items: T[], day = todayKey()): T[] {
+  return seededShuffle(items, hashSeed(`frameone-hero:${day}`));
+}
+
 /**
  * Pick a few backdrop-ready movies for today's hero.
  * Mixes trending + popular, dedupes, shuffles by date — not a fixed list.
@@ -51,7 +55,7 @@ export function pickDailyHeroMovies(
 
   if (withBackdrop.length === 0) return [];
 
-  return seededShuffle(withBackdrop, hashSeed(`frameone-hero:${day}`)).slice(
+  return shuffleHeroPicks(withBackdrop, day).slice(
     0,
     Math.min(count, withBackdrop.length),
   );

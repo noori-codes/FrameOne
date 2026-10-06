@@ -338,11 +338,18 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                   onClick={() => goTo(i)}
                   className={cn("group relative h-8 min-w-0 flex-1")}
                 >
-                  <span className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 overflow-hidden rounded-full bg-cream/20 transition-colors group-hover:bg-cream/40">
+                  <span
+                    className={cn(
+                      "absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 overflow-hidden rounded-full transition-[height,background-color,box-shadow] duration-300",
+                      i === index
+                        ? "h-1.5 bg-amber/35 shadow-[0_0_12px_rgba(47,230,200,0.28)]"
+                        : "bg-cream/20 group-hover:bg-cream/40",
+                    )}
+                  >
                     {i === index ? (
                       <span
                         ref={progressRef}
-                        className="absolute inset-0 origin-left scale-x-0 bg-amber"
+                        className="absolute inset-0 origin-left scale-x-0 bg-amber shadow-[0_0_12px_rgba(47,230,200,0.85)]"
                       />
                     ) : null}
                   </span>
