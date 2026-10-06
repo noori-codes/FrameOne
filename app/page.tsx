@@ -206,7 +206,13 @@ export default async function Home() {
     const picks: { movie: TmdbMovie; categoryLabel: string }[] = [];
 
     for (const movie of movies) {
-      if (usedInHero.has(movie.id) || !movie.backdrop_path) continue;
+      if (
+        usedInHero.has(movie.id) ||
+        !movie.backdrop_path ||
+        movie.genre_ids?.includes(16)
+      ) {
+        continue;
+      }
       usedInHero.add(movie.id);
       picks.push({ movie, categoryLabel });
       if (picks.length === HERO_GROUP_SIZE) break;
@@ -218,7 +224,7 @@ export default async function Home() {
   const heroPicks = shuffleHeroPicks([
     ...pickHeroGroup(latestMovies, "Latest releases"),
     ...pickHeroGroup(mergePages(topRatedP1, topRatedP2), "Top rated"),
-    ...pickHeroGroup(genreBuckets.get(16) ?? [], "Animation"),
+    ...pickHeroGroup(trending, "Trending now"),
   ]);
   const heroCategoryById = new Map(
     heroPicks.map(({ movie, categoryLabel }) => [movie.id, categoryLabel]),
