@@ -4,14 +4,13 @@ import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { MovieCard } from "@/components/movie-card";
 import type { GenreSort, PaginatedMovies, TmdbMovie } from "@/lib/tmdb";
 
-type GenreInfiniteGridProps = {
-  genreId: number;
-  sort: GenreSort;
+type InfiniteMovieGridProps = {
+  endpoint: string;
+  sort?: GenreSort;
   initial: PaginatedMovies;
 };
 
-/** Matches `grid-cols-2 sm:3 md:4 lg:5 xl:6` on this grid. */
-function useGenreGridColumns() {
+function useGridColumns() {
   const [cols, setCols] = useState(2);
 
   useEffect(() => {
@@ -47,17 +46,17 @@ function useGenreGridColumns() {
 }
 
 /**
- * Genre poster grid — loads the next TMDB page when the sentinel enters view.
- * Parent should pass key={`${genreId}-${sort}`} so state resets on navigation.
+ * Shared poster grid for genre and browse pages.
+ * Parent should key this by endpoint and sort so state resets on navigation.
  *
  * While more pages exist, incomplete last rows are held back so the grid
  * never shows empty slots that later “pop in”.
  */
-export function GenreInfiniteGrid({
-  genreId,
+export function InfiniteMovieGrid({
+  endpoint,
   sort,
   initial,
-}: GenreInfiniteGridProps) {
+}: InfiniteMovieGridProps) {
   const [movies, setMovies] = useState(initial.results);
   const [page, setPage] = useState(initial.page);
   const [totalResults] = useState(initial.totalResults);
@@ -67,7 +66,7 @@ export function GenreInfiniteGrid({
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
-  const cols = useGenreGridColumns();
+  const cols = useGridColumns();
 
   const visibleMovies = useMemo(() => {
     if (!hasMore || cols < 2) return movies;
@@ -88,11 +87,9 @@ export function GenreInfiniteGrid({
 
     const nextPage = page + 1;
     try {
-      const qs = new URLSearchParams({
-        page: String(nextPage),
-        sort,
-      });
-      const res = await fetch(`/api/genres/${genreId}/movies?${qs}`, {
+      const qs = new URLSearchParams({ page: String(nextPage) });
+      if (sort) qs.set("sort", sort);
+      const res = await fetch(`${endpoint}?${qs}`, {
         signal: controller.signal,
       });
       if (!res.ok) throw new Error("Couldn’t load more titles");
@@ -119,7 +116,7 @@ export function GenreInfiniteGrid({
         setLoading(false);
       }
     }
-  }, [genreId, hasMore, page, sort]);
+  }, [endpoint, hasMore, page, sort]);
 
   useEffect(() => {
     return () => {
@@ -143,9 +140,7 @@ export function GenreInfiniteGrid({
   }, [hasMore, loadMore]);
 
   if (movies.length === 0) {
-    return (
-      <p className="mt-16 text-cream/50">No movies found for this genre.</p>
-    );
+    return <p className="mt-16 text-cream/50">No movies found.</p>;
   }
 
   return (
@@ -205,7 +200,7 @@ export function GenreInfiniteGrid({
 
       {!hasMore && !loading ? (
         <p className="mt-10 text-center text-sm text-cream/35">
-          That’s everything in this genre for now
+          That’s everything for now
         </p>
       ) : null}
     </div>

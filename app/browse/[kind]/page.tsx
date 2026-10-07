@@ -1,39 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MovieCard } from "@/components/movie-card";
-import { PaginationNav, parsePageParam } from "@/components/pagination-nav";
+import { InfiniteMovieGrid } from "@/components/infinite-movie-grid";
 import {
-  getPopularMoviesPage,
-  getTopRatedMoviesPage,
-  getTrendingMoviesPage,
-} from "@/lib/tmdb";
-
-const BROWSE_KINDS = {
-  trending: {
-    title: "Trending now",
-    blurb: "Movies trending on TMDB today",
-  },
-  popular: {
-    title: "Popular now",
-    blurb: "Most popular movies on TMDB right now",
-  },
-  "top-rated": {
-    title: "Top rated",
-    blurb: "Highest-rated movies on TMDB",
-  },
-} as const;
-
-type BrowseKind = keyof typeof BROWSE_KINDS;
+  BROWSE_KINDS,
+  getBrowseMoviesPage,
+  isBrowseKind,
+} from "@/lib/browse";
+import { parsePageParam } from "@/components/pagination-nav";
 
 type BrowsePageProps = {
   params: Promise<{ kind: string }>;
   searchParams: Promise<{ page?: string }>;
 };
-
-function isBrowseKind(value: string): value is BrowseKind {
-  return value in BROWSE_KINDS;
-}
 
 export async function generateMetadata({
   params,
@@ -53,64 +32,37 @@ export default async function BrowsePage({
 
   const page = parsePageParam(pageRaw);
   const meta = BROWSE_KINDS[kind];
-
-  const moviesPage =
-    kind === "trending"
-      ? await getTrendingMoviesPage("day", page)
-      : kind === "popular"
-        ? await getPopularMoviesPage(page)
-        : await getTopRatedMoviesPage(page);
-
-  const movies = moviesPage.results;
-  const { totalPages, totalResults } = moviesPage;
+  const moviesPage = await getBrowseMoviesPage(kind, page);
 
   return (
-    <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-4 pt-8 pb-16 sm:px-8 sm:pt-10 sm:pb-20">
-      <Link
-        href="/"
-        className="text-sm text-cream/50 transition-colors hover:text-amber"
-      >
-        ← Home
-      </Link>
+    <main className="relative flex min-h-dvh w-full flex-1 flex-col">
+      <div className="border-b border-cream/8 bg-stage/30">
+        <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-10">
+          <Link
+            href="/"
+            className="text-sm text-cream/45 transition-colors hover:text-amber"
+          >
+            ← Home
+          </Link>
+          <h1 className="mt-5 text-3xl font-semibold tracking-tight wrap-break-word text-cream sm:text-5xl md:text-6xl">
+            {meta.title}
+          </h1>
+          <p className="mt-2 text-sm text-cream/50">
+            {meta.blurb}
+            {moviesPage.totalResults > 0
+              ? ` · ${moviesPage.totalResults.toLocaleString()} titles`
+              : null}
+          </p>
+        </div>
+      </div>
 
-      <h1 className="mt-4 font-display text-4xl tracking-wide wrap-break-word text-cream uppercase sm:text-6xl">
-        {meta.title}
-      </h1>
-      <p className="mt-2 text-sm text-cream/55">
-        {meta.blurb}
-        {totalResults > 0
-          ? ` · ${totalResults.toLocaleString()} titles`
-          : null}
-      </p>
-
-      {movies.length === 0 ? (
-        <p className="mt-14 text-cream/50">No movies found.</p>
-      ) : (
-        <>
-          <ul className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5 md:grid-cols-5 lg:grid-cols-6">
-            {movies.map((movie) => (
-              <li key={movie.id}>
-                <MovieCard
-                  id={movie.id}
-                  title={movie.title}
-                  posterPath={movie.poster_path}
-                  voteAverage={movie.vote_average}
-                  showTitle
-                />
-              </li>
-            ))}
-          </ul>
-
-          <PaginationNav
-            page={page}
-            totalPages={totalPages}
-            prevHref={page > 1 ? `/browse/${kind}?page=${page - 1}` : null}
-            nextHref={
-              page < totalPages ? `/browse/${kind}?page=${page + 1}` : null
-            }
-          />
-        </>
-      )}
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+        <InfiniteMovieGrid
+          key={`${kind}-${page}`}
+          endpoint={`/api/browse/${kind}/movies`}
+          initial={moviesPage}
+        />
+      </div>
     </main>
   );
 }

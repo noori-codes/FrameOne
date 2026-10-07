@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GenreChips } from "@/components/genre-chips";
-import { GenreInfiniteGrid } from "@/components/genre-infinite-grid";
+import { InfiniteMovieGrid } from "@/components/infinite-movie-grid";
 import { GenreSortNav } from "@/components/genre-sort-nav";
 import {
   GENRE_SORTS,
@@ -94,9 +94,9 @@ export default async function GenrePage({
       </div>
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
-        <GenreInfiniteGrid
+        <InfiniteMovieGrid
           key={`${genreId}-${sort}`}
-          genreId={genreId}
+          endpoint={`/api/genres/${genreId}/movies`}
           sort={sort}
           initial={initial}
         />
