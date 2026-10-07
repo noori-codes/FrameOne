@@ -1,7 +1,13 @@
 "use client";
 
 import { Play, X } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
@@ -9,9 +15,23 @@ function youtubeEmbedUrl(key: string) {
   return `https://www.youtube.com/embed/${key}?autoplay=1&rel=0`;
 }
 
+function subscribeMounted() {
+  return () => {};
+}
+
+function getMountedSnapshot() {
+  return true;
+}
+
+function getServerMountedSnapshot() {
+  return false;
+}
+
 type TrailerButtonProps = {
   /** YouTube video key from TMDB; null = no trailer */
   youtubeKey: string | null;
+  /** Fetch the trailer on demand when the key was not loaded with the page. */
+  movieId?: number;
   title: string;
   label?: string;
   className?: string;
@@ -28,6 +48,7 @@ type TrailerButtonProps = {
  */
 export function TrailerButton({
   youtubeKey,
+  movieId,
   title,
   label = "Watch trailer",
   className,
@@ -35,7 +56,14 @@ export function TrailerButton({
   onOpenChange,
 }: TrailerButtonProps) {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    subscribeMounted,
+    getMountedSnapshot,
+    getServerMountedSnapshot,
+  );
+  const [resolvedYoutubeKey, setResolvedYoutubeKey] = useState(youtubeKey);
+  const [loadingTrailer, setLoadingTrailer] = useState(false);
+  const [trailerError, setTrailerError] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
 
@@ -44,9 +72,34 @@ export function TrailerButton({
     onOpenChange?.(next);
   }
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  async function openTrailer() {
+    setTrailerError(null);
+    let key = resolvedYoutubeKey;
+
+    if (!key && movieId != null) {
+      setLoadingTrailer(true);
+      try {
+        const response = await fetch(`/api/movies/${movieId}/trailer`);
+        if (!response.ok) throw new Error("Couldn’t load this trailer.");
+        const data = (await response.json()) as { youtubeKey: string | null };
+        key = data.youtubeKey;
+        setResolvedYoutubeKey(key);
+        if (!key) {
+          setTrailerError("No trailer is available for this movie.");
+          return;
+        }
+      } catch (error) {
+        setTrailerError(
+          error instanceof Error ? error.message : "Couldn’t load this trailer.",
+        );
+        return;
+      } finally {
+        setLoadingTrailer(false);
+      }
+    }
+
+    if (key) setTrailerOpen(true);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -67,7 +120,7 @@ export function TrailerButton({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only bind while open
   }, [open]);
 
-  if (!youtubeKey) return null;
+  if (!resolvedYoutubeKey && movieId == null) return null;
 
   const modal =
     open && mounted
@@ -99,7 +152,7 @@ export function TrailerButton({
               <div className="aspect-video overflow-hidden rounded-lg bg-black ring-1 ring-cream/15">
                 <iframe
                   title={`${title} trailer`}
-                  src={youtubeEmbedUrl(youtubeKey)}
+                  src={youtubeEmbedUrl(resolvedYoutubeKey!)}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                   className="h-full w-full"
@@ -115,9 +168,11 @@ export function TrailerButton({
     <>
       <button
         type="button"
-        onClick={() => setTrailerOpen(true)}
+        onClick={() => void openTrailer()}
+        disabled={loadingTrailer}
+        aria-busy={loadingTrailer}
         className={cn(
-          "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors",
+          "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors disabled:cursor-wait disabled:opacity-70",
           variant === "primary"
             ? "bg-amber text-[color:var(--on-amber)] hover:bg-(--amber-dim) hover:text-cream"
             : "border border-cream/30 bg-black/20 text-cream/85 backdrop-blur-sm hover:border-cream/50 hover:text-cream",
@@ -125,8 +180,13 @@ export function TrailerButton({
         )}
       >
         <Play className="h-4 w-4 fill-current" aria-hidden />
-        {label}
+        {loadingTrailer ? "Loading trailer…" : label}
       </button>
+      {trailerError ? (
+        <p className="text-xs text-rose-200" role="alert">
+          {trailerError}
+        </p>
+      ) : null}
       {modal}
     </>
   );

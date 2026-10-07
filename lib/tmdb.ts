@@ -141,6 +141,25 @@ type CachedTmdbResponse = {
   body: string;
 };
 
+const REDIS_READ_TIMEOUT_MS = 350;
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number) {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error(`Redis read timed out after ${timeoutMs}ms`)),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
+
 function getTmdbCacheKey(url: string) {
   const cacheUrl = new URL(url);
   cacheUrl.searchParams.delete("api_key");
@@ -161,7 +180,10 @@ async function tmdbFetch(
 
   if (redis && revalidate !== 0) {
     try {
-      const cached = await redis.get<CachedTmdbResponse>(cacheKey);
+      const cached = await withTimeout(
+        redis.get<CachedTmdbResponse>(cacheKey),
+        REDIS_READ_TIMEOUT_MS,
+      );
       if (cached) {
         return new Response(cached.body, {
           status: cached.status,
@@ -194,13 +216,17 @@ async function tmdbFetch(
             statusText: res.statusText,
             body: await res.clone().text(),
           };
-          await redis.set(
-            cacheKey,
-            cached,
-            revalidate === false ? {} : { ex: Math.max(1, revalidate) },
-          );
+          void redis
+            .set(
+              cacheKey,
+              cached,
+              revalidate === false ? {} : { ex: Math.max(1, revalidate) },
+            )
+            .catch((error) => {
+              console.warn("TMDB Redis cache write failed:", error);
+            });
         } catch (error) {
-          console.warn("TMDB Redis cache write failed:", error);
+          console.warn("TMDB Redis cache write could not be started:", error);
         }
       }
 

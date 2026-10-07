@@ -279,6 +279,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8">
               <TrailerButton
                 youtubeKey={slide.trailerKey}
+                movieId={slide.id}
                 title={slide.title}
                 label="Watch trailer"
                 onOpenChange={setTrailerOpen}
