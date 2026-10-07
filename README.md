@@ -20,6 +20,21 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Optional TMDB cache with Upstash Redis
+
+TMDB responses are cached in Upstash Redis when both
+`UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are configured. A
+cache hit returns the saved response until its configured expiration, avoiding
+another TMDB request. Cache misses still use TMDB and populate Redis. This
+shared cache can be used by multiple app instances; Next.js fetch revalidation
+continues to apply as a separate cache layer.
+
+Create a Redis database in Upstash and copy its REST URL and token into
+`.env.local` for local development, and into the environment variables for
+your deployment. Redis is optional: without those variables, TMDB requests
+continue to use the existing Next.js fetch cache. If Redis is temporarily
+unavailable, the app logs the cache error and continues to TMDB.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

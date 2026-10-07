@@ -1,3 +1,6 @@
+import { createHash } from "node:crypto";
+import { getRedisClient } from "@/lib/redis";
+
 /**
  * TMDB client (server-only for now).
  *
@@ -132,6 +135,19 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+type CachedTmdbResponse = {
+  status: number;
+  statusText: string;
+  body: string;
+};
+
+function getTmdbCacheKey(url: string) {
+  const cacheUrl = new URL(url);
+  cacheUrl.searchParams.delete("api_key");
+  const hash = createHash("sha256").update(cacheUrl.toString()).digest("hex");
+  return `frameone:tmdb:v1:${hash}`;
+}
+
 /**
  * TMDB fetch with short retries — connection timeouts / 429s are common
  * when the home page fires many discover calls.
@@ -140,6 +156,24 @@ async function tmdbFetch(
   url: string,
   revalidate: number | false = 3600,
 ): Promise<Response> {
+  const redis = getRedisClient();
+  const cacheKey = getTmdbCacheKey(url);
+
+  if (redis && revalidate !== 0) {
+    try {
+      const cached = await redis.get<CachedTmdbResponse>(cacheKey);
+      if (cached) {
+        return new Response(cached.body, {
+          status: cached.status,
+          statusText: cached.statusText,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+    } catch (error) {
+      console.warn("TMDB Redis cache read failed; requesting TMDB:", error);
+    }
+  }
+
   let lastError: unknown;
 
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -151,6 +185,23 @@ async function tmdbFetch(
       if ((res.status === 429 || res.status >= 500) && attempt < 2) {
         await sleep(400 * (attempt + 1));
         continue;
+      }
+
+      if (redis && revalidate !== 0 && res.ok) {
+        try {
+          const cached: CachedTmdbResponse = {
+            status: res.status,
+            statusText: res.statusText,
+            body: await res.clone().text(),
+          };
+          await redis.set(
+            cacheKey,
+            cached,
+            revalidate === false ? {} : { ex: Math.max(1, revalidate) },
+          );
+        } catch (error) {
+          console.warn("TMDB Redis cache write failed:", error);
+        }
       }
 
       return res;
