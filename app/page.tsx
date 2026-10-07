@@ -8,9 +8,9 @@ import {
   getMovieTrailerKeyFromVideos,
   getLatestMovies,
   getMoviesByGenre,
-  getPopularMovies,
-  getTopRatedMovies,
-  getTrendingMovies,
+  getPopularMoviesPage,
+  getTopRatedMoviesPage,
+  getTrendingMoviesPage,
   mapPool,
   posterUrl,
   type TmdbMovie,
@@ -42,7 +42,6 @@ const HOME_GENRE_ROWS = [
 
 const GENRE_FETCH_CONCURRENCY = 8; // don’t open 100+ sockets to TMDB at once
 const GENRE_HOME_ROW_SIZE = 12;
-const DISCOVERY_ROW_SIZE = 28;
 const HERO_GROUP_SIZE = 3;
 
 /**
@@ -51,81 +50,30 @@ const HERO_GROUP_SIZE = 3;
 export default async function Home() {
   const [
     latestMovies,
-    popularP1,
-    popularP2,
-    trendingP1,
-    trendingP2,
-    topRatedP1,
-    topRatedP2,
+    popularPage,
+    trendingPage,
+    topRatedPage,
   ] = await Promise.all([
     getLatestMovies(),
-    getPopularMovies(1),
-    getPopularMovies(2),
-    getTrendingMovies("day", 1),
-    getTrendingMovies("day", 2),
-    getTopRatedMovies(1),
-    getTopRatedMovies(2),
+    getPopularMoviesPage(1),
+    getTrendingMoviesPage("day", 1),
+    getTopRatedMoviesPage(1),
   ]);
+  const popular = popularPage.results;
+  const trending = trendingPage.results;
+  const topRated = topRatedPage.results;
 
   // Cap concurrency — a full Promise.all of every genre page was timing out
-  const genrePagePairs = await mapPool(
+  const genreRows = await mapPool(
     HOME_GENRE_ROWS,
     GENRE_FETCH_CONCURRENCY,
-    ({ id }) => getMoviesByGenre(id, 1),
+    async (genre) => ({
+      ...genre,
+      movies: (
+        await getMoviesByGenre(genre.id, 1)
+      ).results.slice(0, GENRE_HOME_ROW_SIZE),
+    }),
   );
-
-  function mergePages(...pages: TmdbMovie[][]): TmdbMovie[] {
-    const seen = new Set<number>();
-    const out: TmdbMovie[] = [];
-    for (const page of pages) {
-      for (const movie of page) {
-        if (seen.has(movie.id)) continue;
-        seen.add(movie.id);
-        out.push(movie);
-      }
-    }
-    return out;
-  }
-
-  /** Claim movies for a row; skip ids already taken in `used`. */
-  function takeUnique(
-    movies: TmdbMovie[],
-    used: Set<number>,
-    limit?: number,
-  ): TmdbMovie[] {
-    const out: TmdbMovie[] = [];
-    for (const movie of movies) {
-      if (used.has(movie.id)) continue;
-      used.add(movie.id);
-      out.push(movie);
-      if (limit != null && out.length >= limit) break;
-    }
-    return out;
-  }
-
-  // Discovery rows dedupe only among themselves (not against genres)
-  const usedInDiscovery = new Set<number>();
-  const trending = takeUnique(
-    mergePages(trendingP1, trendingP2),
-    usedInDiscovery,
-    DISCOVERY_ROW_SIZE,
-  );
-  const popular = takeUnique(
-    mergePages(popularP1, popularP2),
-    usedInDiscovery,
-    DISCOVERY_ROW_SIZE,
-  );
-  const topRated = takeUnique(
-    mergePages(topRatedP1, topRatedP2),
-    usedInDiscovery,
-    DISCOVERY_ROW_SIZE,
-  );
-
-  // Keep home rows small and independent; full results load on each genre page.
-  const genreRows = HOME_GENRE_ROWS.map((genre, i) => ({
-    ...genre,
-    movies: genrePagePairs[i]!.results.slice(0, GENRE_HOME_ROW_SIZE),
-  }));
 
   const usedInHero = new Set<number>();
   function pickHeroGroup(movies: TmdbMovie[], categoryLabel: string) {
@@ -149,7 +97,7 @@ export default async function Home() {
 
   const heroPicks = shuffleHeroPicks([
     ...pickHeroGroup(latestMovies, "Latest releases"),
-    ...pickHeroGroup(mergePages(topRatedP1, topRatedP2), "Top rated"),
+    ...pickHeroGroup(topRated, "Top rated"),
     ...pickHeroGroup(trending, "Trending now"),
   ]);
   const heroCategoryById = new Map(
