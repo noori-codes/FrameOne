@@ -1,18 +1,48 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CollectionPageLayout } from "@/components/collection-page-layout";
+import { GenreChips } from "@/components/genre-chips";
 import { InfiniteMovieGrid } from "@/components/infinite-movie-grid";
+import { cn } from "@/lib/utils";
 import {
   BROWSE_KINDS,
+  type BrowseKind,
   getBrowseMoviesPage,
   isBrowseKind,
 } from "@/lib/browse";
 import { parsePageParam } from "@/components/pagination-nav";
+import { getMovieGenres } from "@/lib/tmdb";
 
 type BrowsePageProps = {
   params: Promise<{ kind: string }>;
   searchParams: Promise<{ page?: string }>;
 };
+
+function BrowseKindNav({ active }: { active: BrowseKind }) {
+  return (
+    <nav aria-label="Browse lists" className="flex flex-wrap gap-2">
+      {Object.entries(BROWSE_KINDS).map(([kind, browseKind]) => {
+        const isActive = kind === active;
+        return (
+          <Link
+            key={kind}
+            href={`/browse/${kind}`}
+            aria-current={isActive ? "page" : undefined}
+            className={cn(
+              "rounded-full px-3.5 py-1.5 text-sm transition-colors",
+              isActive
+                ? "bg-amber text-[color:var(--on-amber)]"
+                : "border border-cream/15 text-cream/60 hover:border-amber/50 hover:text-amber",
+            )}
+          >
+            {browseKind.title}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
 
 export async function generateMetadata({
   params,
@@ -32,37 +62,34 @@ export default async function BrowsePage({
 
   const page = parsePageParam(pageRaw);
   const meta = BROWSE_KINDS[kind];
-  const moviesPage = await getBrowseMoviesPage(kind, page);
+  const [moviesPage, genres] = await Promise.all([
+    getBrowseMoviesPage(kind, page),
+    getMovieGenres(),
+  ]);
+  const featuredMovie = moviesPage.results.find(
+    (movie) => movie.backdrop_path,
+  );
 
   return (
-    <main className="relative flex min-h-dvh w-full flex-1 flex-col">
-      <div className="border-b border-cream/8 bg-stage/30">
-        <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-10">
-          <Link
-            href="/"
-            className="text-sm text-cream/45 transition-colors hover:text-amber"
-          >
-            ← Home
-          </Link>
-          <h1 className="mt-5 text-3xl font-semibold tracking-tight wrap-break-word text-cream sm:text-5xl md:text-6xl">
-            {meta.title}
-          </h1>
-          <p className="mt-2 text-sm text-cream/50">
-            {meta.blurb}
-            {moviesPage.totalResults > 0
-              ? ` · ${moviesPage.totalResults.toLocaleString()} titles`
-              : null}
-          </p>
-        </div>
-      </div>
-
-      <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
-        <InfiniteMovieGrid
-          key={`${kind}-${page}`}
-          endpoint={`/api/browse/${kind}/movies`}
-          initial={moviesPage}
-        />
-      </div>
-    </main>
+    <CollectionPageLayout
+      title={meta.title}
+      description={meta.blurb}
+      backHref="/"
+      backLabel="Home"
+      totalResults={moviesPage.totalResults}
+      selectionLabel={kind === "trending" ? "Today’s picks" : "TMDB picks"}
+      featuredMovie={featuredMovie}
+      controlsLabel="Browse collection"
+      controls={<BrowseKindNav active={kind} />}
+      secondaryControls={<GenreChips genres={genres} />}
+      resultsEyebrow="Browse collection"
+      resultsTitle={meta.title}
+    >
+      <InfiniteMovieGrid
+        key={`${kind}-${page}`}
+        endpoint={`/api/browse/${kind}/movies`}
+        initial={moviesPage}
+      />
+    </CollectionPageLayout>
   );
 }
