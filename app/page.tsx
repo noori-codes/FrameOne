@@ -5,7 +5,7 @@ import { shuffleHeroPicks } from "@/lib/daily-hero";
 import {
   backdropUrl,
   getMovie,
-  getMovieTrailerKey,
+  getMovieTrailerKeyFromVideos,
   getLatestMovies,
   getMoviesByGenre,
   getPopularMovies,
@@ -40,31 +40,8 @@ const HOME_GENRE_ROWS = [
   { id: 10752, slug: "war", title: "War" },
 ] as const;
 
-/**
- * When a title has several genres, the earliest id here “owns” it on home.
- * Specific genres (Animation, Horror, …) beat broad ones (Family, Drama).
- */
-const GENRE_CLAIM_PRIORITY = [
-  16, // Animation
-  27, // Horror
-  10752, // War
-  878, // Sci-Fi
-  9648, // Mystery
-  80, // Crime
-  53, // Thriller
-  10749, // Romance
-  14, // Fantasy
-  12, // Adventure
-  28, // Action
-  35, // Comedy
-  18, // Drama
-  10751, // Family — often overlaps Animation / Comedy
-] as const;
-
-const GENRE_PAGES_INITIAL = 3;
-const GENRE_PAGE_MAX = 20; // keep paging short rows until full
 const GENRE_FETCH_CONCURRENCY = 8; // don’t open 100+ sockets to TMDB at once
-const GENRE_ROW_SIZE = 50;
+const GENRE_HOME_ROW_SIZE = 12;
 const DISCOVERY_ROW_SIZE = 28;
 const HERO_GROUP_SIZE = 3;
 
@@ -91,16 +68,10 @@ export default async function Home() {
   ]);
 
   // Cap concurrency — a full Promise.all of every genre page was timing out
-  const genreJobs = HOME_GENRE_ROWS.flatMap((g) =>
-    Array.from({ length: GENRE_PAGES_INITIAL }, (_, i) => ({
-      genreId: g.id,
-      page: i + 1,
-    })),
-  );
   const genrePagePairs = await mapPool(
-    genreJobs,
+    HOME_GENRE_ROWS,
     GENRE_FETCH_CONCURRENCY,
-    ({ genreId, page }) => getMoviesByGenre(genreId, page),
+    ({ id }) => getMoviesByGenre(id, 1),
   );
 
   function mergePages(...pages: TmdbMovie[][]): TmdbMovie[] {
@@ -150,55 +121,10 @@ export default async function Home() {
     DISCOVERY_ROW_SIZE,
   );
 
-  // Per-genre discover pools, then claim in priority order (Animation before Family)
-  const genrePools = new Map<number, TmdbMovie[]>();
-  HOME_GENRE_ROWS.forEach((genre, i) => {
-    const start = i * GENRE_PAGES_INITIAL;
-    const pages = genrePagePairs
-      .slice(start, start + GENRE_PAGES_INITIAL)
-      .map((p) => p.results);
-    genrePools.set(genre.id, mergePages(...pages));
-  });
-
-  const usedInGenres = new Set<number>();
-  const genreBuckets = new Map<number, TmdbMovie[]>();
-  for (const genreId of GENRE_CLAIM_PRIORITY) {
-    genreBuckets.set(
-      genreId,
-      takeUnique(genrePools.get(genreId) ?? [], usedInGenres, GENRE_ROW_SIZE),
-    );
-  }
-
-  // Action/Adventure/etc. often lose overlaps to earlier genres — page deeper until 50
-  for (const genreId of GENRE_CLAIM_PRIORITY) {
-    let bucket = genreBuckets.get(genreId) ?? [];
-    let nextPage = GENRE_PAGES_INITIAL + 1;
-
-    while (bucket.length < GENRE_ROW_SIZE && nextPage <= GENRE_PAGE_MAX) {
-      const batch = Array.from({ length: 3 }, (_, i) => nextPage + i).filter(
-        (p) => p <= GENRE_PAGE_MAX,
-      );
-
-      const pages = await mapPool(batch, GENRE_FETCH_CONCURRENCY, (page) =>
-        getMoviesByGenre(genreId, page),
-      );
-      nextPage += batch.length;
-
-      const fresh = mergePages(...pages.map((p) => p.results));
-      if (fresh.length === 0) break;
-
-      const need = GENRE_ROW_SIZE - bucket.length;
-      const added = takeUnique(fresh, usedInGenres, need);
-      if (added.length === 0) continue;
-
-      bucket = [...bucket, ...added];
-      genreBuckets.set(genreId, bucket);
-    }
-  }
-
-  const genreRows = HOME_GENRE_ROWS.map((genre) => ({
+  // Keep home rows small and independent; full results load on each genre page.
+  const genreRows = HOME_GENRE_ROWS.map((genre, i) => ({
     ...genre,
-    movies: genreBuckets.get(genre.id) ?? [],
+    movies: genrePagePairs[i]!.results.slice(0, GENRE_HOME_ROW_SIZE),
   }));
 
   const usedInHero = new Set<number>();
@@ -229,21 +155,28 @@ export default async function Home() {
   const heroCategoryById = new Map(
     heroPicks.map(({ movie, categoryLabel }) => [movie.id, categoryLabel]),
   );
-  const heroDetails = (
-    await Promise.all(heroPicks.map(({ movie }) => getMovie(movie.id)))
-  ).filter((m): m is NonNullable<typeof m> => m != null);
-
-  const trailerKeys = await Promise.all(
-    heroDetails.map((m) => getMovieTrailerKey(m.id)),
+  const heroDetails = await Promise.all(
+    heroPicks.map(async ({ movie }) => {
+      try {
+        return await getMovie(movie.id, { appendToResponse: ["videos"] });
+      } catch (error) {
+        console.error(
+          `Failed to load featured movie details for TMDB movie ${movie.id}:`,
+          error,
+        );
+        return null;
+      }
+    }),
   );
 
-  const slides: HeroSlide[] = heroDetails.map((movie, i) => {
+  const slides: HeroSlide[] = heroPicks.map(({ movie }, i) => {
+    const details = heroDetails[i];
     const year = movie.release_date?.slice(0, 4);
     const runtime =
-      movie.runtime != null
-        ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m`
+      details?.runtime != null
+        ? `${Math.floor(details.runtime / 60)}h ${details.runtime % 60}m`
         : null;
-    const genres = movie.genres?.map((g) => g.name).join(" / ");
+    const genres = details?.genres.map((g) => g.name).join(" / ");
     const meta = [year, genres, runtime].filter(Boolean).join(" · ");
 
     return {
@@ -251,12 +184,12 @@ export default async function Home() {
       title: movie.title,
       categoryLabel: heroCategoryById.get(movie.id) ?? "Featured film",
       overview: movie.overview,
-      tagline: movie.tagline,
+      tagline: details?.tagline ?? null,
       backdropUrl: backdropUrl(movie.backdrop_path),
       posterUrl: posterUrl(movie.poster_path, "w500"),
       meta,
       rating: movie.vote_average,
-      trailerKey: trailerKeys[i] ?? null,
+      trailerKey: getMovieTrailerKeyFromVideos(details?.videos?.results),
     };
   });
 

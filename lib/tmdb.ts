@@ -26,11 +26,21 @@ export type TmdbMovie = {
   genre_ids?: number[];
 };
 
+type TmdbVideo = {
+  id: string;
+  key: string;
+  name: string;
+  site: string;
+  type: string;
+  official: boolean;
+};
+
 /** Extra fields returned by GET /movie/{id} */
 export type TmdbMovieDetails = TmdbMovie & {
   runtime: number | null;
   tagline: string | null;
   genres: { id: number; name: string }[];
+  videos?: { results: TmdbVideo[] };
   original_title?: string;
   original_language?: string;
   status?: string;
@@ -326,10 +336,14 @@ export async function searchMovies(
 /** Single movie by id. Returns null when TMDB says 404. */
 export async function getMovie(
   id: string | number,
+  options: { appendToResponse?: ("credits" | "videos")[] } = {},
 ): Promise<TmdbMovieDetails | null> {
   const url = new URL(`${getBaseUrl()}/movie/${id}`);
   url.searchParams.set("api_key", getApiKey());
-  url.searchParams.set("append_to_response", "credits");
+  const appendToResponse = options.appendToResponse ?? ["credits"];
+  if (appendToResponse.length > 0) {
+    url.searchParams.set("append_to_response", appendToResponse.join(","));
+  }
 
   const res = await tmdbFetch(url.toString(), 3600);
 
@@ -342,14 +356,20 @@ export async function getMovie(
   return (await res.json()) as TmdbMovieDetails;
 }
 
-type TmdbVideo = {
-  id: string;
-  key: string;
-  name: string;
-  site: string;
-  type: string;
-  official: boolean;
-};
+export function getMovieTrailerKeyFromVideos(
+  videos: TmdbVideo[] | undefined,
+): string | null {
+  if (!videos) return null;
+  const youtube = videos.filter((v) => v.site === "YouTube" && v.key);
+
+  const pick =
+    youtube.find((v) => v.type === "Trailer" && v.official) ??
+    youtube.find((v) => v.type === "Trailer") ??
+    youtube.find((v) => v.type === "Teaser") ??
+    youtube[0];
+
+  return pick?.key ?? null;
+}
 
 /**
  * Best YouTube trailer key for a movie, or null if TMDB has none.
@@ -371,15 +391,7 @@ export async function getMovieTrailerKey(
   }
 
   const data = (await res.json()) as { results: TmdbVideo[] };
-  const youtube = data.results.filter((v) => v.site === "YouTube" && v.key);
-
-  const pick =
-    youtube.find((v) => v.type === "Trailer" && v.official) ??
-    youtube.find((v) => v.type === "Trailer") ??
-    youtube.find((v) => v.type === "Teaser") ??
-    youtube[0];
-
-  return pick?.key ?? null;
+  return getMovieTrailerKeyFromVideos(data.results);
 }
 
 /**
