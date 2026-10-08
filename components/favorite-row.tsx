@@ -10,7 +10,6 @@ import { FavoriteMetaForm } from "@/components/favorite-meta-form";
 import { MovieCard } from "@/components/movie-card";
 import { LIST_FAVORITE } from "@/lib/lists";
 import { posterUrl } from "@/lib/tmdb";
-import { tmdbImageLoader } from "@/lib/tmdb-image-loader";
 
 export type FavoriteRowData = {
   id: string;
@@ -80,7 +79,6 @@ export function FavoriteRow({ favorite }: FavoriteRowProps) {
                       src={poster}
                       alt=""
                       fill
-                      loader={tmdbImageLoader}
                       className="object-cover"
                       sizes="80px"
                     />

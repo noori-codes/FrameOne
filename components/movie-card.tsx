@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { mediaPath, posterUrl, type MediaKind } from "@/lib/tmdb";
-import { tmdbImageLoader } from "@/lib/tmdb-image-loader";
 import { cn } from "@/lib/utils";
 
 type MovieCardProps = {
@@ -60,7 +59,6 @@ export function MovieCard({
             sizes={sizes}
             priority={priority}
             // TMDB size CDN via custom loader — skips Next optimizer timeouts
-            loader={tmdbImageLoader}
             onError={() => setFailed(true)}
             className="movie-card-image object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform group-hover:scale-[1.06]"
           />

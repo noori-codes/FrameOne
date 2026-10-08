@@ -6,7 +6,6 @@ import {
   mapPool,
   posterUrl,
 } from "@/lib/tmdb";
-import { tmdbImageLoader } from "@/lib/tmdb-image-loader";
 
 /**
  * /genres — pick a category, then open /genres/[id]
@@ -51,7 +50,6 @@ export default async function GenresPage() {
                     src={poster}
                     alt=""
                     fill
-                    loader={tmdbImageLoader}
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 200px"
                     className="object-cover opacity-55 transition-transform duration-500 group-hover:scale-105 group-hover:opacity-70"
                   />

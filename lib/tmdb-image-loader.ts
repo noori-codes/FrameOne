@@ -3,10 +3,7 @@ import type { ImageLoaderProps } from "next/image";
 const POSTER_WIDTHS = [185, 342, 500] as const;
 const BACKDROP_WIDTHS = [780, 1280] as const;
 
-function closestWidth(
-  width: number,
-  candidates: readonly number[],
-): number {
+function closestWidth(width: number, candidates: readonly number[]): number {
   let best = candidates[0]!;
   for (const candidate of candidates) {
     best = candidate;
@@ -20,10 +17,11 @@ function isBackdropSize(size: string) {
 }
 
 /**
- * Maps next/image requested widths onto TMDB CDN sizes.
- * Avoids Next’s upstream image optimizer (7s timeout on slow TMDB edges).
+ * Global next/image loader (see next.config.ts `images.loaderFile`).
+ * Maps widths onto TMDB CDN sizes and leaves non-TMDB srcs untouched.
+ * Must be the default export for Next’s custom loaderFile contract.
  */
-export function tmdbImageLoader({ src, width }: ImageLoaderProps) {
+export default function tmdbImageLoader({ src, width }: ImageLoaderProps) {
   if (!src.includes("image.tmdb.org/t/p/")) return src;
 
   const match = src.match(

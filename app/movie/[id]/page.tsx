@@ -23,7 +23,6 @@ import {
   posterUrl,
   profileUrl,
 } from "@/lib/tmdb";
-import { tmdbImageLoader } from "@/lib/tmdb-image-loader";
 
 type MoviePageProps = {
   params: Promise<{ id: string }>;
@@ -154,7 +153,6 @@ export default async function MoviePage({ params }: MoviePageProps) {
             fill
             priority
             sizes="100vw"
-            loader={tmdbImageLoader}
             className="pointer-events-none object-cover object-[center_28%]"
           />
         ) : null}
@@ -275,7 +273,6 @@ export default async function MoviePage({ params }: MoviePageProps) {
                   sizes="300px"
                   className="object-cover"
                   priority
-                  loader={tmdbImageLoader}
                 />
               ) : (
                 <div className="flex h-full items-center justify-center p-5 text-center font-display text-3xl text-cream/45">
@@ -356,7 +353,6 @@ export default async function MoviePage({ params }: MoviePageProps) {
                             alt={person.name}
                             fill
                             sizes="(max-width: 640px) 42vw, (max-width: 1024px) 25vw, 180px"
-                            loader={tmdbImageLoader}
                             className="object-cover transition-transform duration-500 hover:scale-[1.04]"
                           />
                         ) : (
