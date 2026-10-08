@@ -1,51 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FrameOne
 
-## Getting Started
+FrameOne is a movie discovery and watchlist app built with Next.js, React, and
+Tailwind CSS. Explore movies, browse by genre, search titles, view movie details
+and trailers, and save titles to personal Favorites and Watchlist collections.
+Accounts can also manage profile details and avatars.
 
-First, run the development server:
+Movie data and images come from [TMDB](https://www.themoviedb.org/). User
+accounts and saved lists are stored in PostgreSQL with Prisma.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Getting started
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Prerequisites
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Node.js and npm
+- A [TMDB API key](https://www.themoviedb.org/settings/api)
+- A PostgreSQL database for account and list features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Install and configure
 
-## Optional TMDB cache with Upstash Redis
+1. Install dependencies:
 
-TMDB responses are cached in Upstash Redis when both
-`UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are configured. A
-cache hit returns the saved response until its configured expiration, avoiding
-another TMDB request. Cache misses still use TMDB and populate Redis. This
-shared cache can be used by multiple app instances; Next.js fetch revalidation
-continues to apply as a separate cache layer.
+   ```bash
+   npm install
+   ```
 
-Create a Redis database in Upstash and copy its REST URL and token into
-`.env.local` for local development, and into the environment variables for
-your deployment. Redis is optional: without those variables, TMDB requests
-continue to use the existing Next.js fetch cache. If Redis is temporarily
-unavailable, the app logs the cache error and continues to TMDB.
+2. Copy `.env.example` to `.env.local` and fill in the values for your
+   environment. At minimum, set `TMDB_API_KEY`, `DATABASE_URL`, and
+   `AUTH_SECRET`. Generate an auth secret with:
 
-## Learn More
+   ```bash
+   openssl rand -base64 32
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+   For local development, set `AUTH_URL` to `http://localhost:3000`. The
+   database URL should point to your PostgreSQL database. If your provider
+   requires separate pooled and direct connections, configure both
+   `DATABASE_URL` and `DIRECT_URL` as described in `.env.example`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. Apply the database migrations:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```bash
+   npm run db:migrate
+   ```
 
-## Deploy on Vercel
+4. Start the development server:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   npm run dev
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Optional services
+
+- **Upstash Redis:** Set `UPSTASH_REDIS_REST_URL` and
+  `UPSTASH_REDIS_REST_TOKEN` to enable a shared cache for TMDB responses.
+  Without them, the app continues to use the Next.js fetch cache.
+- **S3-compatible storage:** Configure the `S3_*` variables in `.env.example`
+  to enable avatar storage.
+
+Keep secrets in `.env.local` or your deployment provider's environment
+settings. Do not commit secret values.
+
+## Scripts
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the local development server |
+| `npm run build` | Generate the Prisma client and build the app |
+| `npm run start` | Start the production server |
+| `npm run lint` | Run ESLint |
+| `npm run db:generate` | Generate the Prisma client |
+| `npm run db:migrate` | Apply pending database migrations |
+| `npm run db:studio` | Open Prisma Studio |
