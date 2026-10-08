@@ -13,6 +13,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { TrailerButton } from "@/components/trailer-button";
+import { tmdbImageLoader } from "@/lib/tmdb-image-loader";
 import { cn } from "@/lib/utils";
 
 export type HeroSlide = {
@@ -212,7 +213,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             fill
             priority={index === 0}
             sizes="100vw"
-            unoptimized
+            loader={tmdbImageLoader}
             className="hero-backdrop object-cover object-[center_20%]"
           />
         ) : (
@@ -307,7 +308,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                   alt=""
                   fill
                   sizes="290px"
-                  unoptimized
+                  loader={tmdbImageLoader}
                   className="object-cover"
                 />
               </div>

@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Clapperboard, Sparkles } from "lucide-react";
 import { backdropUrl, posterUrl, type TmdbMovie } from "@/lib/tmdb";
+import { tmdbImageLoader } from "@/lib/tmdb-image-loader";
 
 type CollectionPageLayoutProps = {
   title: string;
@@ -47,7 +48,7 @@ export function CollectionPageLayout({
             alt=""
             fill
             priority
-            unoptimized
+            loader={tmdbImageLoader}
             sizes="100vw"
             className="absolute inset-0 -z-20 object-cover object-center opacity-40"
           />
@@ -110,7 +111,7 @@ export function CollectionPageLayout({
                   src={featuredPoster}
                   alt=""
                   fill
-                  unoptimized
+                  loader={tmdbImageLoader}
                   sizes="208px"
                   className="object-cover"
                 />
