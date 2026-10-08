@@ -12,7 +12,9 @@ import {
   getPopularMoviesPage,
   getTopRatedMoviesPage,
   getTrendingMoviesPage,
+  getTrendingTvPage,
   posterUrl,
+  tvShowAsMovie,
   type TmdbMovie,
 } from "@/lib/tmdb";
 
@@ -96,11 +98,13 @@ async function HomeHero() {
 }
 
 async function DiscoveryRows() {
-  const [trendingPage, popularPage, topRatedPage] = await Promise.all([
-    getHomeTrendingPage(),
-    getPopularMoviesPage(1),
-    getHomeTopRatedPage(),
-  ]);
+  const [trendingPage, popularPage, topRatedPage, trendingTvPage] =
+    await Promise.all([
+      getHomeTrendingPage(),
+      getPopularMoviesPage(1),
+      getHomeTopRatedPage(),
+      getTrendingTvPage("day", 1),
+    ]);
 
   return (
     <>
@@ -109,6 +113,13 @@ async function DiscoveryRows() {
         title="Trending now"
         movies={trendingPage.results}
         href="/browse/trending"
+      />
+      <MovieRow
+        id="trending-series"
+        title="Trending series"
+        subtitle="TV shows rising on TMDB today"
+        movies={trendingTvPage.results.map(tvShowAsMovie)}
+        mediaType="tv"
       />
       <MovieRow
         id="popular"
@@ -162,7 +173,7 @@ export default function Home() {
       </Suspense>
 
       <div className="relative z-10 flex w-full flex-col gap-14 border-t border-cream/8 pt-12 pb-12 sm:gap-24 sm:pt-20 sm:pb-20">
-        <Suspense fallback={<RowsSkeleton count={3} />}>
+        <Suspense fallback={<RowsSkeleton count={4} />}>
           <DiscoveryRows />
         </Suspense>
         <DeferredGenreRows />
