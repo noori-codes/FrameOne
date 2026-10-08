@@ -4,7 +4,7 @@ import { Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { posterUrl } from "@/lib/tmdb";
+import { mediaPath, posterUrl, type MediaKind } from "@/lib/tmdb";
 import { tmdbImageLoader } from "@/lib/tmdb-image-loader";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +18,8 @@ type MovieCardProps = {
   priority?: boolean;
   sizes?: string;
   className?: string;
+  /** Defaults to movie; use `tv` for series posters. */
+  mediaType?: MediaKind;
 };
 
 /**
@@ -34,6 +36,7 @@ export function MovieCard({
   priority = false,
   sizes = "(max-width: 640px) 40vw, 160px",
   className,
+  mediaType = "movie",
 }: MovieCardProps) {
   const src = posterUrl(posterPath);
   const [failed, setFailed] = useState(false);
@@ -45,7 +48,7 @@ export function MovieCard({
 
   return (
     <Link
-      href={`/movie/${id}`}
+      href={mediaPath(mediaType, id)}
       className={cn("movie-card group block", className)}
     >
       <div className="movie-card-frame relative aspect-2/3 overflow-hidden rounded-lg bg-stage shadow-[0_8px_24px_-12px_rgba(0,0,0,0.65)] ring-1 ring-cream/10 transition-[transform,box-shadow,ring-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform group-hover:-translate-y-1.5 group-hover:shadow-[0_20px_40px_-16px_rgba(0,0,0,0.85)] group-hover:ring-cream/20">

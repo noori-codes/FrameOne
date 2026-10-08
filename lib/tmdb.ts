@@ -663,3 +663,196 @@ export async function getMoviesByGenre(
   const data = (await res.json()) as PaginatedMoviesResponse;
   return toPaginated(data);
 }
+
+/* -------------------------------------------------------------------------- */
+/* TV / series (step 1 — detail + trending discovery)                         */
+/* -------------------------------------------------------------------------- */
+
+export type MediaKind = "movie" | "tv";
+
+export type TmdbTvShow = {
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  vote_average: number;
+  first_air_date: string;
+  genre_ids?: number[];
+};
+
+export type TmdbTvDetails = TmdbTvShow & {
+  tagline: string | null;
+  genres: { id: number; name: string }[];
+  videos?: { results: TmdbVideo[] };
+  original_name?: string;
+  original_language?: string;
+  status?: string;
+  vote_count?: number;
+  popularity?: number;
+  homepage?: string;
+  number_of_seasons?: number;
+  number_of_episodes?: number;
+  episode_run_time?: number[];
+  last_air_date?: string | null;
+  in_production?: boolean;
+  networks?: { id: number; name: string; logo_path: string | null }[];
+  created_by?: { id: number; name: string; profile_path: string | null }[];
+  production_companies?: {
+    id: number;
+    name: string;
+    origin_country: string;
+  }[];
+  production_countries?: { iso_3166_1: string; name: string }[];
+  spoken_languages?: {
+    english_name: string;
+    iso_639_1: string;
+    name: string;
+  }[];
+  credits?: {
+    cast: TmdbCastMember[];
+    crew: TmdbCrewMember[];
+  };
+  external_ids?: { imdb_id?: string | null };
+};
+
+type PaginatedTvResponse = {
+  page: number;
+  results: TmdbTvShow[];
+  total_pages: number;
+  total_results: number;
+};
+
+export type PaginatedTv = {
+  results: TmdbTvShow[];
+  page: number;
+  totalPages: number;
+  totalResults: number;
+};
+
+function toPaginatedTv(data: PaginatedTvResponse): PaginatedTv {
+  return {
+    results: data.results,
+    page: data.page,
+    totalPages: Math.min(data.total_pages, 500),
+    totalResults: data.total_results,
+  };
+}
+
+/** Map a TV list item into the poster-row shape (uses `title` like movies). */
+export function tvShowAsMovie(show: TmdbTvShow): TmdbMovie {
+  return {
+    id: show.id,
+    title: show.name,
+    overview: show.overview,
+    poster_path: show.poster_path,
+    backdrop_path: show.backdrop_path,
+    vote_average: show.vote_average,
+    release_date: show.first_air_date ?? "",
+    genre_ids: show.genre_ids,
+  };
+}
+
+export function mediaPath(kind: MediaKind, id: number) {
+  return kind === "tv" ? `/tv/${id}` : `/movie/${id}`;
+}
+
+/**
+ * TV shows trending today (or this week).
+ * TMDB: GET /trending/tv/{day|week}
+ */
+export async function getTrendingTvPage(
+  window: "day" | "week" = "day",
+  page = 1,
+): Promise<PaginatedTv> {
+  const url = new URL(`${getBaseUrl()}/trending/tv/${window}`);
+  url.searchParams.set("api_key", getApiKey());
+  url.searchParams.set("page", String(page));
+
+  const res = await tmdbFetch(url.toString(), 1800);
+
+  if (!res.ok) {
+    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+  }
+
+  return toPaginatedTv((await res.json()) as PaginatedTvResponse);
+}
+
+/** Single TV show by id. Returns null when TMDB says 404. */
+export async function getTv(
+  id: string | number,
+  options: { appendToResponse?: ("credits" | "videos" | "external_ids")[] } = {},
+): Promise<TmdbTvDetails | null> {
+  const url = new URL(`${getBaseUrl()}/tv/${id}`);
+  url.searchParams.set("api_key", getApiKey());
+  const appendToResponse = options.appendToResponse ?? [
+    "credits",
+    "external_ids",
+  ];
+  if (appendToResponse.length > 0) {
+    url.searchParams.set("append_to_response", appendToResponse.join(","));
+  }
+
+  const res = await tmdbFetch(url.toString(), 3600);
+
+  if (res.status === 404) return null;
+
+  if (!res.ok) {
+    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+  }
+
+  return (await res.json()) as TmdbTvDetails;
+}
+
+/**
+ * Best YouTube trailer key for a TV show, or null if TMDB has none.
+ * TMDB: GET /tv/{id}/videos
+ */
+export async function getTvTrailerKey(
+  id: string | number,
+): Promise<string | null> {
+  const url = new URL(`${getBaseUrl()}/tv/${id}/videos`);
+  url.searchParams.set("api_key", getApiKey());
+
+  const res = await tmdbFetch(url.toString(), 86400);
+
+  if (res.status === 404) return null;
+
+  if (!res.ok) {
+    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+  }
+
+  const data = (await res.json()) as { results: TmdbVideo[] };
+  return getMovieTrailerKeyFromVideos(data.results);
+}
+
+/**
+ * Similar TV shows (falls back to recommendations).
+ * TMDB: GET /tv/{id}/similar · GET /tv/{id}/recommendations
+ */
+export async function getSimilarTv(
+  id: string | number,
+  limit = 20,
+): Promise<TmdbTvShow[]> {
+  const showId = Number(id);
+
+  async function fetchList(path: "similar" | "recommendations") {
+    const url = new URL(`${getBaseUrl()}/tv/${id}/${path}`);
+    url.searchParams.set("api_key", getApiKey());
+    url.searchParams.set("page", "1");
+
+    const res = await tmdbFetch(url.toString(), 3600);
+    if (res.status === 404) return [] as TmdbTvShow[];
+    if (!res.ok) {
+      throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    }
+    const data = (await res.json()) as PaginatedTvResponse;
+    return data.results.filter((show) => show.id !== showId);
+  }
+
+  const similar = await fetchList("similar");
+  if (similar.length > 0) return similar.slice(0, limit);
+
+  const recommended = await fetchList("recommendations");
+  return recommended.slice(0, limit);
+}
