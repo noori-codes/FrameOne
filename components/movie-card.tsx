@@ -4,8 +4,9 @@ import { Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 import { posterUrl } from "@/lib/tmdb";
+import { tmdbImageLoader } from "@/lib/tmdb-image-loader";
+import { cn } from "@/lib/utils";
 
 type MovieCardProps = {
   id: number;
@@ -55,8 +56,8 @@ export function MovieCard({
             fill
             sizes={sizes}
             priority={priority}
-            // Bypass /_next/image — TMDB CDN can exceed Next’s 7s upstream timeout
-            unoptimized
+            // TMDB size CDN via custom loader — skips Next optimizer timeouts
+            loader={tmdbImageLoader}
             onError={() => setFailed(true)}
             className="movie-card-image object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform group-hover:scale-[1.06]"
           />

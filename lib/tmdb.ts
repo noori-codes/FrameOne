@@ -141,7 +141,43 @@ type CachedTmdbResponse = {
   body: string;
 };
 
-const REDIS_READ_TIMEOUT_MS = 350;
+type MemoryCacheEntry = {
+  value: CachedTmdbResponse;
+  /** Fresh until this time — served without hitting network. */
+  freshUntil: number;
+  /** After fresh expires, still usable as fallback until this time. */
+  staleUntil: number;
+};
+
+const REDIS_READ_TIMEOUT_MS = 200;
+const REDIS_FAIL_THRESHOLD = 2;
+const REDIS_COOLDOWN_MS = 60_000;
+const TMDB_FETCH_TIMEOUT_MS = 4_000;
+const MEMORY_CACHE_MAX = 250;
+const STALE_FALLBACK_MS = 24 * 60 * 60 * 1000;
+
+const memoryCache = new Map<string, MemoryCacheEntry>();
+
+let redisFailStreak = 0;
+let redisCircuitOpenUntil = 0;
+
+function redisReadsAllowed() {
+  return Date.now() >= redisCircuitOpenUntil;
+}
+
+function noteRedisSuccess() {
+  redisFailStreak = 0;
+}
+
+function noteRedisFailure() {
+  redisFailStreak += 1;
+  if (redisFailStreak < REDIS_FAIL_THRESHOLD) return;
+  redisCircuitOpenUntil = Date.now() + REDIS_COOLDOWN_MS;
+  redisFailStreak = 0;
+  console.warn(
+    `TMDB Redis circuit open for ${REDIS_COOLDOWN_MS}ms (Upstash too slow)`,
+  );
+}
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number) {
   let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -167,74 +203,130 @@ function getTmdbCacheKey(url: string) {
   return `frameone:tmdb:v1:${hash}`;
 }
 
+function responseFromCache(cached: CachedTmdbResponse) {
+  return new Response(cached.body, {
+    status: cached.status,
+    statusText: cached.statusText,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function memoryGet(cacheKey: string, { allowStale = false } = {}) {
+  const entry = memoryCache.get(cacheKey);
+  if (!entry) return null;
+  const now = Date.now();
+  if (entry.freshUntil > now) return entry.value;
+  if (allowStale && entry.staleUntil > now) return entry.value;
+  if (entry.staleUntil <= now) memoryCache.delete(cacheKey);
+  return null;
+}
+
+function memorySet(
+  cacheKey: string,
+  value: CachedTmdbResponse,
+  revalidate: number | false,
+) {
+  const ttlSec = revalidate === false ? 86_400 : Math.max(1, revalidate);
+  if (memoryCache.size >= MEMORY_CACHE_MAX) {
+    const oldest = memoryCache.keys().next().value;
+    if (oldest) memoryCache.delete(oldest);
+  }
+  memoryCache.set(cacheKey, {
+    value,
+    freshUntil: Date.now() + ttlSec * 1000,
+    staleUntil: Date.now() + Math.max(ttlSec * 1000, STALE_FALLBACK_MS),
+  });
+}
+
+function writeThroughCaches(
+  cacheKey: string,
+  cached: CachedTmdbResponse,
+  revalidate: number | false,
+) {
+  memorySet(cacheKey, cached, revalidate);
+
+  const redis = getRedisClient();
+  if (!redis || revalidate === 0) return;
+
+  void redis
+    .set(
+      cacheKey,
+      cached,
+      revalidate === false ? {} : { ex: Math.max(1, revalidate) },
+    )
+    .catch(() => {
+      // Non-blocking; Next + memory cache still serve the hot path.
+    });
+}
+
 /**
- * TMDB fetch with short retries — connection timeouts / 429s are common
- * when the home page fires many discover calls.
+ * TMDB fetch with memory cache, Redis (circuit-breaker), and short retries.
+ * Slow Upstash must not sit on the critical path; stale memory is preferred
+ * over a hard failure when TMDB is unreachable.
  */
 async function tmdbFetch(
   url: string,
   revalidate: number | false = 3600,
 ): Promise<Response> {
-  const redis = getRedisClient();
   const cacheKey = getTmdbCacheKey(url);
 
-  if (redis && revalidate !== 0) {
+  if (revalidate !== 0) {
+    const hot = memoryGet(cacheKey);
+    if (hot) return responseFromCache(hot);
+  }
+
+  const redis = getRedisClient();
+  if (redis && revalidate !== 0 && redisReadsAllowed()) {
     try {
       const cached = await withTimeout(
         redis.get<CachedTmdbResponse>(cacheKey),
         REDIS_READ_TIMEOUT_MS,
       );
       if (cached) {
-        return new Response(cached.body, {
-          status: cached.status,
-          statusText: cached.statusText,
-          headers: { "Content-Type": "application/json" },
-        });
+        noteRedisSuccess();
+        memorySet(cacheKey, cached, revalidate);
+        return responseFromCache(cached);
       }
-    } catch (error) {
-      console.warn("TMDB Redis cache read failed; requesting TMDB:", error);
+      noteRedisSuccess();
+    } catch {
+      noteRedisFailure();
     }
   }
 
   let lastError: unknown;
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await fetch(url, {
         next: { revalidate },
+        signal: AbortSignal.timeout(TMDB_FETCH_TIMEOUT_MS),
       });
 
-      if ((res.status === 429 || res.status >= 500) && attempt < 2) {
-        await sleep(400 * (attempt + 1));
+      if ((res.status === 429 || res.status >= 500) && attempt < 1) {
+        await sleep(300 * (attempt + 1));
         continue;
       }
 
-      if (redis && revalidate !== 0 && res.ok) {
-        try {
-          const cached: CachedTmdbResponse = {
-            status: res.status,
-            statusText: res.statusText,
-            body: await res.clone().text(),
-          };
-          void redis
-            .set(
-              cacheKey,
-              cached,
-              revalidate === false ? {} : { ex: Math.max(1, revalidate) },
-            )
-            .catch((error) => {
-              console.warn("TMDB Redis cache write failed:", error);
-            });
-        } catch (error) {
-          console.warn("TMDB Redis cache write could not be started:", error);
-        }
+      if (revalidate !== 0 && res.ok) {
+        const cached: CachedTmdbResponse = {
+          status: res.status,
+          statusText: res.statusText,
+          body: await res.clone().text(),
+        };
+        writeThroughCaches(cacheKey, cached, revalidate);
       }
 
       return res;
     } catch (err) {
       lastError = err;
-      if (attempt < 2) await sleep(500 * (attempt + 1));
+      if (attempt < 1) await sleep(250 * (attempt + 1));
     }
+  }
+
+  const stale = revalidate !== 0 ? memoryGet(cacheKey, { allowStale: true }) : null;
+  if (stale) {
+    console.warn("TMDB unreachable; serving stale memory cache for", cacheKey);
+    return responseFromCache(stale);
   }
 
   throw lastError instanceof Error ? lastError : new Error("TMDB fetch failed");
