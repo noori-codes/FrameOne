@@ -1,17 +1,17 @@
 import { cache, Suspense } from "react";
+import { DeferredGenreRows } from "@/components/deferred-genre-rows";
 import { HeroCarousel, type HeroSlide } from "@/components/hero-carousel";
 import { MovieRow } from "@/components/movie-row";
 import { SiteFooter } from "@/components/site-footer";
 import { MovieRowSkeleton, Skeleton } from "@/components/skeletons";
 import { shuffleHeroPicks } from "@/lib/daily-hero";
+import { tmdbImageUrl } from "@/lib/tmdb-image-loader";
 import {
   backdropUrl,
   getLatestMovies,
-  getMoviesByGenre,
   getPopularMoviesPage,
   getTopRatedMoviesPage,
   getTrendingMoviesPage,
-  mapPool,
   posterUrl,
   type TmdbMovie,
 } from "@/lib/tmdb";
@@ -19,25 +19,6 @@ import {
 /** Refresh at least hourly so a new UTC day picks a new hero set. */
 export const revalidate = 3600;
 
-const HOME_GENRE_ROWS = [
-  { id: 35, slug: "comedy", title: "Comedy" },
-  { id: 10751, slug: "family", title: "Family" },
-  { id: 28, slug: "action", title: "Action" },
-  { id: 12, slug: "adventure", title: "Adventure" },
-  { id: 27, slug: "horror", title: "Horror" },
-  { id: 878, slug: "scifi", title: "Sci-Fi" },
-  { id: 14, slug: "fantasy", title: "Fantasy" },
-  { id: 10749, slug: "romance", title: "Romance" },
-  { id: 16, slug: "animation", title: "Animation" },
-  { id: 53, slug: "thriller", title: "Thriller" },
-  { id: 18, slug: "drama", title: "Drama" },
-  { id: 80, slug: "crime", title: "Crime" },
-  { id: 9648, slug: "mystery", title: "Mystery" },
-  { id: 10752, slug: "war", title: "War" },
-] as const;
-
-const GENRE_FETCH_CONCURRENCY = 8;
-const GENRE_HOME_ROW_SIZE = 12;
 const HERO_GROUP_SIZE = 3;
 
 const getHomeTrendingPage = cache(() => getTrendingMoviesPage("day", 1));
@@ -89,7 +70,29 @@ async function HomeHero() {
     trailerKey: null,
   }));
 
-  return <HeroCarousel slides={slides} />;
+  const firstBackdrop = slides[0]?.backdropUrl;
+  const heroPreload780 = firstBackdrop
+    ? tmdbImageUrl(firstBackdrop, 780)
+    : null;
+  const heroPreload1280 = firstBackdrop
+    ? tmdbImageUrl(firstBackdrop, 1280)
+    : null;
+
+  return (
+    <>
+      {heroPreload780 && heroPreload1280 ? (
+        <link
+          rel="preload"
+          as="image"
+          // Responsive LCP candidate — matches hero Image sizes="100vw"
+          imageSrcSet={`${heroPreload780} 780w, ${heroPreload1280} 1280w`}
+          imageSizes="100vw"
+          fetchPriority="high"
+        />
+      ) : null}
+      <HeroCarousel slides={slides} />
+    </>
+  );
 }
 
 async function DiscoveryRows() {
@@ -121,29 +124,6 @@ async function DiscoveryRows() {
       />
     </>
   );
-}
-
-async function GenreRows() {
-  const rows = await mapPool(
-    HOME_GENRE_ROWS,
-    GENRE_FETCH_CONCURRENCY,
-    async (genre) => ({
-      ...genre,
-      movies: (
-        await getMoviesByGenre(genre.id, 1)
-      ).results.slice(0, GENRE_HOME_ROW_SIZE),
-    }),
-  );
-
-  return rows.map((genre) => (
-    <MovieRow
-      key={genre.id}
-      id={genre.slug}
-      title={genre.title}
-      movies={genre.movies}
-      href={`/genres/${genre.id}`}
-    />
-  ));
 }
 
 function HeroSkeleton() {
@@ -185,9 +165,7 @@ export default function Home() {
         <Suspense fallback={<RowsSkeleton count={3} />}>
           <DiscoveryRows />
         </Suspense>
-        <Suspense fallback={<RowsSkeleton count={4} />}>
-          <GenreRows />
-        </Suspense>
+        <DeferredGenreRows />
       </div>
 
       <SiteFooter />
