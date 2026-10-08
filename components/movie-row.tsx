@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { MovieCard } from "@/components/movie-card";
-import type { TmdbMovie } from "@/lib/tmdb";
+import type { MediaKind, TmdbMovie } from "@/lib/tmdb";
 
 type MovieRowProps = {
   id: string;
@@ -14,6 +14,8 @@ type MovieRowProps = {
   movies: TmdbMovie[];
   /** Optional “See all” link (e.g. /genres/35). */
   href?: string;
+  /** Defaults to movie; use `tv` for series rows. */
+  mediaType?: MediaKind;
 };
 
 /**
@@ -26,6 +28,7 @@ export function MovieRow({
   subtitle,
   movies,
   href,
+  mediaType = "movie",
 }: MovieRowProps) {
   const row = movies;
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -144,6 +147,7 @@ export function MovieRow({
                 title={movie.title}
                 posterPath={movie.poster_path}
                 voteAverage={movie.vote_average}
+                mediaType={mediaType}
                 sizes="(max-width: 640px) 120px, (max-width: 768px) 156px, 176px"
               />
             </li>
