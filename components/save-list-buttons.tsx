@@ -4,7 +4,13 @@ import Link from "next/link";
 import { Heart } from "lucide-react";
 import { useActionState } from "react";
 import { toggleList, type ToggleListState } from "@/app/actions/favorites";
-import { LIST_FAVORITE, LIST_WATCHLIST, type ListType } from "@/lib/lists";
+import {
+  LIST_FAVORITE,
+  LIST_WATCHLIST,
+  MEDIA_MOVIE,
+  type ListType,
+  type MediaListType,
+} from "@/lib/lists";
 
 type SaveListButtonsProps = {
   movieId: number;
@@ -13,6 +19,7 @@ type SaveListButtonsProps = {
   initialFavorite: boolean;
   initialWatchlist: boolean;
   signedIn: boolean;
+  mediaType?: MediaListType;
 };
 
 function ListToggle({
@@ -20,6 +27,7 @@ function ListToggle({
   title,
   posterPath,
   listType,
+  mediaType,
   initialSaved,
   activeLabel,
   idleLabel,
@@ -29,6 +37,7 @@ function ListToggle({
   title: string;
   posterPath: string | null;
   listType: ListType;
+  mediaType: MediaListType;
   initialSaved: boolean;
   activeLabel: string;
   idleLabel: string;
@@ -48,6 +57,7 @@ function ListToggle({
       <input type="hidden" name="title" value={title} />
       <input type="hidden" name="posterPath" value={posterPath ?? ""} />
       <input type="hidden" name="listType" value={listType} />
+      <input type="hidden" name="mediaType" value={mediaType} />
       <button
         type="submit"
         disabled={pending}
@@ -56,10 +66,10 @@ function ListToggle({
           iconOnly
             ? saved
               ? "inline-flex h-10 w-10 items-center justify-center rounded-full border border-amber/50 bg-amber/10 text-amber transition-colors hover:border-amber hover:bg-amber/15 disabled:opacity-60 sm:h-11 sm:w-11"
-                : "inline-flex h-10 w-10 items-center justify-center rounded-full border border-cream/25 text-cream transition-colors hover:border-cream/45 hover:text-cream disabled:opacity-60 sm:h-11 sm:w-11"
+              : "inline-flex h-10 w-10 items-center justify-center rounded-full border border-cream/25 text-cream transition-colors hover:border-cream/45 hover:text-cream disabled:opacity-60 sm:h-11 sm:w-11"
             : saved
-                ? "min-h-10 rounded-full border border-amber/50 bg-amber/10 px-3.5 py-2 text-xs text-amber transition-colors hover:border-amber hover:bg-amber/15 disabled:opacity-60 sm:min-h-11 sm:px-4 sm:text-sm"
-                : "min-h-10 rounded-full border border-cream/25 px-3.5 py-2 text-xs text-cream transition-colors hover:border-cream/45 hover:text-cream disabled:opacity-60 sm:min-h-11 sm:px-4 sm:text-sm"
+              ? "min-h-10 rounded-full border border-amber/50 bg-amber/10 px-3.5 py-2 text-xs text-amber transition-colors hover:border-amber hover:bg-amber/15 disabled:opacity-60 sm:min-h-11 sm:px-4 sm:text-sm"
+              : "min-h-10 rounded-full border border-cream/25 px-3.5 py-2 text-xs text-cream transition-colors hover:border-cream/45 hover:text-cream disabled:opacity-60 sm:min-h-11 sm:px-4 sm:text-sm"
         }
       >
         {iconOnly ? (
@@ -83,8 +93,7 @@ function ListToggle({
 }
 
 /**
- * Favorites + Watchlist toggles on the movie detail page.
- * A movie can live in either list, both, or neither.
+ * Favorites + Watchlist toggles on movie / TV detail pages.
  */
 export function SaveListButtons({
   movieId,
@@ -93,6 +102,7 @@ export function SaveListButtons({
   initialFavorite,
   initialWatchlist,
   signedIn,
+  mediaType = MEDIA_MOVIE,
 }: SaveListButtonsProps) {
   if (!signedIn) {
     return (
@@ -108,22 +118,24 @@ export function SaveListButtons({
   return (
     <div className="flex flex-wrap items-center gap-2.5">
       <ListToggle
-        key={`fav-${movieId}-${initialFavorite}`}
+        key={`fav-${mediaType}-${movieId}-${initialFavorite}`}
         movieId={movieId}
         title={title}
         posterPath={posterPath}
         listType={LIST_FAVORITE}
+        mediaType={mediaType}
         initialSaved={initialFavorite}
         idleLabel="Favorite"
         activeLabel="Favorited"
         iconOnly
       />
       <ListToggle
-        key={`wl-${movieId}-${initialWatchlist}`}
+        key={`wl-${mediaType}-${movieId}-${initialWatchlist}`}
         movieId={movieId}
         title={title}
         posterPath={posterPath}
         listType={LIST_WATCHLIST}
+        mediaType={mediaType}
         initialSaved={initialWatchlist}
         idleLabel="Add to watchlist"
         activeLabel="On watchlist"
