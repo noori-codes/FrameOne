@@ -8,7 +8,12 @@ import { createPortal } from "react-dom";
 import { toggleList, type ToggleListState } from "@/app/actions/favorites";
 import { FavoriteMetaForm } from "@/components/favorite-meta-form";
 import { MovieCard } from "@/components/movie-card";
-import { LIST_FAVORITE } from "@/lib/lists";
+import {
+  LIST_FAVORITE,
+  MEDIA_MOVIE,
+  mediaHref,
+  type MediaListType,
+} from "@/lib/lists";
 import { posterUrl } from "@/lib/tmdb";
 
 export type FavoriteRowData = {
@@ -18,6 +23,7 @@ export type FavoriteRowData = {
   posterPath: string | null;
   rating: number | null;
   note: string | null;
+  mediaType?: MediaListType;
 };
 
 type FavoriteRowProps = {
@@ -35,6 +41,8 @@ export function FavoriteRow({ favorite }: FavoriteRowProps) {
   const titleId = useId();
   const [, removeAction, removing] = useActionState(toggleList, removeInitial);
   const poster = posterUrl(favorite.posterPath, "w342");
+  const mediaType = favorite.mediaType ?? MEDIA_MOVIE;
+  const href = mediaHref(mediaType, favorite.movieId);
 
   const closeEditor = useCallback(() => setEditing(false), []);
 
@@ -108,6 +116,7 @@ export function FavoriteRow({ favorite }: FavoriteRowProps) {
               <FavoriteMetaForm
                 key={`${favorite.id}-${favorite.rating}-${favorite.note}`}
                 movieId={favorite.movieId}
+                mediaType={mediaType}
                 initialRating={favorite.rating}
                 initialNote={favorite.note}
                 onSuccess={closeEditor}
@@ -126,17 +135,22 @@ export function FavoriteRow({ favorite }: FavoriteRowProps) {
             id={favorite.movieId}
             title={favorite.title}
             posterPath={favorite.posterPath}
+            mediaType={mediaType}
             sizes="96px"
+            initialFavorite
           />
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col">
           <Link
-            href={`/movie/${favorite.movieId}`}
+            href={href}
             className="text-lg font-semibold leading-snug tracking-tight text-cream transition-colors hover:text-amber sm:text-xl"
           >
             {favorite.title}
           </Link>
+          <p className="mt-0.5 text-[10px] font-semibold tracking-[0.16em] text-cream/35 uppercase">
+            {mediaType === "tv" ? "Series" : "Film"}
+          </p>
 
           <div className="mt-1.5">
             {favorite.rating != null ? (
@@ -167,6 +181,7 @@ export function FavoriteRow({ favorite }: FavoriteRowProps) {
               <input type="hidden" name="listType" value={LIST_FAVORITE} />
               <input type="hidden" name="movieId" value={favorite.movieId} />
               <input type="hidden" name="title" value={favorite.title} />
+              <input type="hidden" name="mediaType" value={mediaType} />
               <input
                 type="hidden"
                 name="posterPath"
@@ -181,7 +196,7 @@ export function FavoriteRow({ favorite }: FavoriteRowProps) {
               </button>
             </form>
             <Link
-              href={`/movie/${favorite.movieId}`}
+              href={href}
               className="rounded-full px-3 py-1.5 text-sm text-cream/40 transition-colors hover:text-amber"
             >
               Open

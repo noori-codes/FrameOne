@@ -113,7 +113,7 @@ async function DiscoveryRows() {
       userId
         ? prisma.favorite
             .findMany({
-              where: { userId, listType: LIST_FAVORITE },
+              where: { userId, listType: LIST_FAVORITE, mediaType: "movie" },
               select: { movieId: true },
             })
             .then((rows) => rows.map((row) => row.movieId))

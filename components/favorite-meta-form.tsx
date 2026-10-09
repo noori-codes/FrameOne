@@ -5,6 +5,7 @@ import {
   updateFavoriteMeta,
   type FavoriteMetaState,
 } from "@/app/actions/favorites";
+import { MEDIA_MOVIE, type MediaListType } from "@/lib/lists";
 import { cn } from "@/lib/utils";
 
 type FavoriteMetaFormProps = {
@@ -13,6 +14,7 @@ type FavoriteMetaFormProps = {
   initialNote: string | null;
   className?: string;
   onSuccess?: () => void;
+  mediaType?: MediaListType;
 };
 
 const initial: FavoriteMetaState = {};
@@ -27,6 +29,7 @@ export function FavoriteMetaForm({
   initialNote,
   className,
   onSuccess,
+  mediaType = MEDIA_MOVIE,
 }: FavoriteMetaFormProps) {
   const [state, action, pending] = useActionState(updateFavoriteMeta, initial);
 
@@ -40,6 +43,7 @@ export function FavoriteMetaForm({
       className={cn("flex w-full flex-col gap-3", className)}
     >
       <input type="hidden" name="movieId" value={movieId} />
+      <input type="hidden" name="mediaType" value={mediaType} />
 
       <label className="flex flex-col gap-1.5 text-sm text-cream/65">
         Your rating

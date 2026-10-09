@@ -66,6 +66,7 @@ export default async function WatchlistPage() {
                   id={item.movieId}
                   title={item.title}
                   posterPath={item.posterPath}
+                  mediaType={item.mediaType === "tv" ? "tv" : "movie"}
                   showTitle
                 />
               </li>

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { toggleList, type ToggleListState } from "@/app/actions/favorites";
-import { LIST_FAVORITE } from "@/lib/lists";
+import { LIST_FAVORITE, MEDIA_MOVIE } from "@/lib/lists";
 import { mediaPath, posterUrl, type MediaKind } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 
@@ -55,6 +55,7 @@ function FavoriteHeart({
       <input type="hidden" name="title" value={title} />
       <input type="hidden" name="posterPath" value={posterPath ?? ""} />
       <input type="hidden" name="listType" value={LIST_FAVORITE} />
+      <input type="hidden" name="mediaType" value={MEDIA_MOVIE} />
       <button
         type="submit"
         disabled={pending}
