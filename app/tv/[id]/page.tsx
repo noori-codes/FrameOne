@@ -9,8 +9,13 @@ import {
   Star,
 } from "lucide-react";
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
+import { FavoriteMetaForm } from "@/components/favorite-meta-form";
 import { MovieRow } from "@/components/movie-row";
+import { SaveListButtons } from "@/components/save-list-buttons";
 import { TrailerButton } from "@/components/trailer-button";
+import { MEDIA_TV } from "@/lib/lists";
+import { prisma } from "@/lib/prisma";
 import {
   backdropUrl,
   getSimilarTv,
@@ -82,7 +87,34 @@ export default async function TvPage({ params }: TvPageProps) {
   const show = await getTv(id);
   if (!show) notFound();
 
-  const [trailerKey, similar] = await Promise.all([
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  const [favorite, watchlistItem, trailerKey, similar] = await Promise.all([
+    userId
+      ? prisma.favorite.findUnique({
+          where: {
+            userId_movieId_listType_mediaType: {
+              userId,
+              movieId: show.id,
+              listType: "favorite",
+              mediaType: MEDIA_TV,
+            },
+          },
+        })
+      : Promise.resolve(null),
+    userId
+      ? prisma.favorite.findUnique({
+          where: {
+            userId_movieId_listType_mediaType: {
+              userId,
+              movieId: show.id,
+              listType: "watchlist",
+              mediaType: MEDIA_TV,
+            },
+          },
+        })
+      : Promise.resolve(null),
     getTvTrailerKey(show.id),
     getSimilarTv(show.id, 20),
   ]);
@@ -218,6 +250,16 @@ export default async function TvPage({ params }: TvPageProps) {
                     className="min-h-10 px-5 text-sm sm:min-h-12 sm:px-6"
                   />
                 ) : null}
+                <SaveListButtons
+                  key={`${show.id}-${Boolean(favorite)}-${Boolean(watchlistItem)}`}
+                  movieId={show.id}
+                  title={show.name}
+                  posterPath={show.poster_path}
+                  mediaType={MEDIA_TV}
+                  initialFavorite={Boolean(favorite)}
+                  initialWatchlist={Boolean(watchlistItem)}
+                  signedIn={Boolean(session?.user)}
+                />
               </div>
             </div>
 
@@ -322,6 +364,31 @@ export default async function TvPage({ params }: TvPageProps) {
                   );
                 })}
               </ul>
+            </section>
+          ) : null}
+
+          {favorite ? (
+            <section
+              aria-labelledby="your-notes-heading"
+              className="border-t border-cream/10 pt-8 sm:pt-10"
+            >
+              <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
+                Your collection
+              </p>
+              <h2
+                id="your-notes-heading"
+                className="mt-2 font-display text-4xl text-cream uppercase sm:text-5xl"
+              >
+                Your notes
+              </h2>
+              <FavoriteMetaForm
+                key={`${favorite.id}-${favorite.rating}-${favorite.note}`}
+                movieId={show.id}
+                mediaType={MEDIA_TV}
+                initialRating={favorite.rating}
+                initialNote={favorite.note}
+                className="mt-5 max-w-xl"
+              />
             </section>
           ) : null}
         </div>

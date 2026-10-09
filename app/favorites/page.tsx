@@ -94,6 +94,8 @@ export default async function FavoritesPage({
                     posterPath: fav.posterPath,
                     rating: fav.rating,
                     note: fav.note,
+                    mediaType:
+                      fav.mediaType === "tv" ? "tv" : "movie",
                   }}
                 />
               ))}

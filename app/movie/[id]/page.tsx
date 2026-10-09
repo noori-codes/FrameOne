@@ -98,10 +98,11 @@ export default async function MoviePage({ params }: MoviePageProps) {
     userId
       ? prisma.favorite.findUnique({
           where: {
-            userId_movieId_listType: {
+            userId_movieId_listType_mediaType: {
               userId,
               movieId: movie.id,
               listType: "favorite",
+              mediaType: "movie",
             },
           },
         })
@@ -109,10 +110,11 @@ export default async function MoviePage({ params }: MoviePageProps) {
     userId
       ? prisma.favorite.findUnique({
           where: {
-            userId_movieId_listType: {
+            userId_movieId_listType_mediaType: {
               userId,
               movieId: movie.id,
               listType: "watchlist",
+              mediaType: "movie",
             },
           },
         })

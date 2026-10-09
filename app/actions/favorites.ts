@@ -2,7 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
-import { isListType, LIST_FAVORITE, type ListType } from "@/lib/lists";
+import {
+  isListType,
+  isMediaListType,
+  LIST_FAVORITE,
+  MEDIA_MOVIE,
+  type ListType,
+  type MediaListType,
+} from "@/lib/lists";
 import { prisma } from "@/lib/prisma";
 
 export type ToggleListState = {
@@ -16,15 +23,16 @@ export type FavoriteMetaState = {
   success?: string;
 };
 
-function revalidateLists(movieId: number) {
-  revalidatePath(`/movie/${movieId}`);
+function revalidateLists(mediaType: MediaListType, movieId: number) {
+  revalidatePath(mediaType === "tv" ? `/tv/${movieId}` : `/movie/${movieId}`);
   revalidatePath("/favorites");
   revalidatePath("/watchlist");
+  revalidatePath("/");
 }
 
 /**
- * Add or remove a movie from Favorites or Watchlist.
- * Form field `listType` must be "favorite" or "watchlist".
+ * Add or remove a title from Favorites or Watchlist.
+ * Form fields: movieId, title, posterPath, listType, mediaType (movie|tv).
  */
 export async function toggleList(
   _prev: ToggleListState,
@@ -32,7 +40,7 @@ export async function toggleList(
 ): Promise<ToggleListState> {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: "Sign in to save movies." };
+    return { error: "Sign in to save titles." };
   }
 
   const listTypeRaw = String(formData.get("listType") ?? "");
@@ -40,6 +48,12 @@ export async function toggleList(
     return { error: "Invalid list." };
   }
   const listType = listTypeRaw;
+
+  const mediaTypeRaw = String(formData.get("mediaType") ?? MEDIA_MOVIE);
+  if (!isMediaListType(mediaTypeRaw)) {
+    return { error: "Invalid media type." };
+  }
+  const mediaType = mediaTypeRaw;
 
   const movieId = Number(formData.get("movieId"));
   const title = String(formData.get("title") ?? "").trim();
@@ -50,22 +64,23 @@ export async function toggleList(
       : null;
 
   if (!Number.isFinite(movieId) || movieId <= 0 || !title) {
-    return { error: "Invalid movie." };
+    return { error: "Invalid title." };
   }
 
   const existing = await prisma.favorite.findUnique({
     where: {
-      userId_movieId_listType: {
+      userId_movieId_listType_mediaType: {
         userId: session.user.id,
         movieId,
         listType,
+        mediaType,
       },
     },
   });
 
   if (existing) {
     await prisma.favorite.delete({ where: { id: existing.id } });
-    revalidateLists(movieId);
+    revalidateLists(mediaType, movieId);
     return { saved: false, listType };
   }
 
@@ -73,13 +88,14 @@ export async function toggleList(
     data: {
       userId: session.user.id,
       movieId,
+      mediaType,
       title,
       posterPath,
       listType,
     },
   });
 
-  revalidateLists(movieId);
+  revalidateLists(mediaType, movieId);
   return { saved: true, listType };
 }
 
@@ -100,8 +116,14 @@ export async function updateFavoriteMeta(
 
   const movieId = Number(formData.get("movieId"));
   if (!Number.isFinite(movieId) || movieId <= 0) {
-    return { error: "Invalid movie." };
+    return { error: "Invalid title." };
   }
+
+  const mediaTypeRaw = String(formData.get("mediaType") ?? MEDIA_MOVIE);
+  if (!isMediaListType(mediaTypeRaw)) {
+    return { error: "Invalid media type." };
+  }
+  const mediaType = mediaTypeRaw;
 
   const ratingRaw = String(formData.get("rating") ?? "").trim();
   let rating: number | null = null;
@@ -117,16 +139,17 @@ export async function updateFavoriteMeta(
 
   const existing = await prisma.favorite.findUnique({
     where: {
-      userId_movieId_listType: {
+      userId_movieId_listType_mediaType: {
         userId: session.user.id,
         movieId,
         listType: LIST_FAVORITE,
+        mediaType,
       },
     },
   });
 
   if (!existing) {
-    return { error: "Add this movie to Favorites before rating it." };
+    return { error: "Add this title to Favorites before rating it." };
   }
 
   await prisma.favorite.update({
@@ -137,6 +160,6 @@ export async function updateFavoriteMeta(
     },
   });
 
-  revalidateLists(movieId);
+  revalidateLists(mediaType, movieId);
   return { success: "Saved." };
 }
