@@ -1,10 +1,13 @@
 import { cache, Suspense } from "react";
+import { auth } from "@/auth";
 import { DeferredGenreRows } from "@/components/deferred-genre-rows";
 import { HeroCarousel, type HeroSlide } from "@/components/hero-carousel";
 import { MovieRow } from "@/components/movie-row";
 import { SiteFooter } from "@/components/site-footer";
 import { MovieRowSkeleton, Skeleton } from "@/components/skeletons";
 import { shuffleHeroPicks } from "@/lib/daily-hero";
+import { LIST_FAVORITE } from "@/lib/lists";
+import { prisma } from "@/lib/prisma";
 import { tmdbImageUrl } from "@/lib/tmdb-image-loader";
 import {
   backdropUrl,
@@ -98,12 +101,23 @@ async function HomeHero() {
 }
 
 async function DiscoveryRows() {
-  const [trendingPage, popularPage, topRatedPage, trendingTvPage] =
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  const [trendingPage, popularPage, topRatedPage, trendingTvPage, favoriteIds] =
     await Promise.all([
       getHomeTrendingPage(),
       getPopularMoviesPage(1),
       getHomeTopRatedPage(),
       getTrendingTvPage("day", 1),
+      userId
+        ? prisma.favorite
+            .findMany({
+              where: { userId, listType: LIST_FAVORITE },
+              select: { movieId: true },
+            })
+            .then((rows) => rows.map((row) => row.movieId))
+        : Promise.resolve([] as number[]),
     ]);
 
   return (
@@ -113,6 +127,7 @@ async function DiscoveryRows() {
         title="Trending now"
         movies={trendingPage.results}
         href="/browse/trending"
+        favoriteIds={favoriteIds}
       />
       <MovieRow
         id="trending-series"
@@ -126,12 +141,14 @@ async function DiscoveryRows() {
         title="Popular now"
         movies={popularPage.results}
         href="/browse/popular"
+        favoriteIds={favoriteIds}
       />
       <MovieRow
         id="top-rated"
         title="Top rated"
         movies={topRatedPage.results}
         href="/browse/top-rated"
+        favoriteIds={favoriteIds}
       />
     </>
   );

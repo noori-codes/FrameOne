@@ -16,6 +16,7 @@ type MovieRowProps = {
   href?: string;
   /** Defaults to movie; use `tv` for series rows. */
   mediaType?: MediaKind;
+  favoriteIds?: number[];
 };
 
 /**
@@ -29,8 +30,11 @@ export function MovieRow({
   movies,
   href,
   mediaType = "movie",
+  favoriteIds,
 }: MovieRowProps) {
   const row = movies;
+  const favoriteSet =
+    favoriteIds && favoriteIds.length > 0 ? new Set(favoriteIds) : null;
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
     containScroll: "trimSnaps",
@@ -148,6 +152,7 @@ export function MovieRow({
                 posterPath={movie.poster_path}
                 voteAverage={movie.vote_average}
                 mediaType={mediaType}
+                initialFavorite={favoriteSet?.has(movie.id) ?? false}
                 sizes="(max-width: 640px) 120px, (max-width: 768px) 156px, 176px"
               />
             </li>
