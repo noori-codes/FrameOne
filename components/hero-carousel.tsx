@@ -11,7 +11,13 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { TrailerButton } from "@/components/trailer-button";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +74,8 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
   const slide = slides[index] ?? null;
 
   const trailerOpenRef = useRef(trailerOpen);
+  /** Hover / keyboard focus inside the hero — pause without flipping the Play/Pause control. */
+  const interactPauseRef = useRef(false);
   const startedAtRef = useRef(0);
   const pausedAtRef = useRef<number | null>(null);
   const elapsedBeforePauseRef = useRef(0);
@@ -77,9 +85,15 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
     trailerOpenRef.current = trailerOpen;
   }, [trailerOpen]);
 
+  const setInteractPause = useCallback((next: boolean) => {
+    interactPauseRef.current = next;
+  }, []);
+
   const setBar = useCallback((ratio: number) => {
     const el = progressRef.current;
-    if (el) el.style.transform = `scaleX(${Math.min(1, Math.max(0, ratio))})`;
+    if (el) {
+      el.style.width = `${Math.min(1, Math.max(0, ratio)) * 100}%`;
+    }
   }, []);
 
   const resetClock = useCallback(
@@ -109,7 +123,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
   );
 
   // Restart the shared clock whenever the slide changes (auto or manual).
-  useEffect(() => {
+  useLayoutEffect(() => {
     resetClock();
   }, [index, resetClock]);
 
@@ -135,6 +149,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
       const paused =
         isPaused ||
         trailerOpenRef.current ||
+        interactPauseRef.current ||
         (typeof document !== "undefined" && document.hidden);
 
       if (paused) {
@@ -275,7 +290,21 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               {slide.overview}
             </p>
 
-            <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8">
+            <div
+              className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8"
+              onPointerEnter={() => setInteractPause(true)}
+              onPointerLeave={() => setInteractPause(false)}
+              onFocusCapture={() => setInteractPause(true)}
+              onBlurCapture={(event) => {
+                const next = event.relatedTarget;
+                if (
+                  !(next instanceof Node) ||
+                  !event.currentTarget.contains(next)
+                ) {
+                  setInteractPause(false);
+                }
+              }}
+            >
               <TrailerButton
                 youtubeKey={slide.trailerKey}
                 movieId={slide.id}
@@ -299,6 +328,10 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               href={`/movie/${slide.id}`}
               aria-label={`View details for ${slide.title}`}
               className="group relative mx-auto hidden w-full max-w-64 justify-self-center lg:block"
+              onPointerEnter={() => setInteractPause(true)}
+              onPointerLeave={() => setInteractPause(false)}
+              onFocus={() => setInteractPause(true)}
+              onBlur={() => setInteractPause(false)}
             >
               <div className="relative aspect-2/3 overflow-hidden rounded-sm bg-stage shadow-[0_32px_90px_-24px_rgba(0,0,0,0.9)] ring-1 ring-white/25 transition-transform duration-500 group-hover:-translate-y-2 group-hover:rotate-1 motion-reduce:transition-none">
                 <Image
@@ -314,48 +347,59 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
         </div>
 
         {count > 1 ? (
-          <div className="mt-9 flex w-full items-center gap-4 border-t border-cream/15 pt-5 sm:mt-12 sm:gap-6 sm:pt-6">
-            <span className="shrink-0 text-xs font-medium tracking-[0.18em] text-cream/65 uppercase">
-              <span className="text-amber">
+          <div className="mt-9 flex w-full items-center gap-3 border-t border-cream/10 pt-5 sm:mt-12 sm:gap-5 sm:pt-6">
+            <div className="flex shrink-0 items-baseline gap-1.5 font-display tracking-wide">
+              <span className="text-lg leading-none text-amber sm:text-xl">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <span className="mx-2 text-cream/30">/</span>
-              {String(count).padStart(2, "0")}
-            </span>
+              <span className="text-xs text-cream/30 sm:text-sm">/</span>
+              <span className="text-xs text-cream/45 sm:text-sm">
+                {String(count).padStart(2, "0")}
+              </span>
+            </div>
+
             <div
-              className="flex min-w-0 flex-1 items-center gap-2.5"
+              className="flex min-w-0 flex-1 items-center gap-1 sm:gap-1.5"
               role="tablist"
               aria-label="Featured slides"
             >
-              {slides.map((s, i) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={i === index}
-                  aria-label={`Show ${s.title}`}
-                  onClick={() => goTo(i)}
-                  className={cn("group relative h-8 min-w-0 flex-1")}
-                >
-                  <span
-                    className={cn(
-                      "absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 overflow-hidden rounded-full transition-[height,background-color,box-shadow] duration-300",
-                      i === index
-                        ? "h-1.5 bg-amber/35 shadow-[0_0_12px_rgba(47,230,200,0.28)]"
-                        : "bg-cream/20 group-hover:bg-cream/40",
-                    )}
+              {slides.map((s, i) => {
+                const isCurrent = i === index;
+                const isPast = i < index;
+
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isCurrent}
+                    aria-label={`Show ${s.title}`}
+                    onClick={() => goTo(i)}
+                    className="group relative h-10 min-w-0 flex-1"
                   >
-                    {i === index ? (
-                      <span
-                        ref={progressRef}
-                        className="absolute inset-0 origin-left scale-x-0 bg-amber shadow-[0_0_12px_rgba(47,230,200,0.85)]"
-                      />
-                    ) : null}
-                  </span>
-                </button>
-              ))}
+                    <span
+                      className={cn(
+                        "absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 overflow-hidden rounded-full bg-cream/[0.14] transition-[height,background-color,filter] duration-300 group-hover:bg-cream/30",
+                        isCurrent && "h-1.5 bg-cream/[0.12]",
+                        isPast && "bg-amber/25",
+                      )}
+                    >
+                      {isPast ? (
+                        <span className="absolute inset-0 rounded-full bg-amber/90" />
+                      ) : null}
+                      {isCurrent ? (
+                        <span
+                          ref={progressRef}
+                          className="absolute inset-y-0 left-0 w-0 rounded-full bg-amber shadow-[0_0_12px_2px_color-mix(in_srgb,var(--amber)_45%,transparent)]"
+                        />
+                      ) : null}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+
+            <div className="flex shrink-0 items-center gap-1 rounded-full border border-cream/12 bg-black/35 p-1 shadow-[0_8px_28px_-16px_rgba(0,0,0,0.8)] backdrop-blur-md">
               <button
                 type="button"
                 aria-label={
@@ -363,29 +407,33 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                 }
                 aria-pressed={isPaused}
                 onClick={() => setIsPaused((paused) => !paused)}
-                className="inline-flex size-11 items-center justify-center rounded-full border border-cream/25 bg-background/20 text-cream/80 backdrop-blur-sm transition-colors hover:border-amber/60 hover:text-amber"
+                className={cn(
+                  "inline-flex size-9 items-center justify-center rounded-full text-cream/75 transition-[color,background-color,transform] duration-200 hover:bg-cream/10 hover:text-cream active:scale-95 sm:size-10",
+                  isPaused && "bg-amber/15 text-amber hover:bg-amber/20 hover:text-amber",
+                )}
               >
                 {isPaused ? (
-                  <Play className="size-4" />
+                  <Play className="size-3.5 fill-current" />
                 ) : (
-                  <Pause className="size-4" />
+                  <Pause className="size-3.5" />
                 )}
               </button>
+              <span aria-hidden className="h-4 w-px bg-cream/12" />
               <button
                 type="button"
                 aria-label="Previous featured movie"
                 onClick={() => go(-1)}
-                className="inline-flex size-11 items-center justify-center rounded-full border border-cream/25 bg-background/20 text-cream/80 backdrop-blur-sm transition-colors hover:border-amber/60 hover:text-amber"
+                className="inline-flex size-9 items-center justify-center rounded-full text-cream/75 transition-[color,background-color,transform] duration-200 hover:bg-cream/10 hover:text-cream active:scale-95 sm:size-10"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="size-4" />
               </button>
               <button
                 type="button"
                 aria-label="Next featured movie"
                 onClick={() => go(1)}
-                className="inline-flex size-11 items-center justify-center rounded-full border border-cream/25 bg-background/20 text-cream/80 backdrop-blur-sm transition-colors hover:border-amber/60 hover:text-amber"
+                className="inline-flex size-9 items-center justify-center rounded-full text-cream/75 transition-[color,background-color,transform] duration-200 hover:bg-cream/10 hover:text-cream active:scale-95 sm:size-10"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="size-4" />
               </button>
             </div>
           </div>
