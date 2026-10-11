@@ -305,13 +305,28 @@ export default async function MoviePage({ params }: MoviePageProps) {
               <div className="mt-7 flex flex-wrap gap-x-8 gap-y-3 border-t border-cream/10 pt-5">
                 <p className="text-sm text-cream/50">
                   Director{" "}
-                  <span className="ml-2 text-cream/85">{director.name}</span>
+                  <Link
+                    href={`/person/${director.id}`}
+                    className="ml-2 text-cream/85 transition-colors hover:text-amber"
+                  >
+                    {director.name}
+                  </Link>
                 </p>
                 {writers && writers.length > 0 ? (
                   <p className="text-sm text-cream/50">
                     Written by{" "}
                     <span className="ml-2 text-cream/85">
-                      {writers.map((writer) => writer.name).join(", ")}
+                      {writers.map((writer, i) => (
+                        <span key={`${writer.id}-${writer.job}`}>
+                          {i > 0 ? ", " : null}
+                          <Link
+                            href={`/person/${writer.id}`}
+                            className="transition-colors hover:text-amber"
+                          >
+                            {writer.name}
+                          </Link>
+                        </span>
+                      ))}
                     </span>
                   </p>
                 ) : null}
@@ -348,27 +363,32 @@ export default async function MoviePage({ params }: MoviePageProps) {
                       key={`${person.id}-${person.character}`}
                       className="min-w-0"
                     >
-                      <div className="relative aspect-4/5 overflow-hidden rounded-sm bg-stage">
-                        {profile ? (
-                          <Image
-                            src={profile}
-                            alt={person.name}
-                            fill
-                            sizes="(max-width: 640px) 42vw, (max-width: 1024px) 25vw, 180px"
-                            className="object-cover transition-transform duration-500 hover:scale-[1.04]"
-                          />
-                        ) : (
-                          <div className="flex h-full items-center justify-center font-display text-4xl text-cream/30">
-                            {person.name.slice(0, 1)}
-                          </div>
-                        )}
-                      </div>
-                      <p className="mt-2.5 truncate text-sm font-medium text-cream/90">
-                        {person.name}
-                      </p>
-                      <p className="mt-0.5 line-clamp-1 text-xs text-cream/45">
-                        {person.character || "Cast"}
-                      </p>
+                      <Link
+                        href={`/person/${person.id}`}
+                        className="group block min-w-0"
+                      >
+                        <div className="relative aspect-4/5 overflow-hidden rounded-sm bg-stage ring-1 ring-cream/10 transition-[ring-color,transform] duration-300 group-hover:ring-cream/25">
+                          {profile ? (
+                            <Image
+                              src={profile}
+                              alt={person.name}
+                              fill
+                              sizes="(max-width: 640px) 42vw, (max-width: 1024px) 25vw, 180px"
+                              className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center font-display text-4xl text-cream/30">
+                              {person.name.slice(0, 1)}
+                            </div>
+                          )}
+                        </div>
+                        <p className="mt-2.5 truncate text-sm font-medium text-cream/90 transition-colors group-hover:text-amber">
+                          {person.name}
+                        </p>
+                        <p className="mt-0.5 line-clamp-1 text-xs text-cream/45">
+                          {person.character || "Cast"}
+                        </p>
+                      </Link>
                     </li>
                   );
                 })}

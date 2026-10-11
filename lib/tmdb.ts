@@ -267,6 +267,7 @@ function writeThroughCaches(
 async function tmdbFetch(
   url: string,
   revalidate: number | false = 3600,
+  { timeoutMs = TMDB_FETCH_TIMEOUT_MS }: { timeoutMs?: number } = {},
 ): Promise<Response> {
   const cacheKey = getTmdbCacheKey(url);
 
@@ -299,7 +300,7 @@ async function tmdbFetch(
     try {
       const res = await fetch(url, {
         next: { revalidate },
-        signal: AbortSignal.timeout(TMDB_FETCH_TIMEOUT_MS),
+        signal: AbortSignal.timeout(timeoutMs),
       });
 
       if ((res.status === 429 || res.status >= 500) && attempt < 1) {
@@ -368,9 +369,12 @@ export function posterUrl(
   return `${getImageBase()}/${size}${posterPath}`;
 }
 
-export function profileUrl(profilePath: string | null) {
+export function profileUrl(
+  profilePath: string | null,
+  size: "w185" | "w342" | "w500" | "h632" | "original" = "w185",
+) {
   if (!profilePath) return null;
-  return `${getImageBase()}/w185${profilePath}`;
+  return `${getImageBase()}/${size}${profilePath}`;
 }
 
 export function backdropUrl(
@@ -855,4 +859,208 @@ export async function getSimilarTv(
 
   const recommended = await fetchList("recommendations");
   return recommended.slice(0, limit);
+}
+
+/** Credit on a person (movie or TV) from combined_credits. */
+export type TmdbPersonCredit = {
+  id: number;
+  media_type?: "movie" | "tv";
+  title?: string;
+  name?: string;
+  character?: string;
+  job?: string;
+  department?: string;
+  poster_path: string | null;
+  backdrop_path?: string | null;
+  release_date?: string;
+  first_air_date?: string;
+  vote_average?: number;
+  popularity?: number;
+  /** Cast billing order (lower = more prominent). */
+  order?: number;
+  /** TV only — how many episodes they appeared in. */
+  episode_count?: number;
+};
+
+export type TmdbPersonDetails = {
+  id: number;
+  name: string;
+  biography: string;
+  birthday: string | null;
+  deathday: string | null;
+  place_of_birth: string | null;
+  profile_path: string | null;
+  known_for_department: string;
+  also_known_as: string[];
+  gender: number;
+  homepage: string | null;
+  popularity: number;
+  combined_credits?: {
+    cast: TmdbPersonCredit[];
+    crew: TmdbPersonCredit[];
+  };
+  external_ids?: {
+    imdb_id: string | null;
+    instagram_id: string | null;
+    twitter_id: string | null;
+    facebook_id: string | null;
+    wikidata_id: string | null;
+  };
+};
+
+/**
+ * Person details + external ids (light — no filmography payload).
+ * TMDB: GET /person/{id}?append_to_response=external_ids
+ */
+export async function getPerson(
+  id: string | number,
+): Promise<TmdbPersonDetails | null> {
+  const url = new URL(`${getBaseUrl()}/person/${id}`);
+  url.searchParams.set("api_key", getApiKey());
+  url.searchParams.set("append_to_response", "external_ids");
+
+  const res = await tmdbFetch(url.toString(), 3600);
+
+  if (res.status === 404) return null;
+
+  if (!res.ok) {
+    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+  }
+
+  return (await res.json()) as TmdbPersonDetails;
+}
+
+/**
+ * Combined movie/TV credits for a person (heavy payload — longer timeout + day cache).
+ * TMDB: GET /person/{id}/combined_credits
+ */
+export async function getPersonCombinedCredits(
+  id: string | number,
+): Promise<{ cast: TmdbPersonCredit[]; crew: TmdbPersonCredit[] } | null> {
+  const url = new URL(`${getBaseUrl()}/person/${id}/combined_credits`);
+  url.searchParams.set("api_key", getApiKey());
+
+  try {
+    const res = await tmdbFetch(url.toString(), 86_400, { timeoutMs: 12_000 });
+    if (res.status === 404) return null;
+    if (!res.ok) return null;
+    return (await res.json()) as {
+      cast: TmdbPersonCredit[];
+      crew: TmdbPersonCredit[];
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Display title for a person credit (movie title or TV name). */
+export function personCreditTitle(credit: TmdbPersonCredit) {
+  return (credit.title || credit.name || "Untitled").trim();
+}
+
+function normalizeCreditMediaType(
+  credit: TmdbPersonCredit,
+): "movie" | "tv" | null {
+  if (credit.media_type === "movie" || credit.media_type === "tv") {
+    return credit.media_type;
+  }
+  if (credit.first_air_date || (credit.name && !credit.title)) return "tv";
+  if (credit.release_date || credit.title) return "movie";
+  return null;
+}
+
+function isJunkCastRole(character: string | undefined) {
+  if (!character?.trim()) return true;
+  const value = character.toLowerCase().trim();
+  return (
+    /^(self|himself|herself|narrator|host|guest|cameo|uncredited)\b/.test(
+      value,
+    ) ||
+    value.includes("archive footage") ||
+    value.includes("self -") ||
+    value.includes("(self)")
+  );
+}
+
+function crewJobsForDepartment(department: string): string[] | null {
+  const dept = department.toLowerCase();
+  if (dept.includes("direct")) return ["Director"];
+  if (dept.includes("writ")) {
+    return ["Writer", "Screenplay", "Story", "Characters", "Teleplay"];
+  }
+  if (dept.includes("product")) {
+    return ["Producer", "Executive Producer", "Co-Producer"];
+  }
+  if (dept.includes("sound")) return ["Original Music Composer", "Music"];
+  if (dept.includes("camera")) return ["Director of Photography"];
+  if (dept.includes("edit")) return ["Editor"];
+  return null;
+}
+
+function creditScore(credit: TmdbPersonCredit) {
+  const popularity = credit.popularity ?? 0;
+  const orderBoost =
+    credit.order != null ? Math.max(0, 12 - credit.order) * 4 : 0;
+  const episodeBoost =
+    credit.episode_count != null
+      ? Math.min(credit.episode_count, 40) * 0.35
+      : 0;
+  return popularity + orderBoost + episodeBoost;
+}
+
+/**
+ * Best “known for” titles for a person — department-aware, junk-filtered.
+ * Actors get real cast roles (not talk-show Self cameos). Directors/writers
+ * get matching crew jobs instead of unrelated acting bits.
+ */
+export function getPersonKnownFor(
+  credits: { cast?: TmdbPersonCredit[]; crew?: TmdbPersonCredit[] } | null,
+  department = "Acting",
+  limit = 18,
+): TmdbPersonCredit[] {
+  const jobs = crewJobsForDepartment(department);
+  const useCrew = jobs != null;
+
+  const raw = useCrew ? (credits?.crew ?? []) : (credits?.cast ?? []);
+  const seen = new Set<string>();
+  const unique: TmdbPersonCredit[] = [];
+
+  for (const credit of raw) {
+    const mediaType = normalizeCreditMediaType(credit);
+    if (!mediaType) continue;
+    if (!credit.poster_path) continue;
+
+    if (useCrew) {
+      if (!credit.job || !jobs!.includes(credit.job)) continue;
+    } else {
+      if (isJunkCastRole(credit.character)) continue;
+      // One-off TV guest spots feel unrelated — keep recurring / substantial roles.
+      if (
+        mediaType === "tv" &&
+        credit.episode_count != null &&
+        credit.episode_count < 3
+      ) {
+        continue;
+      }
+    }
+
+    const key = `${mediaType}:${credit.id}:${useCrew ? credit.job : "cast"}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push({ ...credit, media_type: mediaType });
+  }
+
+  // Prefer one row per title (best-scoring role/job on that title).
+  const bestByTitle = new Map<string, TmdbPersonCredit>();
+  for (const credit of unique) {
+    const titleKey = `${credit.media_type}:${credit.id}`;
+    const prev = bestByTitle.get(titleKey);
+    if (!prev || creditScore(credit) > creditScore(prev)) {
+      bestByTitle.set(titleKey, credit);
+    }
+  }
+
+  return [...bestByTitle.values()]
+    .sort((a, b) => creditScore(b) - creditScore(a))
+    .slice(0, limit);
 }
