@@ -220,7 +220,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
         <div className="absolute inset-0 bg-background/10" />
         <div className="absolute inset-0 bg-linear-to-t from-background via-background/30 to-transparent" />
         <div className="absolute inset-0 bg-linear-to-r from-background/80 via-background/40 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_76%_42%,rgba(47,230,200,0.12),transparent_42%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_76%_42%,rgba(229,37,53,0.12),transparent_42%)]" />
         <div className="film-grain absolute inset-0" />
       </div>
 
@@ -282,7 +282,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                 title={slide.title}
                 label="Watch trailer"
                 onOpenChange={setTrailerOpen}
-                className="shadow-[0_10px_30px_-12px_rgba(47,230,200,0.6)]"
+                className="shadow-[0_10px_30px_-12px_rgba(229,37,53,0.55)]"
               />
               <Link
                 href={`/movie/${slide.id}`}
@@ -341,14 +341,14 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                     className={cn(
                       "absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 overflow-hidden rounded-full transition-[height,background-color,box-shadow] duration-300",
                       i === index
-                        ? "h-1.5 bg-amber/35 shadow-[0_0_12px_rgba(47,230,200,0.28)]"
+                        ? "h-1.5 bg-amber/35 shadow-[0_0_12px_rgba(229,37,53,0.28)]"
                         : "bg-cream/20 group-hover:bg-cream/40",
                     )}
                   >
                     {i === index ? (
                       <span
                         ref={progressRef}
-                        className="absolute inset-0 origin-left scale-x-0 bg-amber shadow-[0_0_12px_rgba(47,230,200,0.85)]"
+                        className="absolute inset-0 origin-left scale-x-0 bg-amber shadow-[0_0_12px_rgba(229,37,53,0.85)]"
                       />
                     ) : null}
                   </span>

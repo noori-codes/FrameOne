@@ -49,7 +49,7 @@ export default async function GenresPage() {
       <header className="relative isolate overflow-hidden border-b border-cream/8">
         <div
           aria-hidden
-          className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(47,230,200,0.1),transparent_50%)]"
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(229,37,53,0.1),transparent_50%)]"
         />
         <div className="relative mx-auto w-full max-w-screen-2xl px-3 py-10 sm:px-5 sm:py-14 lg:px-8 lg:py-16">
           <p className="text-[10px] font-semibold tracking-[0.22em] text-amber uppercase sm:text-xs">

@@ -16,7 +16,7 @@ type BrandLogoProps = {
 };
 
 /**
- * Site brand mark — charcoal + electric-teal F/aperture monogram.
+ * Site brand mark — charcoal + red F/aperture monogram.
  */
 export function BrandLogo({
   size = "sm",

@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  /* Cinema palette — deep ink stage + electric teal accent */
+  /* Cinema palette — deep ink stage + true red accent */
   --background: #070a0b;
   --foreground: #eaf4f2;
   --cream: #eaf4f2;
-  --amber: #2fe6c8;
-  --amber-dim: #1ab89e;
-  --on-amber: #041210;
+  --amber: #e52535;
+  --amber-dim: #c41e2a;
+  --on-amber: #ffffff;
   --stage: #101617;
   --vignette: rgba(0, 0, 0, 0.65);
 }
@@ -46,7 +46,7 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Site-wide scrollbars — thin, stage track + teal thumb */
+/* Site-wide scrollbars — thin, stage track + red thumb */
 * {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--amber) 55%, transparent)
@@ -63,7 +63,7 @@ button:disabled {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--amber) 45%, #0d3d36);
+  background: color-mix(in srgb, var(--amber) 45%, #3a1216);
   border-radius: 999px;
   border: 2px solid var(--stage);
 }

@@ -61,7 +61,7 @@ export function CollectionPageLayout({
         />
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_78%_40%,rgba(47,230,200,0.13),transparent_42%)]"
+          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_78%_40%,rgba(229,37,53,0.13),transparent_42%)]"
         />
 
         <div className="grid min-h-[350px] w-full grid-cols-1 items-end gap-8 px-3 pb-10 pt-8 sm:min-h-[390px] sm:px-5 sm:pb-12 sm:pt-10 lg:min-h-[430px] lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center lg:px-8 lg:py-12">
