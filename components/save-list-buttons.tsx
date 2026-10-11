@@ -77,7 +77,9 @@ function ListToggle({
             ? "inline-flex h-10 w-10 items-center justify-center rounded-full sm:h-11 sm:w-11"
             : "min-h-10 rounded-full px-3.5 py-2 text-xs sm:min-h-11 sm:px-4 sm:text-sm",
           optimisticSaved
-            ? "border border-amber/50 bg-amber/10 text-amber hover:border-amber hover:bg-amber/15"
+            ? iconOnly
+              ? "border border-red-500/45 bg-red-500/10 text-red-500 hover:border-red-400 hover:bg-red-500/15"
+              : "border border-amber/50 bg-amber/10 text-amber hover:border-amber hover:bg-amber/15"
             : "border border-cream/25 text-cream hover:border-cream/45 hover:text-cream",
         )}
       >

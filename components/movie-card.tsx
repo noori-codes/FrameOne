@@ -74,8 +74,9 @@ function FavoriteHeart({
           "movie-card-heart inline-flex size-7 items-center justify-center rounded-full bg-black/55 text-cream/85 backdrop-blur-sm will-change-transform",
           "opacity-0 translate-y-0.5 scale-90 transition-[opacity,transform,color,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] delay-0",
           "group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:delay-75",
-          "hover:bg-black/70 hover:text-amber active:scale-95",
-          optimisticSaved && "text-amber opacity-100 translate-y-0 scale-100 delay-0",
+          "hover:bg-black/70 hover:text-red-400 active:scale-95",
+          optimisticSaved &&
+            "text-red-500 opacity-100 translate-y-0 scale-100 delay-0",
         )}
       >
         <Heart
