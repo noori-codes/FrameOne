@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Heart } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useOptimistic } from "react";
 import { toggleList, type ToggleListState } from "@/app/actions/favorites";
 import {
   LIST_FAVORITE,
@@ -11,6 +11,7 @@ import {
   type ListType,
   type MediaListType,
 } from "@/lib/lists";
+import { cn } from "@/lib/utils";
 
 type SaveListButtonsProps = {
   movieId: number;
@@ -43,13 +44,20 @@ function ListToggle({
   idleLabel: string;
   iconOnly?: boolean;
 }) {
-  const [state, action, pending] = useActionState(toggleList, {
+  const [state, dispatch, pending] = useActionState(toggleList, {
     saved: initialSaved,
     listType,
   } satisfies ToggleListState);
   const saved = state.saved ?? initialSaved;
+  const [optimisticSaved, setOptimisticSaved] = useOptimistic(saved);
 
-  const buttonLabel = pending ? "Saving…" : saved ? activeLabel : idleLabel;
+  const buttonLabel = optimisticSaved ? activeLabel : idleLabel;
+
+  function action(formData: FormData) {
+    if (pending) return;
+    setOptimisticSaved(!optimisticSaved);
+    dispatch(formData);
+  }
 
   return (
     <form action={action}>
@@ -60,24 +68,25 @@ function ListToggle({
       <input type="hidden" name="mediaType" value={mediaType} />
       <button
         type="submit"
-        disabled={pending}
+        aria-busy={pending}
         aria-label={buttonLabel}
-        className={
+        aria-pressed={optimisticSaved}
+        className={cn(
+          "transition-colors",
           iconOnly
-            ? saved
-              ? "inline-flex h-10 w-10 items-center justify-center rounded-full border border-amber/50 bg-amber/10 text-amber transition-colors hover:border-amber hover:bg-amber/15 disabled:opacity-60 sm:h-11 sm:w-11"
-              : "inline-flex h-10 w-10 items-center justify-center rounded-full border border-cream/25 text-cream transition-colors hover:border-cream/45 hover:text-cream disabled:opacity-60 sm:h-11 sm:w-11"
-            : saved
-              ? "min-h-10 rounded-full border border-amber/50 bg-amber/10 px-3.5 py-2 text-xs text-amber transition-colors hover:border-amber hover:bg-amber/15 disabled:opacity-60 sm:min-h-11 sm:px-4 sm:text-sm"
-              : "min-h-10 rounded-full border border-cream/25 px-3.5 py-2 text-xs text-cream transition-colors hover:border-cream/45 hover:text-cream disabled:opacity-60 sm:min-h-11 sm:px-4 sm:text-sm"
-        }
+            ? "inline-flex h-10 w-10 items-center justify-center rounded-full sm:h-11 sm:w-11"
+            : "min-h-10 rounded-full px-3.5 py-2 text-xs sm:min-h-11 sm:px-4 sm:text-sm",
+          optimisticSaved
+            ? "border border-amber/50 bg-amber/10 text-amber hover:border-amber hover:bg-amber/15"
+            : "border border-cream/25 text-cream hover:border-cream/45 hover:text-cream",
+        )}
       >
         {iconOnly ? (
           <Heart
             aria-hidden="true"
             className="h-5 w-5"
-            fill={saved ? "currentColor" : "none"}
-            strokeWidth={saved ? 2.5 : 2}
+            fill={optimisticSaved ? "currentColor" : "none"}
+            strokeWidth={optimisticSaved ? 2.5 : 2}
           />
         ) : (
           buttonLabel

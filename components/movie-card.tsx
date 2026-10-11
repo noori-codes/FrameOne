@@ -4,7 +4,7 @@ import { Heart, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useOptimistic, useState } from "react";
 import { toggleList, type ToggleListState } from "@/app/actions/favorites";
 import { LIST_FAVORITE, MEDIA_MOVIE } from "@/lib/lists";
 import { mediaPath, posterUrl, type MediaKind } from "@/lib/tmdb";
@@ -37,17 +37,24 @@ function FavoriteHeart({
   initialFavorite: boolean;
 }) {
   const router = useRouter();
-  const [state, action, pending] = useActionState(toggleList, {
+  const [state, dispatch, pending] = useActionState(toggleList, {
     saved: initialFavorite,
     listType: LIST_FAVORITE,
   } satisfies ToggleListState);
   const saved = state.saved ?? initialFavorite;
+  const [optimisticSaved, setOptimisticSaved] = useOptimistic(saved);
 
   useEffect(() => {
     if (state.error?.toLowerCase().includes("sign in")) {
       router.push("/signin");
     }
   }, [state.error, router]);
+
+  function action(formData: FormData) {
+    if (pending) return;
+    setOptimisticSaved(!optimisticSaved);
+    dispatch(formData);
+  }
 
   return (
     <form action={action} onClick={(e) => e.stopPropagation()}>
@@ -58,21 +65,23 @@ function FavoriteHeart({
       <input type="hidden" name="mediaType" value={MEDIA_MOVIE} />
       <button
         type="submit"
-        disabled={pending}
-        aria-label={saved ? "Remove from favorites" : "Add to favorites"}
-        aria-pressed={saved}
+        aria-busy={pending}
+        aria-label={
+          optimisticSaved ? "Remove from favorites" : "Add to favorites"
+        }
+        aria-pressed={optimisticSaved}
         className={cn(
-          "movie-card-heart inline-flex size-7 items-center justify-center rounded-full bg-black/55 text-cream/85 backdrop-blur-sm will-change-transform disabled:opacity-60",
+          "movie-card-heart inline-flex size-7 items-center justify-center rounded-full bg-black/55 text-cream/85 backdrop-blur-sm will-change-transform",
           "opacity-0 translate-y-0.5 scale-90 transition-[opacity,transform,color,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] delay-0",
           "group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:delay-75",
           "hover:bg-black/70 hover:text-amber active:scale-95",
-          saved && "text-amber opacity-100 translate-y-0 scale-100 delay-0",
+          optimisticSaved && "text-amber opacity-100 translate-y-0 scale-100 delay-0",
         )}
       >
         <Heart
           className="size-3.5 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
-          fill={saved ? "currentColor" : "none"}
-          strokeWidth={saved ? 2.25 : 2}
+          fill={optimisticSaved ? "currentColor" : "none"}
+          strokeWidth={optimisticSaved ? 2.25 : 2}
           aria-hidden
         />
       </button>

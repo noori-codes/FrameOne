@@ -40,18 +40,18 @@ export async function toggleList(
 ): Promise<ToggleListState> {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: "Sign in to save titles." };
+    return { ..._prev, error: "Sign in to save titles." };
   }
 
   const listTypeRaw = String(formData.get("listType") ?? "");
   if (!isListType(listTypeRaw)) {
-    return { error: "Invalid list." };
+    return { ..._prev, error: "Invalid list." };
   }
   const listType = listTypeRaw;
 
   const mediaTypeRaw = String(formData.get("mediaType") ?? MEDIA_MOVIE);
   if (!isMediaListType(mediaTypeRaw)) {
-    return { error: "Invalid media type." };
+    return { ..._prev, error: "Invalid media type." };
   }
   const mediaType = mediaTypeRaw;
 
@@ -64,7 +64,7 @@ export async function toggleList(
       : null;
 
   if (!Number.isFinite(movieId) || movieId <= 0 || !title) {
-    return { error: "Invalid title." };
+    return { ..._prev, error: "Invalid title." };
   }
 
   const existing = await prisma.favorite.findUnique({
