@@ -62,15 +62,15 @@ function FavoriteHeart({
         aria-label={saved ? "Remove from favorites" : "Add to favorites"}
         aria-pressed={saved}
         className={cn(
-          "inline-flex size-8 items-center justify-center rounded-full border bg-black/55 backdrop-blur-sm transition-[opacity,color,border-color,background-color] duration-300 disabled:opacity-60",
-          "opacity-0 group-hover:opacity-100",
-          saved
-            ? "border-amber/45 text-amber opacity-100"
-            : "border-cream/20 text-cream/80 hover:border-amber/50 hover:text-amber",
+          "movie-card-heart inline-flex size-7 items-center justify-center rounded-full bg-black/55 text-cream/85 backdrop-blur-sm will-change-transform disabled:opacity-60",
+          "opacity-0 translate-y-0.5 scale-90 transition-[opacity,transform,color,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] delay-0",
+          "group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:delay-75",
+          "hover:bg-black/70 hover:text-amber active:scale-95",
+          saved && "text-amber opacity-100 translate-y-0 scale-100 delay-0",
         )}
       >
         <Heart
-          className="size-3.5"
+          className="size-3.5 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
           fill={saved ? "currentColor" : "none"}
           strokeWidth={saved ? 2.25 : 2}
           aria-hidden
@@ -104,6 +104,7 @@ export function MovieCard({
     voteAverage != null && voteAverage > 0
       ? voteAverage.toFixed(1)
       : null;
+  const showHeart = mediaType === "movie";
 
   return (
     <div className={cn("movie-card group relative block", className)}>
@@ -137,13 +138,6 @@ export function MovieCard({
               </p>
             </div>
           ) : null}
-
-          {rating ? (
-            <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-medium text-cream/90 backdrop-blur-sm transition-colors duration-300 group-hover:bg-black/70">
-              <Star className="h-3 w-3 fill-amber text-amber" aria-hidden />
-              {rating}
-            </span>
-          ) : null}
         </div>
 
         {showTitle ? (
@@ -153,14 +147,27 @@ export function MovieCard({
         ) : null}
       </Link>
 
-      {mediaType === "movie" ? (
-        <div className="absolute top-2 right-2 z-10">
-          <FavoriteHeart
-            movieId={id}
-            title={title}
-            posterPath={posterPath}
-            initialFavorite={initialFavorite}
-          />
+      {/* Single chrome row — shared height + axis so rating and heart stay aligned */}
+      {rating || showHeart ? (
+        <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex h-7 items-center justify-between">
+          {rating ? (
+            <span className="movie-card-rating inline-flex h-6 items-center gap-1 rounded-full bg-black/55 px-2 text-[11px] font-medium leading-none text-cream/90 backdrop-blur-sm transition-[background-color,transform,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:bg-black/70 group-hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.55)]">
+              <Star className="size-3 fill-amber text-amber transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110" aria-hidden />
+              {rating}
+            </span>
+          ) : (
+            <span />
+          )}
+          {showHeart ? (
+            <div className="pointer-events-auto">
+              <FavoriteHeart
+                movieId={id}
+                title={title}
+                posterPath={posterPath}
+                initialFavorite={initialFavorite}
+              />
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

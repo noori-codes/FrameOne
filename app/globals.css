@@ -154,12 +154,18 @@ button:disabled {
 
   .movie-card .movie-card-frame,
   .movie-card .movie-card-image,
-  .movie-card .movie-card-caption {
+  .movie-card .movie-card-caption,
+  .movie-card .movie-card-heart,
+  .movie-card .movie-card-rating {
     transition: none !important;
     transform: none !important;
   }
 
   .movie-card .movie-card-caption {
     opacity: 1;
+  }
+
+  .movie-card .movie-card-heart:not([aria-pressed="true"]) {
+    opacity: 0;
   }
 }
