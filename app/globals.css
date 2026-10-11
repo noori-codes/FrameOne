@@ -91,6 +91,57 @@ button:disabled {
   mix-blend-mode: overlay;
 }
 
+@keyframes trailerBackdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes trailerPanelIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.trailer-modal-backdrop {
+  background:
+    radial-gradient(
+      ellipse 80% 60% at 50% 45%,
+      color-mix(in srgb, var(--amber) 16%, transparent),
+      transparent 55%
+    ),
+    rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(10px);
+  animation: trailerBackdropIn 0.28s ease-out both;
+}
+
+.trailer-modal-panel {
+  animation: trailerPanelIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Keep 16:9 video inside the viewport so the header never clips */
+.trailer-modal-video {
+  width: min(100%, calc((100dvh - 5.5rem) * 16 / 9));
+  max-height: calc(100dvh - 5.5rem);
+  aspect-ratio: 16 / 9;
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .trailer-modal-video {
+    width: min(100%, calc((100dvh - 6.5rem) * 16 / 9));
+    max-height: calc(100dvh - 6.5rem);
+  }
+}
+
 @keyframes heroKenBurns {
   from {
     transform: scale(1.06) translate3d(0, 0, 0);
@@ -137,6 +188,11 @@ button:disabled {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .trailer-modal-backdrop,
+  .trailer-modal-panel {
+    animation: none;
+  }
+
   .hero-backdrop {
     animation: none;
   }

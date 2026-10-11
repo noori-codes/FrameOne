@@ -126,7 +126,7 @@ export function TrailerButton({
     open && mounted
       ? createPortal(
           <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm sm:p-8"
+            className="trailer-modal-backdrop fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-3 sm:p-5"
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
@@ -134,29 +134,44 @@ export function TrailerButton({
               if (e.target === e.currentTarget) setTrailerOpen(false);
             }}
           >
-            <div className="relative w-full max-w-4xl">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <p id={titleId} className="truncate text-sm text-cream/70">
-                  {title} — Trailer
-                </p>
-                <button
-                  ref={closeRef}
-                  type="button"
-                  onClick={() => setTrailerOpen(false)}
-                  aria-label="Close trailer"
-                  className="rounded-full border border-cream/25 p-1.5 text-cream/80 transition-colors hover:border-cream/45 hover:text-cream"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="aspect-video overflow-hidden rounded-lg bg-black ring-1 ring-cream/15">
-                <iframe
-                  title={`${title} trailer`}
-                  src={youtubeEmbedUrl(resolvedYoutubeKey!)}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  className="h-full w-full"
-                />
+            <div className="trailer-modal-panel relative my-auto w-full max-w-5xl lg:max-w-6xl">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--amber)_28%,transparent),transparent_65%)] blur-2xl"
+              />
+              <div className="relative flex max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-2xl bg-black shadow-[0_32px_80px_-20px_rgba(0,0,0,0.9)] ring-1 ring-cream/20 sm:max-h-[calc(100dvh-2.5rem)]">
+                <div className="flex shrink-0 items-center justify-between gap-3 border-b border-cream/10 bg-linear-to-r from-black via-stage/80 to-black px-3 py-2.5 sm:gap-4 sm:px-5 sm:py-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold tracking-[0.22em] text-amber uppercase">
+                      Now playing
+                    </p>
+                    <p
+                      id={titleId}
+                      className="truncate font-display text-sm text-cream sm:text-lg"
+                    >
+                      {title}
+                      <span className="text-cream/45"> · Trailer</span>
+                    </p>
+                  </div>
+                  <button
+                    ref={closeRef}
+                    type="button"
+                    onClick={() => setTrailerOpen(false)}
+                    aria-label="Close trailer"
+                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-cream/20 bg-black/40 text-cream/80 transition-[color,border-color,background-color,transform] duration-200 hover:border-cream/45 hover:bg-cream/10 hover:text-cream active:scale-95 sm:size-10"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+                <div className="trailer-modal-video min-h-0 w-full flex-1 bg-black">
+                  <iframe
+                    title={`${title} trailer`}
+                    src={youtubeEmbedUrl(resolvedYoutubeKey!)}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="h-full w-full"
+                  />
+                </div>
               </div>
             </div>
           </div>,
