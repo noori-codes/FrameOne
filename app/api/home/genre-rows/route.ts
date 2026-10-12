@@ -2,20 +2,33 @@ import { NextResponse } from "next/server";
 import {
   GENRE_FETCH_CONCURRENCY,
   GENRE_HOME_ROW_SIZE,
-  HOME_GENRE_ROWS,
+  HOME_GENRE_WAVES,
+  getHomeGenreWave,
 } from "@/lib/home-genres";
 import { getMoviesByGenre, mapPool } from "@/lib/tmdb";
 
 export const revalidate = 3600;
 
 /**
- * GET /api/home/genre-rows
- * Deferred home genre carousels — fetched after first paint / when near viewport.
+ * GET /api/home/genre-rows?wave=0
+ * Deferred home genre carousels — one wave (4 rows) at a time.
  */
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const waveRaw = Number(searchParams.get("wave") ?? "0");
+  const waveIndex =
+    Number.isFinite(waveRaw) && waveRaw >= 0
+      ? Math.min(HOME_GENRE_WAVES.length - 1, Math.floor(waveRaw))
+      : 0;
+
+  const genres = getHomeGenreWave(waveIndex);
+  if (!genres) {
+    return NextResponse.json({ error: "Unknown wave" }, { status: 404 });
+  }
+
   try {
     const rows = await mapPool(
-      HOME_GENRE_ROWS,
+      [...genres],
       GENRE_FETCH_CONCURRENCY,
       async (genre) => ({
         id: genre.id,
@@ -29,7 +42,11 @@ export async function GET() {
     );
 
     return NextResponse.json(
-      { rows },
+      {
+        wave: waveIndex,
+        totalWaves: HOME_GENRE_WAVES.length,
+        rows,
+      },
       {
         headers: {
           "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",

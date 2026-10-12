@@ -206,6 +206,13 @@ export default function Home() {
         <HomeHero />
       </Suspense>
 
+      {/*
+        Home scroll story:
+        1) Hero
+        2) 4 curated discovery rows (trending / series / popular / top rated)
+        3) Genre wave A (4 rows) → Genre wave B (4 rows), deferred on scroll
+        4) Endless popular grid
+      */}
       <div className="relative z-10 flex w-full flex-col gap-14 border-t border-cream/8 pt-12 pb-12 sm:gap-24 sm:pt-20 sm:pb-20">
         <Suspense fallback={<RowsSkeleton count={4} />}>
           <DiscoveryRows />
