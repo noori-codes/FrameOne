@@ -8,6 +8,8 @@ type InfiniteMovieGridProps = {
   endpoint: string;
   sort?: GenreSort;
   initial: PaginatedMovies;
+  /** Hide the “Showing X of Y” line (home feed). Default true. */
+  showCount?: boolean;
 };
 
 function useGridColumns() {
@@ -56,6 +58,7 @@ export function InfiniteMovieGrid({
   endpoint,
   sort,
   initial,
+  showCount = true,
 }: InfiniteMovieGridProps) {
   const [movies, setMovies] = useState(initial.results);
   const [page, setPage] = useState(initial.page);
@@ -145,12 +148,14 @@ export function InfiniteMovieGrid({
 
   return (
     <div>
-      <p className="mb-6 text-sm text-cream/40" aria-live="polite">
-        Showing {visibleMovies.length.toLocaleString()}
-        {totalResults > 0
-          ? ` of ${totalResults.toLocaleString()} titles`
-          : " titles"}
-      </p>
+      {showCount ? (
+        <p className="mb-6 text-sm text-cream/40" aria-live="polite">
+          Showing {visibleMovies.length.toLocaleString()}
+          {totalResults > 0
+            ? ` of ${totalResults.toLocaleString()} titles`
+            : " titles"}
+        </p>
+      ) : null}
 
       <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {visibleMovies.map((movie: TmdbMovie) => (

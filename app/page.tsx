@@ -2,6 +2,7 @@ import { cache, Suspense } from "react";
 import { auth } from "@/auth";
 import { DeferredGenreRows } from "@/components/deferred-genre-rows";
 import { HeroCarousel, type HeroSlide } from "@/components/hero-carousel";
+import { HomeEndlessFeed } from "@/components/home-endless-feed";
 import { MovieRow } from "@/components/movie-row";
 import { SiteFooter } from "@/components/site-footer";
 import { MovieRowSkeleton, Skeleton } from "@/components/skeletons";
@@ -182,6 +183,22 @@ function RowsSkeleton({ count }: { count: number }) {
   );
 }
 
+function EndlessFeedSkeleton() {
+  return (
+    <section className="border-t border-cream/10 pt-12 sm:pt-16">
+      <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="mt-3 h-10 w-56" />
+        <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {Array.from({ length: 12 }, (_, i) => (
+            <Skeleton key={i} className="aspect-2/3 rounded-lg" />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   return (
     <main className="relative flex min-h-dvh flex-1 flex-col overflow-x-hidden">
@@ -194,6 +211,9 @@ export default function Home() {
           <DiscoveryRows />
         </Suspense>
         <DeferredGenreRows />
+        <Suspense fallback={<EndlessFeedSkeleton />}>
+          <HomeEndlessFeed />
+        </Suspense>
       </div>
 
       <SiteFooter />
