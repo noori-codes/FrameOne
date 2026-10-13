@@ -24,7 +24,7 @@ const passwordInitial: ProfileFormState = {};
 const avatarInitial: ProfileFormState = {};
 
 const fieldClass =
-  "w-full rounded-sm border border-cream/20 bg-stage px-3 py-2 text-cream outline-none focus:border-amber";
+  "w-full rounded-sm border border-cream/15 bg-black/35 px-3.5 py-2.5 text-sm text-cream outline-none transition-[border-color,background-color] placeholder:text-cream/30 focus:border-amber/50 focus:bg-black/50";
 
 /** Display name as text with an inline edit control. */
 export function UpdateNameForm({ defaultName }: { defaultName: string }) {
@@ -116,7 +116,7 @@ export function ChangePasswordForm() {
 
   return (
     <form action={action} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1.5 text-sm text-cream/70">
+      <label className="flex flex-col gap-1.5 text-xs font-medium tracking-wide text-cream/55">
         Current password
         <input
           name="currentPassword"
@@ -126,28 +126,30 @@ export function ChangePasswordForm() {
           className={fieldClass}
         />
       </label>
-      <label className="flex flex-col gap-1.5 text-sm text-cream/70">
-        New password
-        <input
-          name="newPassword"
-          type="password"
-          required
-          minLength={6}
-          autoComplete="new-password"
-          className={fieldClass}
-        />
-      </label>
-      <label className="flex flex-col gap-1.5 text-sm text-cream/70">
-        Confirm new password
-        <input
-          name="confirmPassword"
-          type="password"
-          required
-          minLength={6}
-          autoComplete="new-password"
-          className={fieldClass}
-        />
-      </label>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label className="flex flex-col gap-1.5 text-xs font-medium tracking-wide text-cream/55">
+          New password
+          <input
+            name="newPassword"
+            type="password"
+            required
+            minLength={6}
+            autoComplete="new-password"
+            className={fieldClass}
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 text-xs font-medium tracking-wide text-cream/55">
+          Confirm new
+          <input
+            name="confirmPassword"
+            type="password"
+            required
+            minLength={6}
+            autoComplete="new-password"
+            className={fieldClass}
+          />
+        </label>
+      </div>
       {state.error ? (
         <p className="text-sm text-red-400" role="alert">
           {state.error}
@@ -161,9 +163,9 @@ export function ChangePasswordForm() {
       <button
         type="submit"
         disabled={pending}
-        className="min-h-11 w-full rounded-full border border-cream/25 px-4 py-2.5 text-sm text-cream transition-colors hover:border-amber hover:text-amber disabled:opacity-60 sm:min-h-0 sm:w-fit sm:py-2"
+        className="min-h-11 w-full rounded-full bg-amber px-5 py-2.5 text-sm font-medium text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim) disabled:opacity-60 sm:w-fit"
       >
-        {pending ? "Updating…" : "Change password"}
+        {pending ? "Updating…" : "Update password"}
       </button>
     </form>
   );
