@@ -15,7 +15,12 @@ export default auth((req) => {
     pathname.startsWith("/favorites") ||
     pathname.startsWith("/watchlist") ||
     pathname.startsWith("/profile");
-  const isAuthPage = pathname === "/signin" || pathname === "/signup";
+  const isAuthPage =
+    pathname === "/signin" ||
+    pathname === "/signup" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password" ||
+    pathname === "/verify-email";
 
   if (isProtected && !isLoggedIn) {
     const signInUrl = new URL("/signin", req.nextUrl.origin);
@@ -38,5 +43,8 @@ export const config = {
     "/profile/:path*",
     "/signin",
     "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/verify-email",
   ],
 };

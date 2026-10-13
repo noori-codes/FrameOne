@@ -11,7 +11,13 @@ import {
   PASSWORD_MAX,
   PASSWORD_MIN,
 } from "@/lib/auth-validation";
-import { issueSignupOtp, normalizeEmail, verifySignupOtp } from "@/lib/email-otp";
+import {
+  issuePasswordResetOtp,
+  issueSignupOtp,
+  normalizeEmail,
+  verifyPasswordResetOtp,
+  verifySignupOtp,
+} from "@/lib/email-otp";
 import { prisma } from "@/lib/prisma";
 
 export type AuthFormState = {
@@ -213,4 +219,123 @@ export async function login(
   }
 
   return { success: true };
+}
+
+/**
+ * Start password reset — always redirect to the code page when the email
+ * looks valid so we don’t leak whether an account exists.
+ */
+export async function requestPasswordReset(
+  _prev: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const email = normalizeEmail(String(formData.get("email") ?? ""));
+
+  if (!email || email.length > EMAIL_MAX || !isValidEmail(email)) {
+    return { error: "Enter a valid email address." };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { emailVerified: true },
+  });
+
+  if (user && !user.emailVerified) {
+    try {
+      await issueSignupOtp(email);
+    } catch {
+      // Still send them to verify
+    }
+    redirect(`/verify-email?email=${encodeURIComponent(email)}`);
+  }
+
+  if (user?.emailVerified) {
+    try {
+      await issuePasswordResetOtp(email);
+    } catch (err) {
+      console.error("Failed to send password reset email:", err);
+      const detail = err instanceof Error ? err.message : "";
+      return {
+        error: detail
+          ? `Couldn’t send the reset code. ${detail}`
+          : "Couldn’t send the reset code. Try again in a moment.",
+      };
+    }
+  }
+
+  redirect(`/reset-password?email=${encodeURIComponent(email)}`);
+}
+
+export async function resendPasswordResetCode(
+  _prev: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const email = normalizeEmail(String(formData.get("email") ?? ""));
+  if (!email || !isValidEmail(email)) {
+    return { error: "Email is required." };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { emailVerified: true },
+  });
+
+  if (!user?.emailVerified) {
+    // Same generic success — don’t confirm account existence
+    return { success: true, verifyEmail: email };
+  }
+
+  try {
+    await issuePasswordResetOtp(email);
+  } catch (err) {
+    console.error("Failed to resend password reset email:", err);
+    return { error: "Couldn’t send the code. Try again in a moment." };
+  }
+
+  return { success: true, verifyEmail: email };
+}
+
+export async function resetPassword(
+  _prev: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const email = normalizeEmail(String(formData.get("email") ?? ""));
+  const code = String(formData.get("code") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirmPassword") ?? "");
+
+  if (!email || !code || !password) {
+    return { error: "Email, code, and new password are required." };
+  }
+  if (password.length < PASSWORD_MIN) {
+    return { error: `Password must be at least ${PASSWORD_MIN} characters.` };
+  }
+  if (password.length > PASSWORD_MAX) {
+    return { error: `Password must be at most ${PASSWORD_MAX} characters.` };
+  }
+  if (password !== confirm) {
+    return { error: "Passwords don’t match." };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, emailVerified: true },
+  });
+
+  if (!user?.emailVerified) {
+    return { error: "No verified account found for that email." };
+  }
+
+  const checked = await verifyPasswordResetOtp(email, code);
+  if (!checked.ok) {
+    return { error: checked.error };
+  }
+
+  const hashed = await bcrypt.hash(password, 10);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { password: hashed },
+  });
+
+  redirect("/signin?reset=1");
 }

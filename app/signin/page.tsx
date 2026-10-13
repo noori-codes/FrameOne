@@ -2,7 +2,11 @@ import { AuthShell } from "@/components/auth-shell";
 import { SignInForm } from "@/components/sign-in-form";
 
 type SignInPageProps = {
-  searchParams: Promise<{ callbackUrl?: string; verified?: string }>;
+  searchParams: Promise<{
+    callbackUrl?: string;
+    verified?: string;
+    reset?: string;
+  }>;
 };
 
 /**
@@ -10,7 +14,7 @@ type SignInPageProps = {
  * `callbackUrl` is set by middleware when protecting /favorites or /profile.
  */
 export default async function SignInPage({ searchParams }: SignInPageProps) {
-  const { callbackUrl: raw, verified } = await searchParams;
+  const { callbackUrl: raw, verified, reset } = await searchParams;
   const callbackUrl =
     typeof raw === "string" && raw.startsWith("/") && !raw.startsWith("//")
       ? raw
@@ -23,7 +27,11 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
       description="Pick up where you left off — favorites, watchlist, and your account."
       panelLine="Save what you love. Rate what you’ve seen. Pick up your list on any screen."
     >
-      <SignInForm callbackUrl={callbackUrl} verified={verified === "1"} />
+      <SignInForm
+        callbackUrl={callbackUrl}
+        verified={verified === "1"}
+        reset={reset === "1"}
+      />
     </AuthShell>
   );
 }
