@@ -19,11 +19,13 @@ type SignInFormProps = {
   /** Where to send the user after login (from ?callbackUrl=). */
   callbackUrl?: string;
   verified?: boolean;
+  reset?: boolean;
 };
 
 export function SignInForm({
   callbackUrl = "/",
   verified = false,
+  reset = false,
 }: SignInFormProps) {
   const [state, action, pending] = useActionState(login, initial);
   const [email, setEmail] = useState("");
@@ -35,6 +37,12 @@ export function SignInForm({
       {verified ? (
         <p className="rounded-sm border border-amber/30 bg-amber/10 px-3 py-2 text-sm text-amber" role="status">
           Email verified — you can sign in now.
+        </p>
+      ) : null}
+
+      {reset ? (
+        <p className="rounded-sm border border-amber/30 bg-amber/10 px-3 py-2 text-sm text-amber" role="status">
+          Password updated — sign in with your new password.
         </p>
       ) : null}
 
@@ -63,7 +71,15 @@ export function SignInForm({
       </label>
 
       <label className="flex flex-col gap-1.5 text-sm text-cream/65">
-        Password
+        <span className="flex items-center justify-between gap-3">
+          Password
+          <Link
+            href="/forgot-password"
+            className="text-xs font-normal text-cream/45 transition-colors hover:text-amber"
+          >
+            Forgot password?
+          </Link>
+        </span>
         <input
           name="password"
           type="password"

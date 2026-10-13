@@ -7,7 +7,13 @@ import { X } from "lucide-react";
 
 const DISMISS_KEY = "frameone:guest-nudge-dismissed";
 
-const HIDDEN_PATHS = ["/signin", "/signup", "/verify-email"];
+const HIDDEN_PATHS = [
+  "/signin",
+  "/signup",
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
+];
 
 /**
  * Fixed bottom bar for signed-out visitors — same pattern as streaming apps:

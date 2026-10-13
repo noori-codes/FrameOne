@@ -1,9 +1,13 @@
 import { randomInt } from "crypto";
 import bcrypt from "bcryptjs";
-import { sendSignupVerificationEmail } from "@/lib/mail";
+import {
+  sendPasswordResetEmail,
+  sendSignupVerificationEmail,
+} from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
 
 export const OTP_PURPOSE_SIGNUP = "signup";
+export const OTP_PURPOSE_RESET = "password_reset";
 const OTP_TTL_MS = 15 * 60 * 1000;
 
 export function normalizeEmail(email: string) {
@@ -14,30 +18,34 @@ export function generateOtpCode() {
   return String(randomInt(100_000, 1_000_000));
 }
 
-export async function issueSignupOtp(emailRaw: string) {
+async function issueOtp(
+  emailRaw: string,
+  purpose: string,
+  send: (email: string, code: string) => Promise<void>,
+) {
   const email = normalizeEmail(emailRaw);
   const code = generateOtpCode();
   const codeHash = await bcrypt.hash(code, 8);
   const expiresAt = new Date(Date.now() + OTP_TTL_MS);
 
   await prisma.emailOtp.deleteMany({
-    where: { email, purpose: OTP_PURPOSE_SIGNUP },
+    where: { email, purpose },
   });
 
   await prisma.emailOtp.create({
     data: {
       email,
       codeHash,
-      purpose: OTP_PURPOSE_SIGNUP,
+      purpose,
       expiresAt,
     },
   });
 
-  await sendSignupVerificationEmail(email, code);
+  await send(email, code);
   return { email, expiresAt };
 }
 
-export async function verifySignupOtp(emailRaw: string, codeRaw: string) {
+async function verifyOtp(emailRaw: string, codeRaw: string, purpose: string) {
   const email = normalizeEmail(emailRaw);
   const code = codeRaw.replace(/\s+/g, "").trim();
   if (!/^\d{6}$/.test(code)) {
@@ -48,7 +56,7 @@ export async function verifySignupOtp(emailRaw: string, codeRaw: string) {
   }
 
   const latest = await prisma.emailOtp.findFirst({
-    where: { email, purpose: OTP_PURPOSE_SIGNUP },
+    where: { email, purpose },
     orderBy: { createdAt: "desc" },
   });
 
@@ -57,7 +65,7 @@ export async function verifySignupOtp(emailRaw: string, codeRaw: string) {
   }
   if (latest.expiresAt.getTime() < Date.now()) {
     await prisma.emailOtp.deleteMany({
-      where: { email, purpose: OTP_PURPOSE_SIGNUP },
+      where: { email, purpose },
     });
     return {
       ok: false as const,
@@ -71,8 +79,27 @@ export async function verifySignupOtp(emailRaw: string, codeRaw: string) {
   }
 
   await prisma.emailOtp.deleteMany({
-    where: { email, purpose: OTP_PURPOSE_SIGNUP },
+    where: { email, purpose },
   });
 
   return { ok: true as const, email };
+}
+
+export async function issueSignupOtp(emailRaw: string) {
+  return issueOtp(emailRaw, OTP_PURPOSE_SIGNUP, sendSignupVerificationEmail);
+}
+
+export async function verifySignupOtp(emailRaw: string, codeRaw: string) {
+  return verifyOtp(emailRaw, codeRaw, OTP_PURPOSE_SIGNUP);
+}
+
+export async function issuePasswordResetOtp(emailRaw: string) {
+  return issueOtp(emailRaw, OTP_PURPOSE_RESET, sendPasswordResetEmail);
+}
+
+export async function verifyPasswordResetOtp(
+  emailRaw: string,
+  codeRaw: string,
+) {
+  return verifyOtp(emailRaw, codeRaw, OTP_PURPOSE_RESET);
 }

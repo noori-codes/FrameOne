@@ -26,7 +26,13 @@ const links = [
   { href: "/watchlist", label: "Watchlist", auth: true },
 ] as const;
 
-const AUTH_PATHS = new Set(["/signin", "/signup", "/verify-email"]);
+const AUTH_PATHS = new Set([
+  "/signin",
+  "/signup",
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
+]);
 
 /**
  * Responsive header nav — compact bar on small screens, full links from md up.
