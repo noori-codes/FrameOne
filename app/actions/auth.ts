@@ -4,6 +4,13 @@ import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
+import {
+  EMAIL_MAX,
+  isValidEmail,
+  NAME_MAX,
+  PASSWORD_MAX,
+  PASSWORD_MIN,
+} from "@/lib/auth-validation";
 import { issueSignupOtp, normalizeEmail, verifySignupOtp } from "@/lib/email-otp";
 import { prisma } from "@/lib/prisma";
 
@@ -25,8 +32,17 @@ export async function signup(
   if (!email || !password) {
     return { error: "Email and password are required." };
   }
-  if (password.length < 6) {
-    return { error: "Password must be at least 6 characters." };
+  if (name.length > NAME_MAX) {
+    return { error: `Name must be at most ${NAME_MAX} characters.` };
+  }
+  if (email.length > EMAIL_MAX || !isValidEmail(email)) {
+    return { error: "Enter a valid email address." };
+  }
+  if (password.length < PASSWORD_MIN) {
+    return { error: `Password must be at least ${PASSWORD_MIN} characters.` };
+  }
+  if (password.length > PASSWORD_MAX) {
+    return { error: `Password must be at most ${PASSWORD_MAX} characters.` };
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
@@ -153,6 +169,12 @@ export async function login(
 
   if (!email || !password) {
     return { error: "Email and password are required." };
+  }
+  if (email.length > EMAIL_MAX || !isValidEmail(email)) {
+    return { error: "Enter a valid email address." };
+  }
+  if (password.length > PASSWORD_MAX) {
+    return { error: "Invalid email or password." };
   }
 
   const user = await prisma.user.findUnique({

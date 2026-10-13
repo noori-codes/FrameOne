@@ -7,6 +7,10 @@ import {
   verifyEmail,
   type AuthFormState,
 } from "@/app/actions/auth";
+import {
+  PASSWORD_MAX,
+  sanitizeOtpInput,
+} from "@/lib/auth-validation";
 
 const initial: AuthFormState = {};
 
@@ -40,10 +44,18 @@ export function VerifyEmailForm({ email }: VerifyEmailFormProps) {
             inputMode="numeric"
             pattern="[0-9]{6}"
             maxLength={6}
+            minLength={6}
             required
             autoComplete="one-time-code"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             placeholder="••••••"
+            title="Enter the 6-digit code from your email"
             className={`${fieldClass} tracking-[0.35em]`}
+            onInput={(e) => {
+              e.currentTarget.value = sanitizeOtpInput(e.currentTarget.value);
+            }}
           />
         </label>
 
@@ -54,6 +66,7 @@ export function VerifyEmailForm({ email }: VerifyEmailFormProps) {
             name="password"
             type="password"
             required
+            maxLength={PASSWORD_MAX}
             autoComplete="current-password"
             placeholder="Your account password"
             className={fieldClass}

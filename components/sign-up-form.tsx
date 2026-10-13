@@ -1,8 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { signup, type AuthFormState } from "@/app/actions/auth";
+import {
+  EMAIL_MAX,
+  EMAIL_PATTERN,
+  NAME_MAX,
+  PASSWORD_MAX,
+  PASSWORD_MIN,
+  sanitizeEmailInput,
+} from "@/lib/auth-validation";
 
 const initial: AuthFormState = {};
 
@@ -11,6 +19,7 @@ const fieldClass =
 
 export function SignUpForm() {
   const [state, action, pending] = useActionState(signup, initial);
+  const [email, setEmail] = useState("");
 
   return (
     <form action={action} className="flex w-full flex-col gap-5">
@@ -21,8 +30,13 @@ export function SignUpForm() {
           name="name"
           type="text"
           autoComplete="name"
+          maxLength={NAME_MAX}
           placeholder="How we greet you"
+          title={`Up to ${NAME_MAX} characters`}
           className={fieldClass}
+          onBlur={(e) => {
+            e.currentTarget.value = e.currentTarget.value.trim();
+          }}
         />
       </label>
 
@@ -32,9 +46,21 @@ export function SignUpForm() {
           name="email"
           type="email"
           required
+          inputMode="email"
           autoComplete="email"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          maxLength={EMAIL_MAX}
+          pattern={EMAIL_PATTERN}
           placeholder="you@example.com"
+          title="Enter a valid email like you@example.com"
           className={fieldClass}
+          value={email}
+          onChange={(e) => setEmail(sanitizeEmailInput(e.target.value))}
+          onKeyDown={(e) => {
+            if (e.key === " ") e.preventDefault();
+          }}
         />
       </label>
 
@@ -44,9 +70,11 @@ export function SignUpForm() {
           name="password"
           type="password"
           required
-          minLength={6}
+          minLength={PASSWORD_MIN}
+          maxLength={PASSWORD_MAX}
           autoComplete="new-password"
-          placeholder="At least 6 characters"
+          placeholder={`At least ${PASSWORD_MIN} characters`}
+          title={`Password must be ${PASSWORD_MIN}–${PASSWORD_MAX} characters`}
           className={fieldClass}
         />
       </label>
