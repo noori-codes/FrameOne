@@ -26,8 +26,11 @@ const links = [
   { href: "/watchlist", label: "Watchlist", auth: true },
 ] as const;
 
+const AUTH_PATHS = new Set(["/signin", "/signup", "/verify-email"]);
+
 /**
  * Responsive header nav — compact bar on small screens, full links from md up.
+ * Hidden on auth screens so the split layout can own the viewport.
  */
 export function SiteNav({ user }: SiteNavProps) {
   const [open, setOpen] = useState(false);
@@ -54,6 +57,10 @@ export function SiteNav({ user }: SiteNavProps) {
   }, [open]);
 
   const close = () => setOpen(false);
+
+  if (AUTH_PATHS.has(pathname)) {
+    return null;
+  }
 
   const visibleLinks = links.filter((l) => !("auth" in l && l.auth) || user);
   const isActive = (href: string) =>

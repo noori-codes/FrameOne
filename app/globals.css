@@ -187,13 +187,67 @@ button:disabled {
   animation-delay: 280ms;
 }
 
+@keyframes authPanelKenBurns {
+  from {
+    transform: scale(1.04);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+@keyframes authLineIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-panel-media {
+  animation: authPanelKenBurns 18s ease-out forwards;
+}
+
+.auth-panel-line,
+.auth-form-line {
+  opacity: 0;
+  animation: authLineIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.auth-panel-line-1 {
+  animation-delay: 40ms;
+}
+.auth-panel-line-2 {
+  animation-delay: 120ms;
+}
+.auth-panel-line-3 {
+  animation-delay: 200ms;
+}
+
+.auth-form-line-1 {
+  animation-delay: 80ms;
+}
+.auth-form-line-2 {
+  animation-delay: 140ms;
+}
+.auth-form-line-3 {
+  animation-delay: 200ms;
+}
+.auth-form-line-4 {
+  animation-delay: 280ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .trailer-modal-backdrop,
   .trailer-modal-panel {
     animation: none;
   }
 
-  .hero-backdrop {
+  .hero-backdrop,
+  .auth-panel-media {
     animation: none;
   }
 
@@ -202,7 +256,9 @@ button:disabled {
     transform: none;
   }
 
-  .hero-line {
+  .hero-line,
+  .auth-panel-line,
+  .auth-form-line {
     opacity: 1;
     animation: none;
     transform: none;
