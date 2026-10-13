@@ -118,13 +118,22 @@ export function SiteNav({ user }: SiteNavProps) {
                     Account
                   </Link>
                 ) : (
-                  <Link
-                    href="/signin"
-                    onClick={close}
-                    className="mt-2 rounded-full border border-cream/20 px-4 py-2.5 text-center text-sm text-cream transition-colors hover:border-amber hover:text-amber"
-                  >
-                    Sign in
-                  </Link>
+                  <div className="mt-3 flex flex-col gap-2">
+                    <Link
+                      href="/signin"
+                      onClick={close}
+                      className="rounded-full border border-cream/20 px-4 py-2.5 text-center text-sm text-cream transition-colors hover:border-cream/40 hover:text-cream"
+                    >
+                      Sign in
+                    </Link>
+                    <Link
+                      href="/signup"
+                      onClick={close}
+                      className="rounded-full bg-amber px-4 py-2.5 text-center text-sm font-medium text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim)"
+                    >
+                      Join free
+                    </Link>
+                  </div>
                 )}
               </nav>
             </div>
@@ -200,12 +209,20 @@ export function SiteNav({ user }: SiteNavProps) {
                 />
               </Link>
             ) : (
-              <Link
-                href="/signin"
-                className="text-sm text-cream/75 transition-colors hover:text-amber"
-              >
-                Sign in
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/signin"
+                  className="text-sm text-cream/75 transition-colors hover:text-cream"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/signup"
+                  className="inline-flex min-h-9 items-center rounded-full bg-amber px-3.5 text-sm font-medium text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim)"
+                >
+                  Join free
+                </Link>
+              </div>
             )}
           </div>
 
@@ -233,7 +250,14 @@ export function SiteNav({ user }: SiteNavProps) {
                   className="hover:border-amber"
                 />
               </Link>
-            ) : null}
+            ) : (
+              <Link
+                href="/signup"
+                className="mr-0.5 inline-flex min-h-8 items-center rounded-full bg-amber px-3 text-xs font-medium text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim)"
+              >
+                Join
+              </Link>
+            )}
             <button
               type="button"
               aria-label="Open menu"

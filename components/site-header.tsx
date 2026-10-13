@@ -1,5 +1,6 @@
 import type { Session } from "next-auth";
 import { auth } from "@/auth";
+import { GuestAuthNudge } from "@/components/guest-auth-nudge";
 import { SiteNav } from "@/components/site-nav";
 
 /**
@@ -24,6 +25,9 @@ export async function SiteHeader() {
     : null;
 
   return (
-    <SiteNav user={user} />
+    <>
+      <SiteNav user={user} />
+      {!user ? <GuestAuthNudge /> : null}
+    </>
   );
 }

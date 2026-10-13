@@ -68,7 +68,7 @@ async function sendViaSmtp(to: string, subject: string, html: string) {
 
 /**
  * Send transactional email via Resend API (preferred) or SMTP.
- * Env: RESEND_API_KEY + EMAIL_FROM, or SMTP_*/EMAIL_* host credentials.
+ * Env: RESEND_API_KEY + EMAIL_FROM, or SMTP_ / EMAIL_ host credentials.
  */
 export async function sendMail(options: {
   to: string;
