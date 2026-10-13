@@ -14,6 +14,8 @@ model User {
   id        String     @id @default(cuid())
   name      String?
   email     String     @unique
+  /// Set when the user confirms ownership of the email (OTP).
+  emailVerified DateTime?
   /// Avatar URL (app proxy or Storage public URL), e.g. /api/avatars/xyz
   image     String?
   /// Hashed password (never store plain text).
@@ -21,6 +23,19 @@ model User {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   favorites Favorite[]
+}
+
+/// One-time codes for signup email verification.
+model EmailOtp {
+  id        String   @id @default(cuid())
+  email     String
+  /// bcrypt hash of the 6-digit code
+  codeHash  String
+  purpose   String   @default("signup")
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email, purpose])
 }
 
 /// A TMDB title the user saved to Favorites or Watchlist.
