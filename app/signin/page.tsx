@@ -3,7 +3,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { SignInForm } from "@/components/sign-in-form";
 
 type SignInPageProps = {
-  searchParams: Promise<{ callbackUrl?: string }>;
+  searchParams: Promise<{ callbackUrl?: string; verified?: string }>;
 };
 
 /**
@@ -11,7 +11,7 @@ type SignInPageProps = {
  * `callbackUrl` is set by middleware when protecting /favorites or /profile.
  */
 export default async function SignInPage({ searchParams }: SignInPageProps) {
-  const { callbackUrl: raw } = await searchParams;
+  const { callbackUrl: raw, verified } = await searchParams;
   const callbackUrl =
     typeof raw === "string" && raw.startsWith("/") && !raw.startsWith("//")
       ? raw
@@ -46,7 +46,10 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
         </p>
 
         <div className="mt-8 sm:mt-10">
-          <SignInForm callbackUrl={callbackUrl} />
+          <SignInForm
+            callbackUrl={callbackUrl}
+            verified={verified === "1"}
+          />
         </div>
       </div>
     </main>

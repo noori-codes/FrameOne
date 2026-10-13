@@ -12,14 +12,24 @@ const fieldClass =
 type SignInFormProps = {
   /** Where to send the user after login (from ?callbackUrl=). */
   callbackUrl?: string;
+  verified?: boolean;
 };
 
-export function SignInForm({ callbackUrl = "/" }: SignInFormProps) {
+export function SignInForm({
+  callbackUrl = "/",
+  verified = false,
+}: SignInFormProps) {
   const [state, action, pending] = useActionState(login, initial);
 
   return (
     <form action={action} className="flex w-full flex-col gap-5">
       <input type="hidden" name="callbackUrl" value={callbackUrl} />
+
+      {verified ? (
+        <p className="rounded-sm border border-amber/30 bg-amber/10 px-3 py-2 text-sm text-amber" role="status">
+          Email verified — you can sign in now.
+        </p>
+      ) : null}
 
       <label className="flex flex-col gap-1.5 text-sm text-cream/65">
         Email
