@@ -6,13 +6,12 @@ export const PASSWORD_MIN = 6;
 export const PASSWORD_MAX = 128;
 
 /**
- * Practical email shape: local@domain.tld, no spaces.
- * Stricter than bare `type="email"` for empty TLD / trailing dots.
+ * Safe for HTML `pattern` (browsers compile with the `v` flag — no `/` etc. in classes).
+ * local@domain.tld, no spaces.
  */
-export const EMAIL_PATTERN =
-  "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$";
+export const EMAIL_PATTERN = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
 
-const EMAIL_RE = new RegExp(EMAIL_PATTERN);
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function isValidEmail(email: string) {
   return email.length > 0 && email.length <= EMAIL_MAX && EMAIL_RE.test(email);

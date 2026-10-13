@@ -1,54 +1,39 @@
 import nodemailer from "nodemailer";
 
 function emailFrom() {
-  return process.env.EMAIL_FROM?.trim() || "FrameOne <onboarding@resend.dev>";
+  return process.env.EMAIL_FROM?.trim() || process.env.EMAIL_USERNAME?.trim() || "";
 }
 
 function smtpConfig() {
-  const host =
-    process.env.SMTP_HOST?.trim() || process.env.EMAIL_HOST?.trim() || "";
-  const portRaw =
-    process.env.SMTP_PORT?.trim() || process.env.EMAIL_PORT?.trim() || "587";
-  const user =
-    process.env.SMTP_USER?.trim() || process.env.EMAIL_USERNAME?.trim() || "";
-  const pass =
-    process.env.SMTP_PASSWORD?.trim() ||
-    process.env.EMAIL_PASSWORD?.trim() ||
-    "";
-  const port = Number(portRaw) || 587;
+  const host = process.env.EMAIL_HOST?.trim() || "";
+  const port = Number(process.env.EMAIL_PORT?.trim() || "587") || 587;
+  const user = process.env.EMAIL_USERNAME?.trim() || "";
+  const pass = process.env.EMAIL_PASSWORD?.trim() || "";
 
   if (!host || !user || !pass) return null;
   return { host, port, user, pass };
 }
 
-async function sendViaResend(to: string, subject: string, html: string) {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  if (!apiKey) return false;
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: emailFrom(),
-      to: [to],
-      subject,
-      html,
-    }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`Resend failed (${res.status}): ${body.slice(0, 200)}`);
-  }
-  return true;
-}
-
-async function sendViaSmtp(to: string, subject: string, html: string) {
+/**
+ * Send transactional email via EMAIL_* SMTP (mail.noorullah.dev).
+ * Required: EMAIL_HOST, EMAIL_PORT, EMAIL_USERNAME, EMAIL_PASSWORD, EMAIL_FROM.
+ */
+export async function sendMail(options: {
+  to: string;
+  subject: string;
+  html: string;
+}) {
   const smtp = smtpConfig();
-  if (!smtp) return false;
+  const from = emailFrom();
+
+  if (!smtp) {
+    throw new Error(
+      "Email is not configured. Set EMAIL_HOST, EMAIL_PORT, EMAIL_USERNAME, and EMAIL_PASSWORD.",
+    );
+  }
+  if (!from || !from.includes("@")) {
+    throw new Error("EMAIL_FROM must be a valid address (e.g. imran@noorullah.dev).");
+  }
 
   const transporter = nodemailer.createTransport({
     host: smtp.host,
@@ -58,28 +43,11 @@ async function sendViaSmtp(to: string, subject: string, html: string) {
   });
 
   await transporter.sendMail({
-    from: emailFrom(),
-    to,
-    subject,
-    html,
+    from,
+    to: options.to,
+    subject: options.subject,
+    html: options.html,
   });
-  return true;
-}
-
-/**
- * Send transactional email via Resend API (preferred) or SMTP.
- * Env: RESEND_API_KEY + EMAIL_FROM, or SMTP_ / EMAIL_ host credentials.
- */
-export async function sendMail(options: {
-  to: string;
-  subject: string;
-  html: string;
-}) {
-  if (await sendViaResend(options.to, options.subject, options.html)) return;
-  if (await sendViaSmtp(options.to, options.subject, options.html)) return;
-  throw new Error(
-    "Email is not configured. Set RESEND_API_KEY or SMTP/EMAIL host credentials.",
-  );
 }
 
 export async function sendSignupVerificationEmail(

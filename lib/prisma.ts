@@ -8,7 +8,7 @@ import { PrismaClient } from "@/lib/generated/prisma/client";
  * Use the Supabase *transaction pooler* URI (port 6543, ?pgbouncer=true) for
  * DATABASE_URL in the app. Use DIRECT_URL (port 5432) for `prisma migrate`.
  */
-const PRISMA_SCHEMA_VERSION = 11;
+const PRISMA_SCHEMA_VERSION = 12;
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;

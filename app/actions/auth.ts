@@ -76,9 +76,11 @@ export async function signup(
     await issueSignupOtp(email);
   } catch (err) {
     console.error("Failed to send verification email:", err);
+    const detail = err instanceof Error ? err.message : "";
     return {
-      error:
-        "Account saved, but we couldn’t send the verification email. Check email settings and try again.",
+      error: detail
+        ? `Account saved, but we couldn’t send the verification email. ${detail}`
+        : "Account saved, but we couldn’t send the verification email. Check email settings and try again.",
       verifyEmail: email,
     };
   }
