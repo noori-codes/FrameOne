@@ -187,15 +187,6 @@ button:disabled {
   animation-delay: 280ms;
 }
 
-@keyframes authPanelKenBurns {
-  from {
-    transform: scale(1.04);
-  }
-  to {
-    transform: scale(1.12);
-  }
-}
-
 @keyframes authLineIn {
   from {
     opacity: 0;
@@ -207,8 +198,45 @@ button:disabled {
   }
 }
 
-.auth-panel-media {
-  animation: authPanelKenBurns 18s ease-out forwards;
+@keyframes authSceneZoomA {
+  from {
+    transform: scale(1.04) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.12) translate3d(-1.2%, 0.8%, 0);
+  }
+}
+
+@keyframes authSceneZoomB {
+  from {
+    transform: scale(1.08) translate3d(1%, -0.6%, 0);
+  }
+  to {
+    transform: scale(1.03) translate3d(-0.6%, 0.4%, 0);
+  }
+}
+
+@keyframes authSceneCaptionIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-scene-zoom-a {
+  animation: authSceneZoomA 7s ease-out forwards;
+}
+
+.auth-scene-zoom-b {
+  animation: authSceneZoomB 7s ease-out forwards;
+}
+
+.auth-scene-caption {
+  animation: authSceneCaptionIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .auth-panel-line,
@@ -246,14 +274,18 @@ button:disabled {
     animation: none;
   }
 
-  .hero-backdrop,
-  .auth-panel-media {
-    animation: none;
-  }
-
   .hero-backdrop {
+    animation: none;
     opacity: 1;
     transform: none;
+  }
+
+  .auth-scene-zoom-a,
+  .auth-scene-zoom-b,
+  .auth-scene-caption {
+    animation: none;
+    transform: none;
+    opacity: 1;
   }
 
   .hero-line,

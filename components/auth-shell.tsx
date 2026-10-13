@@ -1,7 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { AuthCinematicPanel } from "@/components/auth-cinematic-panel";
 import { BrandLogo } from "@/components/brand-logo";
+import { getAuthScenes } from "@/lib/auth-posters";
 
 type AuthShellProps = {
   /** Small label above the form title */
@@ -16,37 +17,31 @@ type AuthShellProps = {
 };
 
 /**
- * Split auth layout — cinematic brand plane + focused form column.
+ * Split auth layout — cinematic stills + focused form column.
  * Used by sign-in, sign-up, and email verification.
  */
-export function AuthShell({
+export async function AuthShell({
   eyebrow,
   title,
   description,
   panelLine,
   children,
 }: AuthShellProps) {
+  const scenes = await getAuthScenes();
+
   return (
     <main className="relative flex min-h-dvh flex-1 flex-col lg:flex-row">
-      {/* Brand plane — full-bleed visual */}
       <aside className="relative isolate hidden min-h-dvh w-full overflow-hidden lg:flex lg:w-[46%] xl:w-[48%]">
-        <Image
-          src="/brand/ui-mockup-home.jpg"
-          alt=""
-          fill
-          priority
-          sizes="50vw"
-          className="auth-panel-media object-cover object-center"
+        <AuthCinematicPanel scenes={scenes} />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[linear-gradient(165deg,rgba(7,10,11,0.28)_0%,rgba(7,10,11,0.55)_48%,rgba(7,10,11,0.88)_100%)]"
         />
         <div
           aria-hidden
-          className="absolute inset-0 bg-[linear-gradient(160deg,rgba(7,10,11,0.55)_0%,rgba(7,10,11,0.72)_42%,rgba(7,10,11,0.92)_100%)]"
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_28%_18%,color-mix(in_srgb,var(--amber)_14%,transparent),transparent_52%)]"
         />
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,color-mix(in_srgb,var(--amber)_22%,transparent),transparent_55%)]"
-        />
-        <div aria-hidden className="film-grain absolute inset-0" />
+        <div aria-hidden className="film-grain absolute inset-0 opacity-80" />
 
         <div className="relative z-10 flex w-full flex-col justify-between px-10 py-10 xl:px-14 xl:py-12">
           <Link
@@ -57,7 +52,7 @@ export function AuthShell({
             <BrandLogo size="md" priority />
           </Link>
 
-          <div className="max-w-md pb-4">
+          <div className="max-w-md pb-16 xl:pb-20">
             <p className="auth-panel-line auth-panel-line-2 font-display text-6xl leading-[0.92] tracking-[0.08em] text-amber uppercase xl:text-7xl">
               FrameOne
             </p>
@@ -68,7 +63,6 @@ export function AuthShell({
         </div>
       </aside>
 
-      {/* Form column */}
       <section className="relative flex flex-1 flex-col overflow-hidden">
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_0%,color-mix(in_srgb,var(--amber)_10%,transparent),transparent_50%)]" />
