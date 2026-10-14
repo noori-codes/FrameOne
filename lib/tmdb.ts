@@ -152,7 +152,8 @@ type MemoryCacheEntry = {
 const REDIS_READ_TIMEOUT_MS = 200;
 const REDIS_FAIL_THRESHOLD = 2;
 const REDIS_COOLDOWN_MS = 60_000;
-const TMDB_FETCH_TIMEOUT_MS = 4_000;
+/** VPN / cold starts often need more than a few seconds. */
+const TMDB_FETCH_TIMEOUT_MS = 10_000;
 const MEMORY_CACHE_MAX = 250;
 const STALE_FALLBACK_MS = 24 * 60 * 60 * 1000;
 

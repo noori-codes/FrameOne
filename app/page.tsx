@@ -31,11 +31,25 @@ const getHomeTrendingPage = cache(() => getTrendingMoviesPage("day", 1));
 const getHomeTopRatedPage = cache(() => getTopRatedMoviesPage(1));
 
 async function HomeHero() {
-  const [latestMovies, topRated, trending] = await Promise.all([
+  // Soft-fail each pool — one slow TMDB call (often discover/latest) must not blank the home page.
+  const [latestResult, topRatedResult, trendingResult] = await Promise.allSettled([
     getLatestMovies(),
     getHomeTopRatedPage().then((page) => page.results),
     getHomeTrendingPage().then((page) => page.results),
   ]);
+
+  const latestMovies =
+    latestResult.status === "fulfilled" ? latestResult.value : [];
+  const topRated =
+    topRatedResult.status === "fulfilled" ? topRatedResult.value : [];
+  const trending =
+    trendingResult.status === "fulfilled" ? trendingResult.value : [];
+
+  for (const result of [latestResult, topRatedResult, trendingResult]) {
+    if (result.status === "rejected") {
+      console.warn("Home hero pool failed:", result.reason);
+    }
+  }
 
   const used = new Set<number>();
   function pickGroup(movies: TmdbMovie[], categoryLabel: string) {
