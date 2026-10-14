@@ -10,6 +10,7 @@ type InfiniteMovieGridProps = {
   initial: PaginatedMovies;
   /** Hide the “Showing X of Y” line (home feed). Default true. */
   showCount?: boolean;
+  favoriteIds?: number[];
 };
 
 function useGridColumns() {
@@ -59,6 +60,7 @@ export function InfiniteMovieGrid({
   sort,
   initial,
   showCount = true,
+  favoriteIds,
 }: InfiniteMovieGridProps) {
   const [movies, setMovies] = useState(initial.results);
   const [page, setPage] = useState(initial.page);
@@ -70,6 +72,11 @@ export function InfiniteMovieGrid({
   const loadingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   const cols = useGridColumns();
+  const favoriteSet = useMemo(
+    () =>
+      favoriteIds && favoriteIds.length > 0 ? new Set(favoriteIds) : null,
+    [favoriteIds],
+  );
 
   const visibleMovies = useMemo(() => {
     if (!hasMore || cols < 2) return movies;
@@ -166,6 +173,7 @@ export function InfiniteMovieGrid({
               posterPath={movie.poster_path}
               voteAverage={movie.vote_average}
               showTitle
+              initialFavorite={favoriteSet?.has(movie.id) ?? false}
               sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 160px"
             />
           </li>

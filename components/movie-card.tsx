@@ -23,6 +23,8 @@ type MovieCardProps = {
   /** Defaults to movie; use `tv` for series posters. */
   mediaType?: MediaKind;
   initialFavorite?: boolean;
+  /** Show a Film / Series chip (search results). */
+  showMediaBadge?: boolean;
 };
 
 function FavoriteHeart({
@@ -74,11 +76,10 @@ function FavoriteHeart({
         aria-pressed={optimisticSaved}
         className={cn(
           "movie-card-heart inline-flex size-7 items-center justify-center rounded-full border border-cream/10 bg-black/55 text-cream/85 shadow-[0_8px_20px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md will-change-transform",
-          "opacity-0 translate-y-0.5 scale-90 transition-[opacity,transform,color,background-color,border-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] delay-0",
-          "group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:delay-75",
+          "opacity-100 translate-y-0 scale-100 transition-[opacity,transform,color,background-color,border-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
           "hover:border-red-400/35 hover:bg-black/75 hover:text-red-400 active:scale-95",
           optimisticSaved &&
-            "border-red-400/40 text-red-500 opacity-100 translate-y-0 scale-100 delay-0 shadow-[0_8px_22px_-10px_rgba(239,68,68,0.55)]",
+            "border-red-400/40 text-red-500 shadow-[0_8px_22px_-10px_rgba(239,68,68,0.55)]",
         )}
       >
         <Heart
@@ -107,6 +108,7 @@ export function MovieCard({
   className,
   mediaType = "movie",
   initialFavorite = false,
+  showMediaBadge = false,
 }: MovieCardProps) {
   const src = posterUrl(posterPath);
   const [failed, setFailed] = useState(false);
@@ -136,6 +138,12 @@ export function MovieCard({
             </span>
           )}
 
+          {showMediaBadge ? (
+            <span className="pointer-events-none absolute bottom-2 left-2 z-[1] rounded-full border border-cream/15 bg-black/60 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-cream/85 uppercase backdrop-blur-md">
+              {mediaType === "tv" ? "Series" : "Film"}
+            </span>
+          ) : null}
+
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,transparent_40%,rgba(0,0,0,0.35)_100%)] opacity-50 transition-opacity duration-300 group-hover:opacity-70"
@@ -150,7 +158,7 @@ export function MovieCard({
           />
 
           {!showTitle ? (
-            <div className="movie-card-caption pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/95 via-black/55 to-transparent px-2.5 pt-14 pb-2.5 opacity-0 translate-y-2 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-100 group-hover:translate-y-0">
+            <div className="movie-card-caption pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/95 via-black/55 to-transparent px-2.5 pt-14 pb-2.5 opacity-100 translate-y-0 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]">
               <span
                 aria-hidden
                 className="mb-1.5 block h-0.5 w-6 rounded-full bg-amber/80"

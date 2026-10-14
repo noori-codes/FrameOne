@@ -84,7 +84,7 @@ export function MovieRow({
 
   return (
     <section id={id} aria-label={title} className="space-y-5 sm:space-y-6">
-      <div className="flex items-end justify-between gap-3 px-4 sm:gap-4 sm:px-6 lg:px-10">
+      <div className="flex items-end justify-between gap-3 px-4 sm:gap-4 sm:px-6 lg:px-8">
         <div className="min-w-0">
           <h2 className="font-display text-2xl tracking-[0.04em] text-cream uppercase sm:text-3xl md:text-4xl">
             {href ? (
@@ -137,7 +137,7 @@ export function MovieRow({
       </div>
 
       <div
-        className="overflow-hidden px-4 pt-2 pb-5 sm:px-6 lg:px-10"
+        className="overflow-hidden px-4 pt-2 pb-5 sm:px-6 lg:px-8"
         ref={emblaRef}
       >
         <ul className="flex gap-3.5 sm:gap-5">
