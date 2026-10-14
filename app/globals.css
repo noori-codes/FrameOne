@@ -239,6 +239,100 @@ button:disabled {
   animation: authSceneCaptionIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes authAmbientDrift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(4%, -3%, 0) scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes authSubmitShine {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-18deg);
+  }
+}
+
+@keyframes authBannerIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-ambient {
+  animation: authAmbientDrift 10s ease-in-out infinite;
+}
+
+.auth-ambient-slow {
+  animation: authAmbientDrift 16s ease-in-out infinite reverse;
+}
+
+.auth-submit-shine {
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    color-mix(in srgb, white 35%, transparent) 50%,
+    transparent 65%
+  );
+  opacity: 0;
+}
+
+.auth-submit:hover .auth-submit-shine {
+  opacity: 1;
+  animation: authSubmitShine 0.85s ease-out;
+}
+
+.auth-banner {
+  animation: authBannerIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-form-panel {
+  animation: authLineIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 60ms;
+}
+
+@keyframes guestNudgeIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.guest-nudge-card {
+  animation: guestNudgeIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.cta-shine-beam {
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    color-mix(in srgb, white 32%, transparent) 50%,
+    transparent 65%
+  );
+  opacity: 0;
+}
+
+.cta-shine:hover .cta-shine-beam {
+  opacity: 1;
+  animation: authSubmitShine 0.85s ease-out;
+}
+
 .auth-panel-line,
 .auth-form-line {
   opacity: 0;
@@ -282,7 +376,14 @@ button:disabled {
 
   .auth-scene-zoom-a,
   .auth-scene-zoom-b,
-  .auth-scene-caption {
+  .auth-scene-caption,
+  .auth-ambient,
+  .auth-ambient-slow,
+  .auth-banner,
+  .auth-form-panel,
+  .guest-nudge-card,
+  .auth-submit:hover .auth-submit-shine,
+  .cta-shine:hover .cta-shine-beam {
     animation: none;
     transform: none;
     opacity: 1;
@@ -300,7 +401,8 @@ button:disabled {
   .movie-card .movie-card-image,
   .movie-card .movie-card-caption,
   .movie-card .movie-card-heart,
-  .movie-card .movie-card-rating {
+  .movie-card .movie-card-rating,
+  .movie-card .movie-card-sheen {
     transition: none !important;
     transform: none !important;
   }
@@ -309,7 +411,34 @@ button:disabled {
     opacity: 1;
   }
 
+  .movie-card .movie-card-sheen {
+    opacity: 0 !important;
+  }
+
   .movie-card .movie-card-heart:not([aria-pressed="true"]) {
     opacity: 0;
+  }
+}
+
+.movie-card-sheen {
+  background: linear-gradient(
+    125deg,
+    transparent 35%,
+    color-mix(in srgb, white 14%, transparent) 48%,
+    transparent 62%
+  );
+  transform: translateX(-40%);
+}
+
+.movie-card:hover .movie-card-sheen {
+  animation: movieCardSheen 0.9s ease-out;
+}
+
+@keyframes movieCardSheen {
+  from {
+    transform: translateX(-55%);
+  }
+  to {
+    transform: translateX(55%);
   }
 }
