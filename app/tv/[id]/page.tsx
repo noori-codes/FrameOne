@@ -78,10 +78,7 @@ export async function generateMetadata({
   };
 }
 
-/**
- * Step 1 TV detail — browse/trailer/similar only.
- * Favorites & watchlist for series come in a later pass.
- */
+/** Series detail — trailer, lists, cast, similar. */
 export default async function TvPage({ params }: TvPageProps) {
   const { id } = await params;
   const show = await getTv(id);
@@ -163,11 +160,16 @@ export default async function TvPage({ params }: TvPageProps) {
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(7,10,11,0.42)_0%,transparent_22%)]"
         />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_30%,color-mix(in_srgb,var(--amber)_14%,transparent),transparent_48%)]"
+        />
+        <div aria-hidden className="film-grain absolute inset-0 opacity-70" />
 
         <div className="relative mx-auto flex w-full max-w-screen-2xl flex-1 flex-col px-4 pb-6 pt-16 sm:px-6 sm:pb-10 sm:pt-20 lg:px-8 lg:pb-12 lg:pt-24">
           <Link
             href="/#trending-series"
-            className="inline-flex min-h-10 w-fit items-center gap-2 border-b border-cream/25 pb-2 text-xs font-medium text-cream/75 transition-colors hover:border-amber hover:text-amber sm:text-sm"
+            className="inline-flex min-h-10 w-fit items-center gap-2 rounded-full border border-cream/15 bg-black/25 px-3.5 text-xs font-medium text-cream/75 backdrop-blur-md transition-[border-color,color,background-color] hover:border-amber/40 hover:bg-black/40 hover:text-amber sm:text-sm"
           >
             <ArrowLeft className="size-4" aria-hidden />
             Back to series
@@ -175,13 +177,14 @@ export default async function TvPage({ params }: TvPageProps) {
 
           <div className="mt-auto grid grid-cols-1 items-end gap-7 pt-8 sm:gap-10 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-12 lg:pt-16">
             <div className="min-w-0 lg:pb-2">
-              <p className="mb-3 text-[10px] font-semibold tracking-[0.2em] text-amber uppercase sm:text-xs">
+              <p className="mb-3 inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.22em] text-amber uppercase sm:text-xs">
+                <span className="h-px w-5 bg-amber/70" aria-hidden />
                 FrameOne <span className="px-1 text-cream/35">/</span> Series
                 {show.first_air_date
                   ? ` · ${show.first_air_date.slice(0, 4)}`
                   : ""}
               </p>
-              <h1 className="max-w-4xl font-display text-4xl leading-[0.9] text-balance wrap-break-word text-cream uppercase sm:text-6xl md:text-7xl lg:text-8xl">
+              <h1 className="max-w-4xl font-display text-4xl leading-[0.9] text-balance wrap-break-word text-cream uppercase drop-shadow-[0_10px_40px_rgba(0,0,0,0.45)] sm:text-6xl md:text-7xl lg:text-8xl">
                 {show.name}
               </h1>
               {show.tagline ? (
@@ -192,7 +195,7 @@ export default async function TvPage({ params }: TvPageProps) {
 
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-cream/80 sm:mt-5 sm:gap-x-5 sm:gap-y-3 sm:text-sm">
                 {firstAir ? (
-                  <span className="inline-flex items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-cream/12 bg-black/25 px-2.5 py-1 backdrop-blur-sm">
                     <CalendarDays
                       className="size-3.5 text-amber sm:size-4"
                       aria-hidden
@@ -201,7 +204,7 @@ export default async function TvPage({ params }: TvPageProps) {
                   </span>
                 ) : null}
                 {episodeRuntime ? (
-                  <span className="inline-flex items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-cream/12 bg-black/25 px-2.5 py-1 backdrop-blur-sm">
                     <Clock3
                       className="size-3.5 text-amber sm:size-4"
                       aria-hidden
@@ -210,7 +213,7 @@ export default async function TvPage({ params }: TvPageProps) {
                   </span>
                 ) : null}
                 {show.number_of_seasons != null ? (
-                  <span className="text-cream/70">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-cream/12 bg-black/25 px-2.5 py-1 text-cream/70 backdrop-blur-sm">
                     {show.number_of_seasons}{" "}
                     {show.number_of_seasons === 1 ? "season" : "seasons"}
                     {show.number_of_episodes != null
@@ -218,7 +221,7 @@ export default async function TvPage({ params }: TvPageProps) {
                       : ""}
                   </span>
                 ) : null}
-                <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-amber/35 bg-background/55 px-2.5 text-amber backdrop-blur-sm sm:min-h-9 sm:px-3">
+                <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-amber/35 bg-black/35 px-2.5 text-amber shadow-[0_10px_28px_-16px_color-mix(in_srgb,var(--amber)_45%,transparent)] backdrop-blur-md sm:min-h-9 sm:px-3">
                   <Star
                     className="size-3.5 fill-current sm:size-4"
                     aria-hidden
@@ -229,14 +232,15 @@ export default async function TvPage({ params }: TvPageProps) {
               </div>
 
               {show.genres.length > 0 ? (
-                <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 sm:mt-4 sm:gap-2">
+                <div className="mt-3 flex flex-wrap gap-2 sm:mt-4">
                   {show.genres.map((genre) => (
-                    <span
+                    <Link
                       key={genre.id}
-                      className="inline-flex min-h-8 items-center border-b border-cream/25 px-1 text-xs text-cream/75 sm:min-h-9 sm:px-1.5 sm:text-sm"
+                      href={`/genres/${genre.id}`}
+                      className="inline-flex min-h-8 items-center rounded-full border border-cream/15 bg-cream/[0.03] px-3 text-xs text-cream/75 transition-[border-color,color,background-color] hover:border-amber/40 hover:bg-amber/10 hover:text-amber sm:min-h-9 sm:text-sm"
                     >
                       {genre.name}
-                    </span>
+                    </Link>
                   ))}
                 </div>
               ) : null}
@@ -263,21 +267,27 @@ export default async function TvPage({ params }: TvPageProps) {
               </div>
             </div>
 
-            <div className="relative hidden aspect-2/3 w-full overflow-hidden rounded-sm bg-stage shadow-[0_32px_90px_-24px_rgba(0,0,0,0.95)] ring-1 ring-white/25 lg:block">
-              {poster ? (
-                <Image
-                  src={poster}
-                  alt={show.name}
-                  fill
-                  sizes="300px"
-                  className="object-cover"
-                  priority
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center p-5 text-center font-display text-3xl text-cream/45">
-                  {show.name}
-                </div>
-              )}
+            <div className="relative hidden lg:block">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -inset-8 rounded-[2rem] bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--amber)_26%,transparent),transparent_68%)] blur-2xl"
+              />
+              <div className="relative aspect-2/3 w-full overflow-hidden rounded-xl bg-stage shadow-[0_36px_90px_-24px_rgba(0,0,0,0.95)] ring-1 ring-cream/20">
+                {poster ? (
+                  <Image
+                    src={poster}
+                    alt={show.name}
+                    fill
+                    sizes="300px"
+                    className="object-cover"
+                    priority
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center p-5 text-center font-display text-3xl text-cream/45">
+                    {show.name}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -353,14 +363,14 @@ export default async function TvPage({ params }: TvPageProps) {
                         href={`/person/${person.id}`}
                         className="group block min-w-0"
                       >
-                        <div className="relative aspect-4/5 overflow-hidden rounded-sm bg-stage ring-1 ring-cream/10 transition-[ring-color] duration-300 group-hover:ring-cream/25">
+                        <div className="relative aspect-4/5 overflow-hidden rounded-xl bg-stage shadow-[0_16px_36px_-20px_rgba(0,0,0,0.8)] ring-1 ring-cream/10 transition-[ring-color,transform,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:ring-amber/30 group-hover:shadow-[0_22px_44px_-18px_rgba(0,0,0,0.9),0_0_28px_-16px_color-mix(in_srgb,var(--amber)_30%,transparent)]">
                           {profile ? (
                             <Image
                               src={profile}
                               alt={person.name}
                               fill
                               sizes="(max-width: 640px) 42vw, (max-width: 1024px) 25vw, 180px"
-                              className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                              className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
                             />
                           ) : (
                             <div className="flex h-full items-center justify-center font-display text-4xl text-cream/30">

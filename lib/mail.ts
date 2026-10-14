@@ -58,7 +58,7 @@ function otpEmailHtml(opts: {
 }) {
   return `
     <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#111">
-      <p style="letter-spacing:0.2em;text-transform:uppercase;font-size:12px;color:#e52535;font-weight:600">FrameOne</p>
+      <p style="letter-spacing:0.2em;text-transform:uppercase;font-size:12px;color:#1ab89e;font-weight:600">FrameOne</p>
       <h1 style="font-size:24px;margin:8px 0 16px">${opts.heading}</h1>
       <p style="color:#444;line-height:1.5">${opts.body}</p>
       <p style="font-size:32px;letter-spacing:0.35em;font-weight:700;margin:28px 0;color:#111">${opts.code}</p>

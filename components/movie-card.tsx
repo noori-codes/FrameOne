@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useOptimistic, useState } from "react";
 import { toggleList, type ToggleListState } from "@/app/actions/favorites";
-import { LIST_FAVORITE, MEDIA_MOVIE } from "@/lib/lists";
+import { LIST_FAVORITE, type MediaListType } from "@/lib/lists";
 import { mediaPath, posterUrl, type MediaKind } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 
@@ -29,11 +29,13 @@ function FavoriteHeart({
   movieId,
   title,
   posterPath,
+  mediaType,
   initialFavorite,
 }: {
   movieId: number;
   title: string;
   posterPath: string | null;
+  mediaType: MediaListType;
   initialFavorite: boolean;
 }) {
   const router = useRouter();
@@ -62,7 +64,7 @@ function FavoriteHeart({
       <input type="hidden" name="title" value={title} />
       <input type="hidden" name="posterPath" value={posterPath ?? ""} />
       <input type="hidden" name="listType" value={LIST_FAVORITE} />
-      <input type="hidden" name="mediaType" value={MEDIA_MOVIE} />
+      <input type="hidden" name="mediaType" value={mediaType} />
       <button
         type="submit"
         aria-busy={pending}
@@ -113,7 +115,6 @@ export function MovieCard({
     voteAverage != null && voteAverage > 0
       ? voteAverage.toFixed(1)
       : null;
-  const showHeart = mediaType === "movie";
 
   return (
     <div className={cn("movie-card group relative block", className)}>
@@ -168,31 +169,28 @@ export function MovieCard({
         ) : null}
       </Link>
 
-      {rating || showHeart ? (
-        <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex h-7 items-center justify-between">
-          {rating ? (
-            <span className="movie-card-rating inline-flex h-6 items-center gap-1 rounded-full border border-amber/20 bg-black/55 px-2 text-[11px] font-medium leading-none text-cream/90 shadow-[0_6px_16px_-10px_rgba(0,0,0,0.8)] backdrop-blur-md transition-[background-color,transform,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:border-amber/40 group-hover:bg-black/70 group-hover:shadow-[0_8px_18px_-8px_color-mix(in_srgb,var(--amber)_40%,transparent)]">
-              <Star
-                className="size-3 fill-amber text-amber transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
-                aria-hidden
-              />
-              {rating}
-            </span>
-          ) : (
-            <span />
-          )}
-          {showHeart ? (
-            <div className="pointer-events-auto">
-              <FavoriteHeart
-                movieId={id}
-                title={title}
-                posterPath={posterPath}
-                initialFavorite={initialFavorite}
-              />
-            </div>
-          ) : null}
+      <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex h-7 items-center justify-between">
+        {rating ? (
+          <span className="movie-card-rating inline-flex h-6 items-center gap-1 rounded-full border border-amber/20 bg-black/55 px-2 text-[11px] font-medium leading-none text-cream/90 shadow-[0_6px_16px_-10px_rgba(0,0,0,0.8)] backdrop-blur-md transition-[background-color,transform,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:border-amber/40 group-hover:bg-black/70 group-hover:shadow-[0_8px_18px_-8px_color-mix(in_srgb,var(--amber)_40%,transparent)]">
+            <Star
+              className="size-3 fill-amber text-amber transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
+              aria-hidden
+            />
+            {rating}
+          </span>
+        ) : (
+          <span />
+        )}
+        <div className="pointer-events-auto">
+          <FavoriteHeart
+            movieId={id}
+            title={title}
+            posterPath={posterPath}
+            mediaType={mediaType}
+            initialFavorite={initialFavorite}
+          />
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }
