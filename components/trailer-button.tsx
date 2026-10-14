@@ -187,15 +187,20 @@ export function TrailerButton({
         disabled={loadingTrailer}
         aria-busy={loadingTrailer}
         className={cn(
-          "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors disabled:cursor-wait disabled:opacity-70",
+          "group relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold transition-[background-color,box-shadow,border-color,color,transform] disabled:cursor-wait disabled:opacity-70 active:scale-[0.98]",
           variant === "primary"
-            ? "bg-amber text-[color:var(--on-amber)] hover:bg-(--amber-dim) hover:text-cream"
-            : "border border-cream/30 bg-black/20 text-cream/85 backdrop-blur-sm hover:border-cream/50 hover:text-cream",
+            ? "cta-shine bg-amber text-[color:var(--on-amber)] hover:bg-(--amber-dim) hover:text-cream hover:shadow-[0_14px_40px_-14px_color-mix(in_srgb,var(--amber)_70%,transparent)]"
+            : "border border-cream/30 bg-black/25 text-cream/85 backdrop-blur-md hover:border-cream/50 hover:bg-black/40 hover:text-cream",
           className,
         )}
       >
-        <Play className="h-4 w-4 fill-current" aria-hidden />
-        {loadingTrailer ? "Loading trailer…" : label}
+        {variant === "primary" ? (
+          <span className="cta-shine-beam pointer-events-none absolute inset-0" />
+        ) : null}
+        <Play className="relative h-4 w-4 fill-current" aria-hidden />
+        <span className="relative">
+          {loadingTrailer ? "Loading trailer…" : label}
+        </span>
       </button>
       {trailerError ? (
         <p className="text-xs text-rose-200" role="alert">

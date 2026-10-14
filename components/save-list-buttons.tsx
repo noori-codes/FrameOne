@@ -72,15 +72,15 @@ function ListToggle({
         aria-label={buttonLabel}
         aria-pressed={optimisticSaved}
         className={cn(
-          "transition-colors",
+          "backdrop-blur-md transition-[border-color,background-color,color,box-shadow,transform] active:scale-95",
           iconOnly
             ? "inline-flex h-10 w-10 items-center justify-center rounded-full sm:h-11 sm:w-11"
-            : "min-h-10 rounded-full px-3.5 py-2 text-xs sm:min-h-11 sm:px-4 sm:text-sm",
+            : "min-h-10 rounded-full px-3.5 py-2 text-xs font-medium sm:min-h-11 sm:px-4 sm:text-sm",
           optimisticSaved
             ? iconOnly
-              ? "border border-red-500/45 bg-red-500/10 text-red-500 hover:border-red-400 hover:bg-red-500/15"
-              : "border border-amber/50 bg-amber/10 text-amber hover:border-amber hover:bg-amber/15"
-            : "border border-cream/25 text-cream hover:border-cream/45 hover:text-cream",
+              ? "border border-red-500/45 bg-red-500/15 text-red-500 shadow-[0_10px_28px_-14px_rgba(239,68,68,0.55)] hover:border-red-400 hover:bg-red-500/20"
+              : "border border-amber/50 bg-amber/15 text-amber shadow-[0_10px_28px_-14px_color-mix(in_srgb,var(--amber)_45%,transparent)] hover:border-amber hover:bg-amber/20"
+            : "border border-cream/20 bg-black/30 text-cream hover:border-cream/40 hover:bg-black/45 hover:text-cream",
         )}
       >
         {iconOnly ? (
@@ -119,7 +119,7 @@ export function SaveListButtons({
     return (
       <Link
         href="/signin"
-        className="inline-flex min-h-10 items-center rounded-full border border-cream/25 px-3.5 py-2 text-xs text-cream/80 transition-colors hover:border-amber hover:text-amber sm:min-h-11 sm:px-4 sm:text-sm"
+        className="inline-flex min-h-10 items-center rounded-full border border-cream/20 bg-black/30 px-3.5 py-2 text-xs font-medium text-cream/85 backdrop-blur-md transition-[border-color,color,background-color] hover:border-amber/45 hover:bg-amber/10 hover:text-amber sm:min-h-11 sm:px-4 sm:text-sm"
       >
         Sign in to save
       </Link>
