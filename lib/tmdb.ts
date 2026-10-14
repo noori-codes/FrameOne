@@ -507,6 +507,99 @@ export async function searchMovies(
   return toPaginated(data);
 }
 
+/** Movie or TV hit from multi-search, normalized to the poster card shape. */
+export type SearchHit = TmdbMovie & { mediaType: MediaKind };
+
+export type PaginatedSearch = {
+  results: SearchHit[];
+  page: number;
+  totalPages: number;
+  totalResults: number;
+};
+
+type TmdbMultiResult = {
+  id: number;
+  media_type: string;
+  title?: string;
+  name?: string;
+  overview?: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  vote_average?: number;
+  release_date?: string;
+  first_air_date?: string;
+  genre_ids?: number[];
+};
+
+type PaginatedMultiResponse = {
+  page: number;
+  results: TmdbMultiResult[];
+  total_pages: number;
+  total_results: number;
+};
+
+const EMPTY_SEARCH: PaginatedSearch = {
+  results: [],
+  page: 1,
+  totalPages: 0,
+  totalResults: 0,
+};
+
+/**
+ * Search movies + TV via TMDB multi-search (people/other media filtered out).
+ */
+export async function searchMulti(
+  query: string,
+  page = 1,
+): Promise<PaginatedSearch> {
+  const q = query.trim();
+  if (!q) return EMPTY_SEARCH;
+
+  const url = new URL(`${getBaseUrl()}/search/multi`);
+  url.searchParams.set("api_key", getApiKey());
+  url.searchParams.set("query", q);
+  url.searchParams.set("page", String(page));
+  url.searchParams.set("include_adult", "false");
+
+  const res = await tmdbFetch(url.toString(), 60);
+
+  if (!res.ok) {
+    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+  }
+
+  const data = (await res.json()) as PaginatedMultiResponse;
+  const results: SearchHit[] = [];
+
+  for (const item of data.results) {
+    if (item.media_type !== "movie" && item.media_type !== "tv") continue;
+    const title =
+      item.media_type === "tv"
+        ? (item.name ?? item.title ?? "Untitled")
+        : (item.title ?? item.name ?? "Untitled");
+    results.push({
+      id: item.id,
+      title,
+      overview: item.overview ?? "",
+      poster_path: item.poster_path,
+      backdrop_path: item.backdrop_path,
+      vote_average: item.vote_average ?? 0,
+      release_date:
+        item.media_type === "tv"
+          ? (item.first_air_date ?? "")
+          : (item.release_date ?? ""),
+      genre_ids: item.genre_ids,
+      mediaType: item.media_type,
+    });
+  }
+
+  return {
+    results,
+    page: data.page,
+    totalPages: Math.min(data.total_pages, 500),
+    totalResults: data.total_results,
+  };
+}
+
 /** Single movie by id. Returns null when TMDB says 404. */
 export async function getMovie(
   id: string | number,

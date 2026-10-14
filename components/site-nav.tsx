@@ -3,7 +3,13 @@
 import { Menu, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createPortal } from "react-dom";
 import { BrandLogo } from "@/components/brand-logo";
 import { UserAvatar } from "@/components/user-avatar";
@@ -20,7 +26,7 @@ type SiteNavProps = {
 };
 
 const links = [
-  { href: "/", label: "Browse" },
+  { href: "/", label: "Home" },
   { href: "/genres", label: "Genres" },
   { href: "/favorites", label: "Favorites", auth: true },
   { href: "/watchlist", label: "Watchlist", auth: true },
@@ -33,6 +39,9 @@ const AUTH_PATHS = new Set([
   "/forgot-password",
   "/reset-password",
 ]);
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
 /**
  * Responsive header nav — compact bar on small screens, full links from md up.
@@ -47,16 +56,74 @@ export function SiteNav({ user }: SiteNavProps) {
     () => false,
   );
   const titleId = useId();
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const restoreFocusRef = useRef(false);
 
   useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
+    if (!open) {
+      if (restoreFocusRef.current) {
+        restoreFocusRef.current = false;
+        menuTriggerRef.current?.focus();
+      }
+      return;
+    }
+
+    restoreFocusRef.current = true;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
+    // Focus close control after paint so the portal is in the tree.
+    const focusId = window.requestAnimationFrame(() => {
+      closeButtonRef.current?.focus();
+    });
+
+    function getFocusable() {
+      const root = dialogRef.current;
+      if (!root) return [] as HTMLElement[];
+      return Array.from(
+        root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      ).filter(
+        (el) =>
+          !el.hasAttribute("disabled") &&
+          el.getAttribute("aria-hidden") !== "true" &&
+          el.tabIndex !== -1,
+      );
+    }
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+
+      const focusable = getFocusable();
+      if (focusable.length === 0) {
+        e.preventDefault();
+        return;
+      }
+
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
+      const active = document.activeElement as HTMLElement | null;
+
+      if (e.shiftKey) {
+        if (!active || active === first || !dialogRef.current?.contains(active)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (!active || active === last || !dialogRef.current?.contains(active)) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
     window.addEventListener("keydown", onKey);
     return () => {
+      window.cancelAnimationFrame(focusId);
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
@@ -76,6 +143,7 @@ export function SiteNav({ user }: SiteNavProps) {
     open && isClient
       ? createPortal(
           <div
+            ref={dialogRef}
             className="fixed inset-0 z-50 md:hidden"
             role="dialog"
             aria-modal="true"
@@ -83,6 +151,7 @@ export function SiteNav({ user }: SiteNavProps) {
           >
             <button
               type="button"
+              tabIndex={-1}
               aria-label="Close menu"
               className="absolute inset-0 bg-black/70 backdrop-blur-sm"
               onClick={close}
@@ -96,6 +165,7 @@ export function SiteNav({ user }: SiteNavProps) {
                   Menu
                 </p>
                 <button
+                  ref={closeButtonRef}
                   type="button"
                   onClick={close}
                   aria-label="Close menu"
@@ -275,6 +345,7 @@ export function SiteNav({ user }: SiteNavProps) {
               </Link>
             )}
             <button
+              ref={menuTriggerRef}
               type="button"
               aria-label="Open menu"
               aria-expanded={open}

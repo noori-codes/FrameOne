@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Mail } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand-logo";
 import { cn } from "@/lib/utils";
 
 const EXPLORE_LINKS = [
@@ -11,7 +12,8 @@ const EXPLORE_LINKS = [
 ] as const;
 
 const ACCOUNT_LINKS = [
-  { href: "/watchlist", label: "My List" },
+  { href: "/favorites", label: "Favorites" },
+  { href: "/watchlist", label: "Watchlist" },
   { href: "/profile", label: "Profile" },
 ] as const;
 
@@ -101,21 +103,16 @@ function SocialIconLink({
 export function SiteFooter() {
   return (
     <footer className="relative z-10 mt-auto border-t border-cream/[0.06] bg-[#060809]">
-      <div className="mx-auto w-full max-w-screen-2xl px-4 pt-14 pb-8 sm:px-6 sm:pt-16 sm:pb-10 lg:px-10 lg:pt-20">
+      <div className="mx-auto w-full max-w-screen-2xl px-4 pt-14 pb-8 sm:px-6 sm:pt-16 sm:pb-10 lg:px-8 lg:pt-20">
         <div className="grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-4 md:gap-x-10 lg:gap-x-16">
           {/* Brand */}
           <div className="col-span-2 space-y-4 md:col-span-1">
             <Link
               href="/"
               aria-label="FrameOne home"
-              className="group inline-flex items-center gap-3"
+              className="group inline-flex items-center transition-opacity hover:opacity-90"
             >
-              <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-[3px] border border-amber/35 bg-stage/80 font-display text-[15px] leading-none tracking-[0.08em] text-amber transition-colors duration-300 group-hover:border-amber/60 group-hover:bg-amber/5">
-                F1
-              </span>
-              <span className="font-display text-2xl leading-none tracking-[0.18em] text-cream uppercase transition-colors duration-300 group-hover:text-amber">
-                FrameOne
-              </span>
+              <BrandLogo size="sm" withWordmark />
             </Link>
             <p className="max-w-[16rem] text-[13px] leading-relaxed tracking-wide text-cream/40">
               Discover. Save. Watch.
