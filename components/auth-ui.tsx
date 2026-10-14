@@ -73,10 +73,9 @@ export function AuthPasswordField({
         />
         <button
           type="button"
-          tabIndex={-1}
           aria-label={visible ? "Hide password" : "Show password"}
           onClick={() => setVisible((v) => !v)}
-          className="absolute top-1/2 right-3 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-cream/35 transition-colors hover:bg-cream/5 hover:text-cream/75"
+          className="absolute top-1/2 right-3 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-cream/35 transition-colors hover:bg-cream/5 hover:text-cream/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber/50"
         >
           {visible ? (
             <EyeOff className="size-4" strokeWidth={1.75} />

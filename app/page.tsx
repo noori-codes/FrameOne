@@ -1,5 +1,4 @@
 import { cache, Suspense } from "react";
-import { auth } from "@/auth";
 import { DeferredGenreRows } from "@/components/deferred-genre-rows";
 import { HeroCarousel, type HeroSlide } from "@/components/hero-carousel";
 import { HomeEndlessFeed } from "@/components/home-endless-feed";
@@ -7,12 +6,15 @@ import { MovieRow } from "@/components/movie-row";
 import { SiteFooter } from "@/components/site-footer";
 import { MovieRowSkeleton, Skeleton } from "@/components/skeletons";
 import { shuffleHeroPicks } from "@/lib/daily-hero";
-import { LIST_FAVORITE } from "@/lib/lists";
-import { prisma } from "@/lib/prisma";
+import {
+  getHomeMovieFavoriteIds,
+  getHomeTvFavoriteIds,
+} from "@/lib/home-favorites";
 import { tmdbImageUrl } from "@/lib/tmdb-image-loader";
 import {
   backdropUrl,
   getLatestMovies,
+  getMovieTrailerKey,
   getPopularMoviesPage,
   getTopRatedMoviesPage,
   getTrendingMoviesPage,
@@ -20,6 +22,7 @@ import {
   posterUrl,
   tvShowAsMovie,
   type TmdbMovie,
+  type TmdbTvShow,
 } from "@/lib/tmdb";
 
 /** Refresh at least hourly so a new UTC day picks a new hero set. */
@@ -77,18 +80,27 @@ async function HomeHero() {
     ...pickGroup(trending, "Trending now"),
   ]);
 
-  const slides: HeroSlide[] = picks.map(({ movie, categoryLabel }) => ({
-    id: movie.id,
-    title: movie.title,
-    categoryLabel,
-    overview: movie.overview,
-    tagline: null,
-    backdropUrl: backdropUrl(movie.backdrop_path),
-    posterUrl: posterUrl(movie.poster_path, "w500"),
-    meta: movie.release_date?.slice(0, 4) ?? "",
-    rating: movie.vote_average,
-    trailerKey: null,
-  }));
+  const trailerResults = await Promise.allSettled(
+    picks.map(({ movie }) => getMovieTrailerKey(movie.id)),
+  );
+
+  const slides: HeroSlide[] = picks.map(({ movie, categoryLabel }, i) => {
+    const trailerResult = trailerResults[i];
+    const trailerKey =
+      trailerResult?.status === "fulfilled" ? trailerResult.value : null;
+    return {
+      id: movie.id,
+      title: movie.title,
+      categoryLabel,
+      overview: movie.overview,
+      tagline: null,
+      backdropUrl: backdropUrl(movie.backdrop_path),
+      posterUrl: posterUrl(movie.poster_path, "w500"),
+      meta: movie.release_date?.slice(0, 4) ?? "",
+      rating: movie.vote_average,
+      trailerKey,
+    };
+  });
 
   const firstBackdrop = slides[0]?.backdropUrl;
   const heroPreload780 = firstBackdrop
@@ -115,72 +127,65 @@ async function HomeHero() {
   );
 }
 
+async function HomeGenreRows() {
+  const favoriteIds = await getHomeMovieFavoriteIds();
+  return <DeferredGenreRows favoriteIds={favoriteIds} />;
+}
+
 async function DiscoveryRows() {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const [pools, favoriteIds, tvFavoriteIds] = await Promise.all([
+    Promise.allSettled([
+      getHomeTrendingPage(),
+      getPopularMoviesPage(1),
+      getHomeTopRatedPage(),
+      getTrendingTvPage("day", 1),
+    ]),
+    getHomeMovieFavoriteIds(),
+    getHomeTvFavoriteIds(),
+  ]);
 
   const [
     trendingResult,
     popularResult,
     topRatedResult,
     trendingTvResult,
-    movieFavResult,
-    tvFavResult,
-  ] = await Promise.allSettled([
-    getHomeTrendingPage(),
-    getPopularMoviesPage(1),
-    getHomeTopRatedPage(),
-    getTrendingTvPage("day", 1),
-    userId
-      ? prisma.favorite.findMany({
-          where: { userId, listType: LIST_FAVORITE, mediaType: "movie" },
-          select: { movieId: true },
-        })
-      : Promise.resolve([] as { movieId: number }[]),
-    userId
-      ? prisma.favorite.findMany({
-          where: { userId, listType: LIST_FAVORITE, mediaType: "tv" },
-          select: { movieId: true },
-        })
-      : Promise.resolve([] as { movieId: number }[]),
-  ]);
+  ] = pools;
 
-  for (const result of [
-    trendingResult,
-    popularResult,
-    topRatedResult,
-    trendingTvResult,
-  ]) {
+  for (const result of pools) {
     if (result.status === "rejected") {
       console.warn("Home discovery pool failed:", result.reason);
     }
   }
 
-  const emptyPage = {
+  const emptyMoviePage = {
     results: [] as TmdbMovie[],
+    page: 1,
+    totalPages: 0,
+    totalResults: 0,
+  };
+  const emptyTvPage = {
+    results: [] as TmdbTvShow[],
     page: 1,
     totalPages: 0,
     totalResults: 0,
   };
 
   const trendingPage =
-    trendingResult.status === "fulfilled" ? trendingResult.value : emptyPage;
+    trendingResult.status === "fulfilled"
+      ? trendingResult.value
+      : emptyMoviePage;
   const popularPage =
-    popularResult.status === "fulfilled" ? popularResult.value : emptyPage;
+    popularResult.status === "fulfilled"
+      ? popularResult.value
+      : emptyMoviePage;
   const topRatedPage =
-    topRatedResult.status === "fulfilled" ? topRatedResult.value : emptyPage;
+    topRatedResult.status === "fulfilled"
+      ? topRatedResult.value
+      : emptyMoviePage;
   const trendingTvPage =
     trendingTvResult.status === "fulfilled"
       ? trendingTvResult.value
-      : emptyPage;
-  const favoriteIds =
-    movieFavResult.status === "fulfilled"
-      ? movieFavResult.value.map((row) => row.movieId)
-      : [];
-  const tvFavoriteIds =
-    tvFavResult.status === "fulfilled"
-      ? tvFavResult.value.map((row) => row.movieId)
-      : [];
+      : emptyTvPage;
 
   return (
     <>
@@ -279,7 +284,9 @@ export default function Home() {
         <Suspense fallback={<RowsSkeleton count={4} />}>
           <DiscoveryRows />
         </Suspense>
-        <DeferredGenreRows />
+        <Suspense fallback={<RowsSkeleton count={4} />}>
+          <HomeGenreRows />
+        </Suspense>
         <Suspense fallback={<EndlessFeedSkeleton />}>
           <HomeEndlessFeed />
         </Suspense>

@@ -12,6 +12,7 @@ export default function MovieLoading() {
           <Skeleton className="h-10 w-36 rounded-full" />
           <div className="mt-auto grid grid-cols-1 items-end gap-7 pt-8 sm:gap-10 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-12 lg:pt-16">
             <div className="min-w-0 space-y-5">
+              <Skeleton className="mx-auto aspect-2/3 w-full max-w-[140px] rounded-xl sm:max-w-[160px] lg:hidden" />
               <Skeleton className="h-3 w-36 rounded-sm" />
               <Skeleton className="h-16 w-full max-w-3xl rounded-sm sm:h-24" />
               <Skeleton className="h-4 w-2/3 max-w-xl rounded-sm" />
@@ -25,7 +26,7 @@ export default function MovieLoading() {
                 <Skeleton className="h-12 w-28 rounded-full" />
               </div>
             </div>
-            <Skeleton className="hidden aspect-2/3 w-full rounded-sm lg:block" />
+            <Skeleton className="hidden aspect-2/3 w-full rounded-xl lg:block" />
           </div>
         </div>
       </section>

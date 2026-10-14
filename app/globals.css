@@ -415,8 +415,34 @@ button:disabled {
     opacity: 0 !important;
   }
 
+  .movie-card .movie-card-heart {
+    opacity: 1;
+  }
+}
+
+/* Hover-capable pointers: reveal caption/heart on hover. Touch keeps them visible. */
+@media (hover: hover) and (pointer: fine) {
+  .movie-card .movie-card-caption {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  .movie-card:hover .movie-card-caption,
+  .movie-card:focus-within .movie-card-caption {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
   .movie-card .movie-card-heart:not([aria-pressed="true"]) {
     opacity: 0;
+    transform: translateY(0.125rem) scale(0.9);
+  }
+
+  .movie-card:hover .movie-card-heart,
+  .movie-card:focus-within .movie-card-heart,
+  .movie-card .movie-card-heart[aria-pressed="true"] {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
