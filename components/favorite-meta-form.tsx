@@ -79,6 +79,12 @@ export function FavoriteMetaForm({
         </p>
       ) : null}
 
+      {state.success ? (
+        <p className="text-sm text-amber" role="status">
+          Saved.
+        </p>
+      ) : null}
+
       <button
         type="submit"
         disabled={pending}

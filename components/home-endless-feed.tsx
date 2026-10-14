@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { InfiniteMovieGrid } from "@/components/infinite-movie-grid";
+import { getHomeMovieFavoriteIds } from "@/lib/home-favorites";
 import { getPopularMoviesPage } from "@/lib/tmdb";
 
 /**
@@ -7,7 +8,10 @@ import { getPopularMoviesPage } from "@/lib/tmdb";
  * Starts at popular page 2 so page 1 isn’t a near-duplicate of the Popular row.
  */
 export async function HomeEndlessFeed() {
-  const initial = await getPopularMoviesPage(2);
+  const [initial, favoriteIds] = await Promise.all([
+    getPopularMoviesPage(2),
+    getHomeMovieFavoriteIds(),
+  ]);
 
   if (initial.results.length === 0) return null;
 
@@ -43,6 +47,7 @@ export async function HomeEndlessFeed() {
         <InfiniteMovieGrid
           endpoint="/api/browse/popular/movies"
           initial={initial}
+          favoriteIds={favoriteIds}
           showCount={false}
         />
       </div>

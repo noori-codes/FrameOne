@@ -80,6 +80,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
   const pausedAtRef = useRef<number | null>(null);
   const elapsedBeforePauseRef = useRef(0);
   const progressRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     trailerOpenRef.current = trailerOpen;
@@ -131,6 +132,21 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
     if (count < 2) return;
 
     function onKey(e: KeyboardEvent) {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      const root = rootRef.current;
+      const active = document.activeElement;
+      // Only when focus is inside the carousel (not global — avoids stealing search/inputs).
+      if (!root || !active || !root.contains(active)) return;
+      const tag = active instanceof HTMLElement ? active.tagName : "";
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        (active instanceof HTMLElement && active.isContentEditable)
+      ) {
+        return;
+      }
+      e.preventDefault();
       if (e.key === "ArrowLeft") go(-1);
       if (e.key === "ArrowRight") go(1);
     }
@@ -219,7 +235,9 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
   return (
     <section
-      className="relative flex min-h-[min(760px,100dvh)] w-full flex-col overflow-hidden sm:min-h-[min(820px,100dvh)] lg:min-h-[min(860px,100dvh)]"
+      ref={rootRef}
+      tabIndex={0}
+      className="relative flex min-h-[min(760px,100dvh)] w-full flex-col overflow-hidden outline-none sm:min-h-[min(820px,100dvh)] lg:min-h-[min(860px,100dvh)]"
       aria-roledescription="carousel"
       aria-label="Featured movies"
     >
@@ -254,9 +272,11 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               <Sparkles className="size-3.5" aria-hidden />
               {slide.categoryLabel}
             </p>
-            <p className="hero-line hero-line-2 mb-3 min-h-[1.5em] text-xs leading-normal tracking-[0.2em] text-cream/60 uppercase sm:text-sm">
-              {slide.tagline}
-            </p>
+            {slide.tagline ? (
+              <p className="hero-line hero-line-2 mb-3 text-xs leading-normal tracking-[0.2em] text-cream/60 uppercase sm:text-sm">
+                {slide.tagline}
+              </p>
+            ) : null}
 
             <h1
               aria-label={slide.title}

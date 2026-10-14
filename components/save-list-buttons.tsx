@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Heart } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useActionState, useOptimistic } from "react";
 import { toggleList, type ToggleListState } from "@/app/actions/favorites";
 import {
@@ -115,10 +116,15 @@ export function SaveListButtons({
   signedIn,
   mediaType = MEDIA_MOVIE,
 }: SaveListButtonsProps) {
+  const pathname = usePathname();
+
   if (!signedIn) {
+    const callbackUrl = pathname
+      ? `/signin?callbackUrl=${encodeURIComponent(pathname)}`
+      : "/signin";
     return (
       <Link
-        href="/signin"
+        href={callbackUrl}
         className="inline-flex min-h-10 items-center rounded-full border border-cream/20 bg-black/30 px-3.5 py-2 text-xs font-medium text-cream/85 backdrop-blur-md transition-[border-color,color,background-color] hover:border-amber/45 hover:bg-amber/10 hover:text-amber sm:min-h-11 sm:px-4 sm:text-sm"
       >
         Sign in to save
