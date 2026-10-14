@@ -1,6 +1,6 @@
 import { SearchExperience } from "@/components/search-experience";
 import { parsePageParam } from "@/components/pagination-nav";
-import { searchMovies } from "@/lib/tmdb";
+import { searchMulti } from "@/lib/tmdb";
 
 /**
  * /search?q=inception&page=2
@@ -14,7 +14,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const { q = "", page: pageRaw } = await searchParams;
   const query = q.trim();
   const page = parsePageParam(pageRaw);
-  const initialData = query ? await searchMovies(query, page) : null;
+  const initialData = query ? await searchMulti(query, page) : null;
 
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-4 pt-8 pb-16 sm:px-8 sm:pt-10 sm:pb-20">
@@ -31,7 +31,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         Search
       </h1>
       <p className="mt-3 max-w-lg text-sm leading-relaxed text-cream/50 sm:text-base">
-        Find films by title — then save favorites and build your watchlist.
+        Find movies and series by title — then save favorites and build your
+        watchlist.
       </p>
 
       <SearchExperience

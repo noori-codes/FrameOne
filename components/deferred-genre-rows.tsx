@@ -20,10 +20,16 @@ type WaveState = {
 const TOTAL_WAVES = 2;
 const ROWS_PER_WAVE = 4;
 
+type DeferredGenreRowsProps = {
+  favoriteIds?: number[];
+};
+
 /**
  * Loads home genre carousels in waves of 4 as the user scrolls near each batch.
  */
-export function DeferredGenreRows() {
+export function DeferredGenreRows({
+  favoriteIds = [],
+}: DeferredGenreRowsProps) {
   const [waves, setWaves] = useState<WaveState[]>(() =>
     Array.from({ length: TOTAL_WAVES }, () => ({
       rows: [],
@@ -44,11 +50,7 @@ export function DeferredGenreRows() {
   }
 
   async function loadWave(index: number) {
-    markWave(index, (wave) =>
-      wave.status === "ready" || wave.status === "loading"
-        ? wave
-        : { ...wave, status: "loading" },
-    );
+    markWave(index, { status: "loading" });
 
     try {
       const res = await fetch(`/api/home/genre-rows?wave=${index}`);
@@ -61,21 +63,29 @@ export function DeferredGenreRows() {
     }
   }
 
+  function retryWave(index: number) {
+    void loadWave(index);
+  }
+
   return (
     <div className="flex flex-col gap-14 sm:gap-24">
       {waves.map((wave, index) => {
-        const previousReady =
-          index === 0 || waves[index - 1]?.status === "ready";
-        // Don’t mount later waves (or their skeletons) until the prior wave is in.
-        if (!previousReady) return null;
+        const previousSettled =
+          index === 0 ||
+          waves[index - 1]?.status === "ready" ||
+          waves[index - 1]?.status === "failed";
+        // Don’t mount later waves until the prior wave has settled (ready or failed).
+        if (!previousSettled) return null;
 
         return (
           <GenreWave
             key={index}
             index={index}
             wave={wave}
-            canArm={previousReady}
+            canArm={previousSettled}
+            favoriteIds={favoriteIds}
             onArm={() => void loadWave(index)}
+            onRetry={() => retryWave(index)}
           />
         );
       })}
@@ -87,12 +97,16 @@ function GenreWave({
   index,
   wave,
   canArm,
+  favoriteIds,
   onArm,
+  onRetry,
 }: {
   index: number;
   wave: WaveState;
   canArm: boolean;
+  favoriteIds: number[];
   onArm: () => void;
+  onRetry: () => void;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const armedRef = useRef(false);
@@ -142,7 +156,29 @@ function GenreWave({
     };
   }, [canArm, index, onArm, wave.status]);
 
-  if (wave.status === "failed") return null;
+  if (wave.status === "failed") {
+    return (
+      <div
+        ref={rootRef}
+        className="mx-auto flex w-full max-w-screen-2xl flex-col items-start gap-3 px-4 sm:px-6 lg:px-8"
+        role="alert"
+      >
+        <p className="text-sm text-cream/55">
+          Couldn’t load more genre rows.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            armedRef.current = true;
+            onRetry();
+          }}
+          className="inline-flex min-h-9 items-center rounded-full border border-cream/20 bg-black/25 px-4 text-xs font-medium text-cream/85 backdrop-blur-md transition-[border-color,background-color,color] hover:border-amber/40 hover:bg-black/40 hover:text-amber"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div ref={rootRef} className="flex flex-col gap-14 sm:gap-24">
@@ -154,6 +190,7 @@ function GenreWave({
               title={genre.title}
               movies={genre.movies}
               href={`/genres/${genre.id}`}
+              favoriteIds={favoriteIds}
             />
           ))
         : Array.from({ length: ROWS_PER_WAVE }, (_, i) => (

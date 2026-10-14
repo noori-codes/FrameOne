@@ -177,6 +177,28 @@ export default async function TvPage({ params }: TvPageProps) {
 
           <div className="mt-auto grid grid-cols-1 items-end gap-7 pt-8 sm:gap-10 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-12 lg:pt-16">
             <div className="min-w-0 lg:pb-2">
+              <div className="relative mx-auto mb-6 w-full max-w-[140px] sm:mb-8 sm:max-w-[160px] lg:hidden">
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -inset-4 rounded-[2rem] bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--amber)_22%,transparent),transparent_68%)] blur-2xl"
+                />
+                <div className="relative aspect-2/3 overflow-hidden rounded-xl bg-stage shadow-[0_28px_70px_-28px_rgba(0,0,0,0.95)] ring-1 ring-cream/20">
+                  {poster ? (
+                    <Image
+                      src={poster}
+                      alt={show.name}
+                      fill
+                      sizes="160px"
+                      className="object-cover"
+                      priority
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center p-4 text-center font-display text-2xl text-cream/45">
+                      {show.name}
+                    </div>
+                  )}
+                </div>
+              </div>
               <p className="mb-3 inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.22em] text-amber uppercase sm:text-xs">
                 <span className="h-px w-5 bg-amber/70" aria-hidden />
                 FrameOne <span className="px-1 text-cream/35">/</span> Series
