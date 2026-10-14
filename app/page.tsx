@@ -119,21 +119,68 @@ async function DiscoveryRows() {
   const session = await auth();
   const userId = session?.user?.id;
 
-  const [trendingPage, popularPage, topRatedPage, trendingTvPage, favoriteIds] =
-    await Promise.all([
-      getHomeTrendingPage(),
-      getPopularMoviesPage(1),
-      getHomeTopRatedPage(),
-      getTrendingTvPage("day", 1),
-      userId
-        ? prisma.favorite
-            .findMany({
-              where: { userId, listType: LIST_FAVORITE, mediaType: "movie" },
-              select: { movieId: true },
-            })
-            .then((rows) => rows.map((row) => row.movieId))
-        : Promise.resolve([] as number[]),
-    ]);
+  const [
+    trendingResult,
+    popularResult,
+    topRatedResult,
+    trendingTvResult,
+    movieFavResult,
+    tvFavResult,
+  ] = await Promise.allSettled([
+    getHomeTrendingPage(),
+    getPopularMoviesPage(1),
+    getHomeTopRatedPage(),
+    getTrendingTvPage("day", 1),
+    userId
+      ? prisma.favorite.findMany({
+          where: { userId, listType: LIST_FAVORITE, mediaType: "movie" },
+          select: { movieId: true },
+        })
+      : Promise.resolve([] as { movieId: number }[]),
+    userId
+      ? prisma.favorite.findMany({
+          where: { userId, listType: LIST_FAVORITE, mediaType: "tv" },
+          select: { movieId: true },
+        })
+      : Promise.resolve([] as { movieId: number }[]),
+  ]);
+
+  for (const result of [
+    trendingResult,
+    popularResult,
+    topRatedResult,
+    trendingTvResult,
+  ]) {
+    if (result.status === "rejected") {
+      console.warn("Home discovery pool failed:", result.reason);
+    }
+  }
+
+  const emptyPage = {
+    results: [] as TmdbMovie[],
+    page: 1,
+    totalPages: 0,
+    totalResults: 0,
+  };
+
+  const trendingPage =
+    trendingResult.status === "fulfilled" ? trendingResult.value : emptyPage;
+  const popularPage =
+    popularResult.status === "fulfilled" ? popularResult.value : emptyPage;
+  const topRatedPage =
+    topRatedResult.status === "fulfilled" ? topRatedResult.value : emptyPage;
+  const trendingTvPage =
+    trendingTvResult.status === "fulfilled"
+      ? trendingTvResult.value
+      : emptyPage;
+  const favoriteIds =
+    movieFavResult.status === "fulfilled"
+      ? movieFavResult.value.map((row) => row.movieId)
+      : [];
+  const tvFavoriteIds =
+    tvFavResult.status === "fulfilled"
+      ? tvFavResult.value.map((row) => row.movieId)
+      : [];
 
   return (
     <>
@@ -150,6 +197,7 @@ async function DiscoveryRows() {
         subtitle="TV shows rising on TMDB today"
         movies={trendingTvPage.results.map(tvShowAsMovie)}
         mediaType="tv"
+        favoriteIds={tvFavoriteIds}
       />
       <MovieRow
         id="popular"

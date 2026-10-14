@@ -160,7 +160,7 @@ export default async function ProfilePage() {
       <section className="relative isolate overflow-hidden border-b border-cream/10">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_18%_0%,rgba(229,37,53,0.18),transparent_45%),radial-gradient(ellipse_at_90%_20%,rgba(229,37,53,0.08),transparent_40%),linear-gradient(180deg,#101617_0%,#070a0b_100%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_18%_0%,color-mix(in_srgb,var(--amber)_18%,transparent),transparent_45%),radial-gradient(ellipse_at_90%_20%,color-mix(in_srgb,var(--amber)_8%,transparent),transparent_40%),linear-gradient(180deg,#101617_0%,#070a0b_100%)]"
         />
         <div className="film-grain absolute inset-0" />
 

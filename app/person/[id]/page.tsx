@@ -109,7 +109,7 @@ function MetaStat({
   icon?: ReactNode;
 }) {
   return (
-    <div className="min-w-0 rounded-sm border border-cream/10 bg-black/25 px-3 py-2.5 backdrop-blur-sm">
+    <div className="min-w-0 rounded-xl border border-cream/10 bg-black/25 px-3 py-2.5 backdrop-blur-sm">
       <p className="flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.18em] text-cream/40 uppercase">
         {icon}
         {label}
@@ -218,7 +218,7 @@ export default async function PersonPage({ params }: PersonPageProps) {
         <div className="relative mx-auto flex w-full max-w-screen-2xl flex-col px-4 pb-6 pt-14 sm:px-6 sm:pb-8 sm:pt-16 lg:px-8 lg:pb-10 lg:pt-18">
           <Link
             href="/"
-            className="inline-flex min-h-9 w-fit items-center gap-2 border-b border-cream/20 pb-1.5 text-xs font-medium text-cream/70 transition-colors hover:border-amber hover:text-amber sm:text-sm"
+            className="inline-flex min-h-9 w-fit items-center gap-2 rounded-full border border-cream/15 bg-black/25 px-3.5 text-xs font-medium text-cream/75 backdrop-blur-md transition-[border-color,color,background-color] hover:border-amber/40 hover:bg-black/40 hover:text-amber sm:text-sm"
           >
             <ArrowLeft className="size-4" aria-hidden />
             Back to browse
@@ -230,7 +230,7 @@ export default async function PersonPage({ params }: PersonPageProps) {
                 aria-hidden
                 className="pointer-events-none absolute -inset-4 rounded-[2rem] bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--amber)_22%,transparent),transparent_68%)] blur-2xl"
               />
-              <div className="relative aspect-3/4 overflow-hidden rounded-sm bg-stage shadow-[0_28px_70px_-28px_rgba(0,0,0,0.95)] ring-1 ring-cream/25">
+              <div className="relative aspect-3/4 overflow-hidden rounded-xl bg-stage shadow-[0_28px_70px_-28px_rgba(0,0,0,0.95)] ring-1 ring-cream/25">
                 {portrait ? (
                   <Image
                     src={portrait}
@@ -397,7 +397,7 @@ export default async function PersonPage({ params }: PersonPageProps) {
             </div>
 
             <aside className="lg:pt-1">
-              <div className="overflow-hidden rounded-sm border border-cream/10 bg-[linear-gradient(180deg,rgba(16,22,23,0.9),rgba(7,10,11,0.55))] shadow-[0_24px_60px_-36px_rgba(0,0,0,0.85)] backdrop-blur-md lg:sticky lg:top-24">
+              <div className="overflow-hidden rounded-xl border border-cream/10 bg-[linear-gradient(180deg,rgba(16,22,23,0.9),rgba(7,10,11,0.55))] shadow-[0_24px_60px_-36px_rgba(0,0,0,0.85)] backdrop-blur-md lg:sticky lg:top-24">
                 <div className="border-b border-cream/10 px-5 py-4">
                   <p className="text-[10px] font-semibold tracking-[0.22em] text-amber uppercase">
                     Profile

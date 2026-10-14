@@ -168,9 +168,6 @@ export function SearchExperience({
             />
           ) : null}
         </label>
-        <p className="text-xs text-cream/35">
-          Results update as you type — no page reload.
-        </p>
       </div>
 
       {error ? (

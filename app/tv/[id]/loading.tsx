@@ -23,7 +23,7 @@ export default function TvLoading() {
                 <Skeleton className="h-12 w-36 rounded-full" />
               </div>
             </div>
-            <Skeleton className="hidden aspect-2/3 w-full rounded-sm lg:block" />
+            <Skeleton className="hidden aspect-2/3 w-full rounded-xl lg:block" />
           </div>
         </div>
       </section>
