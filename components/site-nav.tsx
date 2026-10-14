@@ -142,9 +142,10 @@ export function SiteNav({ user }: SiteNavProps) {
                     <Link
                       href="/signup"
                       onClick={close}
-                      className="rounded-full bg-amber px-4 py-2.5 text-center text-sm font-medium text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim)"
+                      className="cta-shine group relative overflow-hidden rounded-full bg-amber px-4 py-2.5 text-center text-sm font-semibold text-[color:var(--on-amber)] transition-[background-color,box-shadow] hover:bg-(--amber-dim) hover:text-cream"
                     >
-                      Join free
+                      <span className="cta-shine-beam pointer-events-none absolute inset-0" />
+                      <span className="relative">Join free</span>
                     </Link>
                   </div>
                 )}
@@ -159,7 +160,7 @@ export function SiteNav({ user }: SiteNavProps) {
     <>
       <header
         className={cn(
-          "z-30 border-b border-cream/10 bg-background/80 shadow-[0_8px_30px_-18px_rgba(0,0,0,0.95)] backdrop-blur-xl",
+          "site-header z-30 border-b border-cream/8 bg-background/70 shadow-[0_12px_40px_-22px_rgba(0,0,0,0.95)] backdrop-blur-2xl",
           pathname === "/" ? "fixed inset-x-0 top-0" : "sticky top-0",
         )}
       >
@@ -172,15 +173,15 @@ export function SiteNav({ user }: SiteNavProps) {
             <BrandLogo size="sm" withWordmark priority />
           </Link>
           {/* Desktop links */}
-          <div className="ml-auto hidden items-center gap-6 md:flex">
+          <div className="ml-auto hidden items-center gap-5 md:flex">
             <Link
               href="/search"
               aria-label="Search movies"
               aria-current={pathname === "/search" ? "page" : undefined}
               className={cn(
-                "inline-flex size-9 items-center justify-center rounded-full transition-colors",
+                "inline-flex size-9 items-center justify-center rounded-full transition-[color,background-color,box-shadow]",
                 pathname === "/search"
-                  ? "text-amber"
+                  ? "bg-amber/12 text-amber shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--amber)_55%,transparent)]"
                   : "text-cream/60 hover:bg-cream/5 hover:text-cream",
               )}
             >
@@ -188,7 +189,7 @@ export function SiteNav({ user }: SiteNavProps) {
             </Link>
             <nav
               aria-label="Main navigation"
-              className="flex items-center gap-6 text-sm"
+              className="flex items-center gap-1.5 text-sm"
             >
               {visibleLinks.map((link) => (
                 <Link
@@ -196,10 +197,10 @@ export function SiteNav({ user }: SiteNavProps) {
                   href={link.href}
                   aria-current={isActive(link.href) ? "page" : undefined}
                   className={cn(
-                    "border-b-2 border-transparent py-2 transition-colors",
+                    "rounded-full px-3.5 py-1.5 transition-[color,background-color,box-shadow]",
                     isActive(link.href)
-                      ? "border-amber text-amber"
-                      : "text-cream/75 hover:text-cream",
+                      ? "bg-amber/12 text-amber shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--amber)_28%,transparent)]"
+                      : "text-cream/70 hover:bg-cream/5 hover:text-cream",
                   )}
                 >
                   {link.label}
@@ -211,7 +212,7 @@ export function SiteNav({ user }: SiteNavProps) {
                 href="/profile"
                 aria-label="Profile"
                 title={user.name ?? user.email ?? "Profile"}
-                className="rounded-full transition-opacity hover:opacity-80"
+                className="rounded-full ring-offset-2 ring-offset-background transition-[opacity,box-shadow] hover:opacity-90 hover:ring-2 hover:ring-amber/40"
               >
                 <UserAvatar
                   name={user.name}
@@ -222,18 +223,19 @@ export function SiteNav({ user }: SiteNavProps) {
                 />
               </Link>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <Link
                   href="/signin"
-                  className="text-sm text-cream/75 transition-colors hover:text-cream"
+                  className="text-sm text-cream/70 transition-colors hover:text-cream"
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/signup"
-                  className="inline-flex min-h-9 items-center rounded-full bg-amber px-3.5 text-sm font-medium text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim)"
+                  className="cta-shine group relative inline-flex min-h-9 items-center overflow-hidden rounded-full bg-amber px-3.5 text-sm font-semibold text-[color:var(--on-amber)] transition-[background-color,box-shadow,transform] hover:bg-(--amber-dim) hover:text-cream hover:shadow-[0_12px_36px_-14px_color-mix(in_srgb,var(--amber)_70%,transparent)] active:scale-[0.98]"
                 >
-                  Join free
+                  <span className="cta-shine-beam pointer-events-none absolute inset-0" />
+                  <span className="relative">Join free</span>
                 </Link>
               </div>
             )}
@@ -266,9 +268,10 @@ export function SiteNav({ user }: SiteNavProps) {
             ) : (
               <Link
                 href="/signup"
-                className="mr-0.5 inline-flex min-h-8 items-center rounded-full bg-amber px-3 text-xs font-medium text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim)"
+                className="cta-shine group relative mr-0.5 inline-flex min-h-8 items-center overflow-hidden rounded-full bg-amber px-3 text-xs font-semibold text-[color:var(--on-amber)] transition-[background-color,box-shadow] hover:bg-(--amber-dim) hover:text-cream"
               >
-                Join
+                <span className="cta-shine-beam pointer-events-none absolute inset-0" />
+                <span className="relative">Join</span>
               </Link>
             )}
             <button

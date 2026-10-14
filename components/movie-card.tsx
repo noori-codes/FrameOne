@@ -71,12 +71,12 @@ function FavoriteHeart({
         }
         aria-pressed={optimisticSaved}
         className={cn(
-          "movie-card-heart inline-flex size-7 items-center justify-center rounded-full bg-black/55 text-cream/85 backdrop-blur-sm will-change-transform",
-          "opacity-0 translate-y-0.5 scale-90 transition-[opacity,transform,color,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] delay-0",
+          "movie-card-heart inline-flex size-7 items-center justify-center rounded-full border border-cream/10 bg-black/55 text-cream/85 shadow-[0_8px_20px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md will-change-transform",
+          "opacity-0 translate-y-0.5 scale-90 transition-[opacity,transform,color,background-color,border-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] delay-0",
           "group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:delay-75",
-          "hover:bg-black/70 hover:text-red-400 active:scale-95",
+          "hover:border-red-400/35 hover:bg-black/75 hover:text-red-400 active:scale-95",
           optimisticSaved &&
-            "text-red-500 opacity-100 translate-y-0 scale-100 delay-0",
+            "border-red-400/40 text-red-500 opacity-100 translate-y-0 scale-100 delay-0 shadow-[0_8px_22px_-10px_rgba(239,68,68,0.55)]",
         )}
       >
         <Heart
@@ -92,8 +92,7 @@ function FavoriteHeart({
 
 /**
  * Poster card — image zooms inside the frame (no layout jump), card lifts,
- * soft shadow + title fade. Respects prefers-reduced-motion via globals.
- * Falls back to a title tile when TMDB has no path or the image 404s.
+ * soft glow + title fade. Respects prefers-reduced-motion via globals.
  */
 export function MovieCard({
   id,
@@ -119,7 +118,7 @@ export function MovieCard({
   return (
     <div className={cn("movie-card group relative block", className)}>
       <Link href={mediaPath(mediaType, id)} className="block">
-        <div className="movie-card-frame relative aspect-2/3 overflow-hidden rounded-lg bg-stage shadow-[0_8px_24px_-12px_rgba(0,0,0,0.65)] ring-1 ring-cream/10 transition-[transform,box-shadow,ring-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform group-hover:-translate-y-1.5 group-hover:shadow-[0_20px_40px_-16px_rgba(0,0,0,0.85)] group-hover:ring-cream/20">
+        <div className="movie-card-frame relative aspect-2/3 overflow-hidden rounded-xl bg-stage shadow-[0_10px_28px_-14px_rgba(0,0,0,0.7)] ring-1 ring-cream/10 transition-[transform,box-shadow,ring-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform group-hover:-translate-y-2 group-hover:shadow-[0_28px_50px_-18px_rgba(0,0,0,0.9),0_0_36px_-18px_color-mix(in_srgb,var(--amber)_35%,transparent)] group-hover:ring-amber/30">
           {showImage ? (
             <Image
               src={src!}
@@ -128,7 +127,7 @@ export function MovieCard({
               sizes={sizes}
               priority={priority}
               onError={() => setFailed(true)}
-              className="movie-card-image object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform group-hover:scale-[1.06]"
+              className="movie-card-image object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform group-hover:scale-[1.07]"
             />
           ) : (
             <span className="flex h-full items-center justify-center bg-stage p-3 text-center text-xs leading-snug text-cream/45">
@@ -138,11 +137,23 @@ export function MovieCard({
 
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-linear-to-b from-black/40 to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-85"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,transparent_40%,rgba(0,0,0,0.35)_100%)] opacity-50 transition-opacity duration-300 group-hover:opacity-70"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-linear-to-b from-black/45 to-transparent opacity-70 transition-opacity duration-300 group-hover:opacity-90"
+          />
+          <div
+            aria-hidden
+            className="movie-card-sheen pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
           />
 
           {!showTitle ? (
-            <div className="movie-card-caption pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/45 to-transparent px-2.5 pt-12 pb-2.5 opacity-0 translate-y-1.5 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-100 group-hover:translate-y-0">
+            <div className="movie-card-caption pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/95 via-black/55 to-transparent px-2.5 pt-14 pb-2.5 opacity-0 translate-y-2 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-100 group-hover:translate-y-0">
+              <span
+                aria-hidden
+                className="mb-1.5 block h-0.5 w-6 rounded-full bg-amber/80"
+              />
               <p className="line-clamp-2 text-[13px] leading-snug font-medium text-cream">
                 {title}
               </p>
@@ -157,12 +168,14 @@ export function MovieCard({
         ) : null}
       </Link>
 
-      {/* Single chrome row — shared height + axis so rating and heart stay aligned */}
       {rating || showHeart ? (
         <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex h-7 items-center justify-between">
           {rating ? (
-            <span className="movie-card-rating inline-flex h-6 items-center gap-1 rounded-full bg-black/55 px-2 text-[11px] font-medium leading-none text-cream/90 backdrop-blur-sm transition-[background-color,transform,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:bg-black/70 group-hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.55)]">
-              <Star className="size-3 fill-amber text-amber transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110" aria-hidden />
+            <span className="movie-card-rating inline-flex h-6 items-center gap-1 rounded-full border border-amber/20 bg-black/55 px-2 text-[11px] font-medium leading-none text-cream/90 shadow-[0_6px_16px_-10px_rgba(0,0,0,0.8)] backdrop-blur-md transition-[background-color,transform,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:border-amber/40 group-hover:bg-black/70 group-hover:shadow-[0_8px_18px_-8px_color-mix(in_srgb,var(--amber)_40%,transparent)]">
+              <Star
+                className="size-3 fill-amber text-amber transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
+                aria-hidden
+              />
               {rating}
             </span>
           ) : (

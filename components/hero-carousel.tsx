@@ -189,10 +189,14 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
   if (!slide) {
     return (
-      <section className="relative flex min-h-dvh w-full flex-col justify-end">
+      <section className="relative flex min-h-dvh w-full flex-col justify-end overflow-hidden">
         <div aria-hidden className="absolute inset-0 bg-stage" />
+        <div
+          aria-hidden
+          className="absolute -top-20 left-1/4 size-[28rem] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--amber)_22%,transparent),transparent_68%)] blur-3xl"
+        />
         <div className="relative z-10 flex w-full flex-col px-4 pb-10 pt-16 sm:px-6 sm:pb-12 lg:px-10">
-          <h1 className="max-w-xl font-display text-5xl leading-none tracking-wide text-cream sm:text-7xl">
+          <h1 className="max-w-xl font-display text-5xl leading-none tracking-wide text-cream uppercase sm:text-7xl">
             Movies, lit for the night
           </h1>
           <p className="mt-4 max-w-md text-base leading-relaxed text-cream/65">
@@ -201,9 +205,10 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           </p>
           <Link
             href="#trending"
-            className="mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-amber px-5 py-2.5 text-sm font-medium text-(--on-amber) transition-colors hover:bg-(--amber-dim) hover:text-cream"
+            className="cta-shine group relative mt-8 inline-flex w-fit items-center gap-2 overflow-hidden rounded-full bg-amber px-5 py-2.5 text-sm font-semibold text-(--on-amber) transition-[background-color,box-shadow] hover:bg-(--amber-dim) hover:text-cream hover:shadow-[0_14px_40px_-14px_color-mix(in_srgb,var(--amber)_70%,transparent)]"
           >
-            Start browsing
+            <span className="cta-shine-beam pointer-events-none absolute inset-0" />
+            <span className="relative">Start browsing</span>
           </Link>
         </div>
       </section>
@@ -233,9 +238,9 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           <div className="absolute inset-0 bg-stage" />
         )}
         <div className="absolute inset-0 bg-background/10" />
-        <div className="absolute inset-0 bg-linear-to-t from-background via-background/30 to-transparent" />
-        <div className="absolute inset-0 bg-linear-to-r from-background/80 via-background/40 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_76%_42%,rgba(47,230,200,0.12),transparent_42%)]" />
+        <div className="absolute inset-0 bg-linear-to-t from-background via-background/35 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-background/85 via-background/45 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_78%_38%,color-mix(in_srgb,var(--amber)_16%,transparent),transparent_44%)]" />
         <div className="film-grain absolute inset-0" />
       </div>
 
@@ -245,7 +250,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           className="grid w-full items-center gap-9 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.65fr)] lg:gap-12"
         >
           <div className="w-full max-w-3xl">
-            <p className="hero-line hero-line-1 mb-4 inline-flex items-center gap-2 rounded-full border border-amber/30 bg-background/30 px-3 py-1.5 text-[10px] font-semibold tracking-[0.2em] text-amber uppercase backdrop-blur-sm sm:text-xs">
+            <p className="hero-line hero-line-1 mb-4 inline-flex items-center gap-2 rounded-full border border-amber/30 bg-black/25 px-3 py-1.5 text-[10px] font-semibold tracking-[0.22em] text-amber uppercase shadow-[0_10px_30px_-18px_color-mix(in_srgb,var(--amber)_40%,transparent)] backdrop-blur-md sm:text-xs">
               <Sparkles className="size-3.5" aria-hidden />
               {slide.categoryLabel}
             </p>
@@ -255,7 +260,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
             <h1
               aria-label={slide.title}
-              className="hero-line hero-line-3 line-clamp-2 min-h-[1.76em] max-w-3xl font-display text-5xl leading-[0.88] tracking-wide wrap-break-word text-cream uppercase drop-shadow-[0_8px_30px_rgba(0,0,0,0.5)] sm:text-7xl md:text-8xl lg:text-[6.75rem]"
+              className="hero-line hero-line-3 line-clamp-2 min-h-[1.76em] max-w-3xl font-display text-5xl leading-[0.88] tracking-wide wrap-break-word text-cream uppercase drop-shadow-[0_10px_40px_rgba(0,0,0,0.55)] sm:text-7xl md:text-8xl lg:text-[6.75rem]"
             >
               {titleLines.map((line, lineIndex) =>
                 line ? (
@@ -267,8 +272,8 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             </h1>
 
             <p className="hero-line hero-line-4 mt-5 flex min-h-10 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-medium text-cream/75 sm:mt-6 sm:min-h-6 sm:text-sm">
-              <span className="inline-flex items-center gap-1.5 text-amber">
-                <Star className="size-4 fill-current" aria-hidden />
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber/25 bg-black/30 px-2.5 py-1 text-amber backdrop-blur-sm">
+                <Star className="size-3.5 fill-current" aria-hidden />
                 {slide.rating.toFixed(1)}
               </span>
               {slide.meta
@@ -311,11 +316,10 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                 title={slide.title}
                 label="Watch trailer"
                 onOpenChange={setTrailerOpen}
-                className="shadow-[0_10px_30px_-12px_rgba(47,230,200,0.6)]"
               />
               <Link
                 href={`/movie/${slide.id}`}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-cream/30 bg-black/25 px-5 py-2.5 text-sm text-cream/90 backdrop-blur-sm transition-[border-color,background-color,color] hover:border-cream/60 hover:bg-black/40 hover:text-cream"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-cream/25 bg-black/30 px-5 py-2.5 text-sm font-medium text-cream/90 backdrop-blur-md transition-[border-color,background-color,color,transform] hover:border-cream/55 hover:bg-black/45 hover:text-cream active:scale-[0.98]"
               >
                 <Info className="h-4 w-4" aria-hidden />
                 More info
@@ -333,13 +337,21 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               onFocus={() => setInteractPause(true)}
               onBlur={() => setInteractPause(false)}
             >
-              <div className="relative aspect-2/3 overflow-hidden rounded-sm bg-stage shadow-[0_32px_90px_-24px_rgba(0,0,0,0.9)] ring-1 ring-white/25 transition-transform duration-500 group-hover:-translate-y-2 group-hover:rotate-1 motion-reduce:transition-none">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -inset-8 rounded-[2rem] bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--amber)_28%,transparent),transparent_68%)] opacity-70 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
+              />
+              <div className="relative aspect-2/3 overflow-hidden rounded-xl bg-stage shadow-[0_36px_90px_-24px_rgba(0,0,0,0.95)] ring-1 ring-cream/20 transition-[transform,box-shadow,ring-color] duration-500 group-hover:-translate-y-2 group-hover:rotate-1 group-hover:ring-amber/35 group-hover:shadow-[0_40px_100px_-28px_rgba(0,0,0,0.95),0_0_40px_-16px_color-mix(in_srgb,var(--amber)_40%,transparent)] motion-reduce:transition-none">
                 <Image
                   src={slide.posterUrl}
                   alt=""
                   fill
                   sizes="290px"
-                  className="object-cover"
+                  className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                />
+                <div
+                  aria-hidden
+                  className="movie-card-sheen pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
                 />
               </div>
             </Link>
@@ -399,7 +411,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               })}
             </div>
 
-            <div className="flex shrink-0 items-center gap-1 rounded-full border border-cream/12 bg-black/35 p-1 shadow-[0_8px_28px_-16px_rgba(0,0,0,0.8)] backdrop-blur-md">
+            <div className="flex shrink-0 items-center gap-1 rounded-full border border-cream/12 bg-black/40 p-1 shadow-[0_12px_36px_-16px_rgba(0,0,0,0.9)] backdrop-blur-xl">
               <button
                 type="button"
                 aria-label={
@@ -409,7 +421,8 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                 onClick={() => setIsPaused((paused) => !paused)}
                 className={cn(
                   "inline-flex size-9 items-center justify-center rounded-full text-cream/75 transition-[color,background-color,transform] duration-200 hover:bg-cream/10 hover:text-cream active:scale-95 sm:size-10",
-                  isPaused && "bg-amber/15 text-amber hover:bg-amber/20 hover:text-amber",
+                  isPaused &&
+                    "bg-amber/15 text-amber hover:bg-amber/20 hover:text-amber",
                 )}
               >
                 {isPaused ? (
