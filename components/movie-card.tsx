@@ -154,7 +154,7 @@ export function MovieCard({
           />
           <div
             aria-hidden
-            className="movie-card-sheen pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+            className="movie-card-sheen pointer-events-none absolute inset-0"
           />
 
           {!showTitle ? (
