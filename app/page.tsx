@@ -4,7 +4,11 @@ import { HeroCarousel, type HeroSlide } from "@/components/hero-carousel";
 import { HomeEndlessFeed } from "@/components/home-endless-feed";
 import { MovieRow } from "@/components/movie-row";
 import { SiteFooter } from "@/components/site-footer";
-import { MovieRowSkeleton, Skeleton } from "@/components/skeletons";
+import {
+  EndlessFeedSkeleton,
+  HomeHeroSkeleton,
+  MovieRowSkeleton,
+} from "@/components/skeletons";
 import { shuffleHeroPicks } from "@/lib/daily-hero";
 import {
   getHomeMovieFavoriteIds,
@@ -222,24 +226,6 @@ async function DiscoveryRows() {
   );
 }
 
-function HeroSkeleton() {
-  return (
-    <section className="relative flex min-h-[min(760px,100dvh)] w-full flex-col justify-end overflow-hidden sm:min-h-[min(820px,100dvh)] lg:min-h-[min(860px,100dvh)]">
-      <Skeleton className="absolute inset-0 rounded-none" />
-      <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-4 pb-10 sm:px-6 lg:px-8">
-        <Skeleton className="h-7 w-36 rounded-full" />
-        <Skeleton className="mt-5 h-20 w-full max-w-2xl rounded-sm sm:h-28" />
-        <Skeleton className="mt-5 h-4 w-full max-w-xl" />
-        <Skeleton className="mt-2 h-4 w-2/3 max-w-md" />
-        <div className="mt-8 flex gap-3">
-          <Skeleton className="h-10 w-32 rounded-full" />
-          <Skeleton className="h-10 w-28 rounded-full" />
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function RowsSkeleton({ count }: { count: number }) {
   return (
     <div className="flex flex-col gap-14 sm:gap-24">
@@ -250,26 +236,10 @@ function RowsSkeleton({ count }: { count: number }) {
   );
 }
 
-function EndlessFeedSkeleton() {
-  return (
-    <section className="border-t border-cream/10 pt-12 sm:pt-16">
-      <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="mt-3 h-10 w-56" />
-        <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {Array.from({ length: 12 }, (_, i) => (
-            <Skeleton key={i} className="aspect-2/3 rounded-lg" />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export default function Home() {
   return (
     <main className="relative flex min-h-dvh flex-1 flex-col overflow-x-hidden">
-      <Suspense fallback={<HeroSkeleton />}>
+      <Suspense fallback={<HomeHeroSkeleton />}>
         <HomeHero />
       </Suspense>
 

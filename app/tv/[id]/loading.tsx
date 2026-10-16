@@ -2,7 +2,11 @@ import { MovieRowSkeleton, Skeleton } from "@/components/skeletons";
 
 export default function TvLoading() {
   return (
-    <main className="flex min-h-dvh w-full flex-1 flex-col">
+    <main
+      className="flex min-h-dvh w-full flex-1 flex-col"
+      aria-busy
+      aria-label="Loading series"
+    >
       <section className="movie-detail-hero relative isolate flex flex-col overflow-hidden border-b border-cream/10 bg-stage">
         <div
           aria-hidden

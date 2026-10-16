@@ -3,8 +3,12 @@ import { Skeleton } from "@/components/skeletons";
 /** Mirrors redesigned Account page: hero + settings grid. */
 export default function ProfileLoading() {
   return (
-    <main className="relative flex min-h-dvh flex-1 flex-col">
-      <section className="border-b border-cream/10 bg-stage">
+    <main
+      className="relative flex min-h-dvh flex-1 flex-col overflow-x-hidden"
+      aria-busy
+      aria-label="Loading account"
+    >
+      <section className="relative isolate overflow-hidden border-b border-cream/10 bg-stage">
         <div className="mx-auto w-full max-w-screen-2xl px-4 pt-14 pb-10 sm:px-6 sm:pt-16 lg:px-8">
           <Skeleton className="h-3 w-28" />
           <Skeleton className="mt-3 h-12 w-48 sm:h-16 sm:w-64" />
