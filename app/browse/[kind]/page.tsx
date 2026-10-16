@@ -12,7 +12,7 @@ import {
   isBrowseKind,
 } from "@/lib/browse";
 import { parsePageParam } from "@/components/pagination-nav";
-import { getMovieGenres } from "@/lib/tmdb";
+import { emptyMoviesPage, getMovieGenres } from "@/lib/tmdb";
 
 type BrowsePageProps = {
   params: Promise<{ kind: string }>;
@@ -62,10 +62,14 @@ export default async function BrowsePage({
 
   const page = parsePageParam(pageRaw);
   const meta = BROWSE_KINDS[kind];
-  const [moviesPage, genres] = await Promise.all([
-    getBrowseMoviesPage(kind, page),
+  const [moviesResult, genres] = await Promise.all([
+    getBrowseMoviesPage(kind, page).catch((err) => {
+      console.warn(`Browse ${kind} page ${page} failed:`, err);
+      return emptyMoviesPage(page);
+    }),
     getMovieGenres(),
   ]);
+  const moviesPage = moviesResult;
   const featuredMovie = moviesPage.results.find(
     (movie) => movie.backdrop_path,
   );

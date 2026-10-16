@@ -34,10 +34,12 @@ export async function GET(request: Request) {
         id: genre.id,
         slug: genre.slug,
         title: genre.title,
-        movies: (await getMoviesByGenre(genre.id, 1)).results.slice(
-          0,
-          GENRE_HOME_ROW_SIZE,
-        ),
+        movies: await getMoviesByGenre(genre.id, 1)
+          .then((page) => page.results.slice(0, GENRE_HOME_ROW_SIZE))
+          .catch((err) => {
+            console.warn(`Home genre row ${genre.id} failed:`, err);
+            return [];
+          }),
       }),
     );
 

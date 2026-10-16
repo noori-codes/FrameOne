@@ -70,6 +70,7 @@ export function InfiniteMovieGrid({
   const [error, setError] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef(false);
+  const pausedRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   const cols = useGridColumns();
   const favoriteSet = useMemo(
@@ -85,8 +86,9 @@ export function InfiniteMovieGrid({
     return movies.slice(0, movies.length - remainder);
   }, [cols, hasMore, movies]);
 
-  const loadMore = useCallback(async () => {
-    if (loadingRef.current || !hasMore) return;
+  const loadMore = useCallback(async (opts?: { resume?: boolean }) => {
+    if (opts?.resume) pausedRef.current = false;
+    if (loadingRef.current || !hasMore || pausedRef.current) return;
     loadingRef.current = true;
     setLoading(true);
     setError(null);
@@ -119,6 +121,7 @@ export function InfiniteMovieGrid({
       setHasMore(data.page < data.totalPages);
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") return;
+      pausedRef.current = true;
       setError(e instanceof Error ? e.message : "Couldn’t load more titles");
     } finally {
       if (abortRef.current === controller) {
@@ -203,7 +206,7 @@ export function InfiniteMovieGrid({
           </p>
           <button
             type="button"
-            onClick={() => void loadMore()}
+            onClick={() => void loadMore({ resume: true })}
             className="rounded-full border border-cream/25 px-4 py-1.5 text-sm text-cream transition-colors hover:border-amber hover:text-amber"
           >
             Try again
