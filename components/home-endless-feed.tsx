@@ -8,12 +8,20 @@ import { getPopularMoviesPage } from "@/lib/tmdb";
  * Starts at popular page 2 so page 1 isn’t a near-duplicate of the Popular row.
  */
 export async function HomeEndlessFeed() {
-  const [initial, favoriteIds] = await Promise.all([
-    getPopularMoviesPage(2),
-    getHomeMovieFavoriteIds(),
-  ]);
+  let initial;
+  try {
+    const [page, favoriteIds] = await Promise.all([
+      getPopularMoviesPage(2),
+      getHomeMovieFavoriteIds(),
+    ]);
+    initial = { page, favoriteIds };
+  } catch (err) {
+    console.warn("Home endless feed failed:", err);
+    return null;
+  }
 
-  if (initial.results.length === 0) return null;
+  const { page: moviesPage, favoriteIds } = initial;
+  if (moviesPage.results.length === 0) return null;
 
   return (
     <section
@@ -46,7 +54,7 @@ export async function HomeEndlessFeed() {
 
         <InfiniteMovieGrid
           endpoint="/api/browse/popular/movies"
-          initial={initial}
+          initial={moviesPage}
           favoriteIds={favoriteIds}
           showCount={false}
         />

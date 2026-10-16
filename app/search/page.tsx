@@ -1,6 +1,6 @@
 import { SearchExperience } from "@/components/search-experience";
 import { parsePageParam } from "@/components/pagination-nav";
-import { searchMulti } from "@/lib/tmdb";
+import { searchMulti, type PaginatedSearch } from "@/lib/tmdb";
 
 /**
  * /search?q=inception&page=2
@@ -14,7 +14,20 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const { q = "", page: pageRaw } = await searchParams;
   const query = q.trim();
   const page = parsePageParam(pageRaw);
-  const initialData = query ? await searchMulti(query, page) : null;
+  let initialData: PaginatedSearch | null = null;
+  if (query) {
+    try {
+      initialData = await searchMulti(query, page);
+    } catch (err) {
+      console.warn(`Search for "${query}" failed:`, err);
+      initialData = {
+        results: [],
+        page,
+        totalPages: 0,
+        totalResults: 0,
+      };
+    }
+  }
 
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-4 pt-8 pb-16 sm:px-8 sm:pt-10 sm:pb-20">

@@ -6,6 +6,7 @@ import { InfiniteMovieGrid } from "@/components/infinite-movie-grid";
 import { GenreSortNav } from "@/components/genre-sort-nav";
 import {
   GENRE_SORTS,
+  emptyMoviesPage,
   getMovieGenres,
   getMoviesByGenre,
   parseGenreSort,
@@ -48,7 +49,10 @@ export default async function GenrePage({
 
   const [genres, initial] = await Promise.all([
     getMovieGenres(),
-    getMoviesByGenre(genreId, 1, sort),
+    getMoviesByGenre(genreId, 1, sort).catch((err) => {
+      console.warn(`Genre ${genreId} failed:`, err);
+      return emptyMoviesPage(1);
+    }),
   ]);
 
   const genre = genres.find((g) => g.id === genreId);

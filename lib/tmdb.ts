@@ -135,6 +135,16 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function isAbortLike(err: unknown) {
+  if (!err || typeof err !== "object") return false;
+  const name = "name" in err ? String((err as { name?: string }).name) : "";
+  return name === "TimeoutError" || name === "AbortError";
+}
+
+function warnTmdb(label: string, err: unknown) {
+  console.warn(label, err);
+}
+
 type CachedTmdbResponse = {
   status: number;
   statusText: string;
@@ -321,6 +331,9 @@ async function tmdbFetch(
       return res;
     } catch (err) {
       lastError = err;
+      // AbortSignal.timeout already waited the full budget; a second
+      // attempt turns a 10s stall into a 20s blank page.
+      if (isAbortLike(err)) break;
       if (attempt < 1) await sleep(250 * (attempt + 1));
     }
   }
@@ -386,6 +399,10 @@ export function backdropUrl(
   return `${getImageBase()}/${size}${backdropPath}`;
 }
 
+export function emptyMoviesPage(page = 1): PaginatedMovies {
+  return { ...EMPTY_PAGE, page };
+}
+
 /** Popular movies from TMDB (page 1 by default). */
 export async function getPopularMoviesPage(page = 1): Promise<PaginatedMovies> {
   const url = new URL(`${getBaseUrl()}/movie/popular`);
@@ -446,13 +463,18 @@ export async function getLatestMovies(page = 1): Promise<TmdbMovie[]> {
   url.searchParams.set("vote_count.gte", "10");
   url.searchParams.set("include_adult", "false");
 
-  const res = await tmdbFetch(url.toString(), 3600);
+  try {
+    const res = await tmdbFetch(url.toString(), 3600);
 
-  if (!res.ok) {
-    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    if (!res.ok) {
+      throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    }
+
+    return toPaginated((await res.json()) as PaginatedMoviesResponse).results;
+  } catch (err) {
+    warnTmdb("Failed to load latest movies:", err);
+    return [];
   }
-
-  return toPaginated((await res.json()) as PaginatedMoviesResponse).results;
 }
 
 /**
@@ -649,16 +671,21 @@ export async function getMovieTrailerKey(
   const url = new URL(`${getBaseUrl()}/movie/${id}/videos`);
   url.searchParams.set("api_key", getApiKey());
 
-  const res = await tmdbFetch(url.toString(), 86400);
+  try {
+    const res = await tmdbFetch(url.toString(), 86400);
 
-  if (res.status === 404) return null;
+    if (res.status === 404) return null;
 
-  if (!res.ok) {
-    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    if (!res.ok) {
+      throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    }
+
+    const data = (await res.json()) as { results: TmdbVideo[] };
+    return getMovieTrailerKeyFromVideos(data.results);
+  } catch (err) {
+    warnTmdb(`Failed to load trailer for movie ${id}:`, err);
+    return null;
   }
-
-  const data = (await res.json()) as { results: TmdbVideo[] };
-  return getMovieTrailerKeyFromVideos(data.results);
 }
 
 /**
@@ -686,11 +713,16 @@ export async function getSimilarMovies(
     return data.results.filter((m) => m.id !== movieId);
   }
 
-  const similar = await fetchList("similar");
-  if (similar.length > 0) return similar.slice(0, limit);
+  try {
+    const similar = await fetchList("similar");
+    if (similar.length > 0) return similar.slice(0, limit);
 
-  const recommended = await fetchList("recommendations");
-  return recommended.slice(0, limit);
+    const recommended = await fetchList("recommendations");
+    return recommended.slice(0, limit);
+  } catch (err) {
+    warnTmdb(`Failed to load similar movies for ${id}:`, err);
+    return [];
+  }
 }
 
 /**
@@ -701,14 +733,19 @@ export async function getMovieGenres(): Promise<TmdbGenre[]> {
   const url = new URL(`${getBaseUrl()}/genre/movie/list`);
   url.searchParams.set("api_key", getApiKey());
 
-  const res = await tmdbFetch(url.toString(), 86400);
+  try {
+    const res = await tmdbFetch(url.toString(), 86400);
 
-  if (!res.ok) {
-    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    if (!res.ok) {
+      throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    }
+
+    const data = (await res.json()) as { genres: TmdbGenre[] };
+    return data.genres;
+  } catch (err) {
+    warnTmdb("Failed to load movie genres:", err);
+    return [];
   }
-
-  const data = (await res.json()) as { genres: TmdbGenre[] };
-  return data.genres;
 }
 
 /** Sort modes for genre discover (home always uses popular). */
@@ -837,6 +874,13 @@ function toPaginatedTv(data: PaginatedTvResponse): PaginatedTv {
   };
 }
 
+const EMPTY_TV_PAGE: PaginatedTv = {
+  results: [],
+  page: 1,
+  totalPages: 0,
+  totalResults: 0,
+};
+
 /** Map a TV list item into the poster-row shape (uses `title` like movies). */
 export function tvShowAsMovie(show: TmdbTvShow): TmdbMovie {
   return {
@@ -863,17 +907,22 @@ export async function getTrendingTvPage(
   window: "day" | "week" = "day",
   page = 1,
 ): Promise<PaginatedTv> {
-  const url = new URL(`${getBaseUrl()}/trending/tv/${window}`);
-  url.searchParams.set("api_key", getApiKey());
-  url.searchParams.set("page", String(page));
+  try {
+    const url = new URL(`${getBaseUrl()}/trending/tv/${window}`);
+    url.searchParams.set("api_key", getApiKey());
+    url.searchParams.set("page", String(page));
 
-  const res = await tmdbFetch(url.toString(), 1800);
+    const res = await tmdbFetch(url.toString(), 1800);
 
-  if (!res.ok) {
-    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    if (!res.ok) {
+      throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    }
+
+    return toPaginatedTv((await res.json()) as PaginatedTvResponse);
+  } catch (err) {
+    warnTmdb(`Failed to load trending TV page ${page}:`, err);
+    return { ...EMPTY_TV_PAGE, page };
   }
-
-  return toPaginatedTv((await res.json()) as PaginatedTvResponse);
 }
 
 /** Single TV show by id. Returns null when TMDB says 404. */
@@ -912,16 +961,21 @@ export async function getTvTrailerKey(
   const url = new URL(`${getBaseUrl()}/tv/${id}/videos`);
   url.searchParams.set("api_key", getApiKey());
 
-  const res = await tmdbFetch(url.toString(), 86400);
+  try {
+    const res = await tmdbFetch(url.toString(), 86400);
 
-  if (res.status === 404) return null;
+    if (res.status === 404) return null;
 
-  if (!res.ok) {
-    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    if (!res.ok) {
+      throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    }
+
+    const data = (await res.json()) as { results: TmdbVideo[] };
+    return getMovieTrailerKeyFromVideos(data.results);
+  } catch (err) {
+    warnTmdb(`Failed to load trailer for TV ${id}:`, err);
+    return null;
   }
-
-  const data = (await res.json()) as { results: TmdbVideo[] };
-  return getMovieTrailerKeyFromVideos(data.results);
 }
 
 /**
@@ -948,11 +1002,16 @@ export async function getSimilarTv(
     return data.results.filter((show) => show.id !== showId);
   }
 
-  const similar = await fetchList("similar");
-  if (similar.length > 0) return similar.slice(0, limit);
+  try {
+    const similar = await fetchList("similar");
+    if (similar.length > 0) return similar.slice(0, limit);
 
-  const recommended = await fetchList("recommendations");
-  return recommended.slice(0, limit);
+    const recommended = await fetchList("recommendations");
+    return recommended.slice(0, limit);
+  } catch (err) {
+    warnTmdb(`Failed to load similar TV for ${id}:`, err);
+    return [];
+  }
 }
 
 /** Credit on a person (movie or TV) from combined_credits. */

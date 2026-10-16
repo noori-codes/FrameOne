@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  emptyMoviesPage,
   getMovieGenres,
   getMoviesByGenre,
   mapPool,
@@ -15,7 +16,10 @@ export default async function GenresPage() {
 
   const pages = await mapPool(genres, 6, async (genre) => ({
     genre,
-    page: await getMoviesByGenre(genre.id, 1, "popular"),
+    page: await getMoviesByGenre(genre.id, 1, "popular").catch((err) => {
+      console.warn(`Genre cover ${genre.id} failed:`, err);
+      return emptyMoviesPage(1);
+    }),
   }));
 
   // Popular titles span multiple genres (e.g. Spider-Man) — keep covers unique.
