@@ -1,101 +1,140 @@
 # FrameOne
 
-FrameOne is a cinematic movie and TV discovery app built with Next.js, React,
-and Tailwind CSS. Browse trending titles, explore genres, search films, open
-detail pages with trailers, and save movies to personal Favorites and Watchlist
-collections. Accounts also support profile details and avatars.
+   FrameOne is a cinematic movie and TV discovery app built with Next.js, React, and Tailwind CSS. It helps users browse trending titles, explore curated collections, search for titles, open rich detail views, and save favorites/watchlists across sessions.
 
-Catalog data and images come from [TMDB](https://www.themoviedb.org/). User
-accounts and saved lists are stored in PostgreSQL with Prisma. Auth is handled
-by Auth.js (NextAuth v5).
+   The app uses TMDB for catalog data and imagery, Prisma + PostgreSQL for persistence, and Auth.js for credentials-based authentication.
 
-## Features
+   ## Why FrameOne
 
-- Home hero carousel with daily-rotated movie picks
-- Trending / popular / top-rated movie rows and infinite browse grids
-- Trending TV series row with series detail pages (`/tv/[id]`)
-- Genre discovery for movies
-- Movie search, trailers, cast, and similar titles
-- Favorites and watchlist (movies; series lists coming later)
-- Sign up / sign in, profile editing, and avatar uploads
+   - Discover movies and TV shows through a polished home experience
+   - Explore popular, trending, top-rated, and genre-based collections
+   - Search titles quickly and navigate to a detail view with cast, similar titles, and trailers
+   - Keep track of movies with personal favorites and watchlists
+   - Manage account details, avatars, and saved browsing preferences
 
-## Stack
+   ## Features
 
-- **Next.js 16** (App Router) + **React 19**
-- **Tailwind CSS 4**
-- **Prisma 7** + PostgreSQL
-- **Auth.js** (credentials)
-- **TMDB API** (movies + TV)
-- Optional **Upstash Redis** for shared TMDB response caching
-- Optional **S3-compatible** storage for avatars
+   - Home hero carousel with rotating featured titles
+   - Movie and TV browsing rows for trending, popular, and top-rated content
+   - Genre-based discovery and selection
+   - Search experience for titles and related media
+   - Detailed movie/TV pages with metadata, trailer support, cast, and recommendations
+   - Personalized favorites and watchlist tracking
+   - Sign up / sign in flow with profile editing and avatar uploads
 
-## Getting started
+   ## Tech stack
 
-### Prerequisites
+   - Next.js 16 (App Router)
+   - React 19
+   - Tailwind CSS 4
+   - Prisma 7 + PostgreSQL
+   - Auth.js (NextAuth v5)
+   - TMDB API for metadata, posters, trailers, and images
+   - Optional Upstash Redis for shared TMDB response caching
+   - Optional S3-compatible storage for avatar uploads
 
-- Node.js and npm
-- A [TMDB API key](https://www.themoviedb.org/settings/api)
-- A PostgreSQL database for account and list features
+   ## Prerequisites
 
-### Install and configure
+   Before you start, make sure you have:
 
-1. Install dependencies:
+   - Node.js 20+ and npm
+   - A PostgreSQL database
+   - A TMDB API key from the TMDB settings page
+
+   ## Getting started
+
+   ### 1) Install dependencies
 
    ```bash
    npm install
    ```
 
-2. Copy `.env.example` to `.env.local` and fill in the values for your
-   environment. At minimum, set `TMDB_API_KEY`, `DATABASE_URL`, and
-   `AUTH_SECRET`. Generate an auth secret with:
+   ### 2) Configure environment variables
+
+   Copy the example environment file and fill in your values:
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+   At minimum, configure:
+
+   - `TMDB_API_KEY`
+   - `DATABASE_URL`
+   - `DIRECT_URL`
+   - `AUTH_SECRET`
+   - `AUTH_URL`
+
+   Generate an auth secret locally:
 
    ```bash
    openssl rand -base64 32
    ```
 
-   For local development, set `AUTH_URL` to `http://localhost:3000`. The
-   database URL should point to your PostgreSQL database. If your provider
-   requires separate pooled and direct connections, configure both
-   `DATABASE_URL` and `DIRECT_URL` as described in `.env.example`.
+   For local development, set:
 
-3. Apply the database migrations:
+   ```bash
+   AUTH_URL=http://localhost:3000
+   ```
+
+   If your PostgreSQL provider uses separate pooled and direct connections, configure both `DATABASE_URL` and `DIRECT_URL` as shown in `.env.example`.
+
+   ### 3) Apply database migrations
 
    ```bash
    npm run db:migrate
    ```
 
-4. Start the development server:
+   ### 4) Start the app
 
    ```bash
    npm run dev
    ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+   Then open http://localhost:3000 in your browser.
 
-## Optional services
+   ## Optional services
 
-- **Upstash Redis:** Set `UPSTASH_REDIS_REST_URL` and
-  `UPSTASH_REDIS_REST_TOKEN` for a shared TMDB response cache. The app also
-  keeps an in-memory cache and falls back to the Next.js fetch cache if Redis
-  is slow or unset.
-- **S3-compatible storage:** Configure the `S3_*` variables in `.env.example`
-  to enable avatar storage. Avatars are served through `/api/avatars/[userId]`.
+   ### Upstash Redis
 
-Keep secrets in `.env.local` or your deployment provider's environment
-settings. Do not commit secret values.
+   Set the following variables to enable a shared TMDB cache:
 
-## Scripts
+   - `UPSTASH_REDIS_REST_URL`
+   - `UPSTASH_REDIS_REST_TOKEN`
 
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Start the local development server |
-| `npm run build` | Generate the Prisma client and build the app |
-| `npm run start` | Start the production server |
-| `npm run lint` | Run ESLint |
-| `npm run db:generate` | Generate the Prisma client |
-| `npm run db:migrate` | Apply pending database migrations |
-| `npm run db:studio` | Open Prisma Studio |
+   The app includes in-memory and fetch-cache fallbacks if Redis is unavailable.
 
-## Attribution
+   ### S3-compatible avatar storage
 
-This product uses the TMDB API but is not endorsed or certified by TMDB.
+   Configure the `S3_*` environment variables to enable avatar upload support. Avatars are served via routes under `/api/avatars/[userId]`.
+
+   Keep secrets in `.env.local` or your deployment platform's environment settings. Never commit secret values.
+
+   ## Available scripts
+
+   | Command | Description |
+   | --- | --- |
+   | `npm run dev` | Start the development server |
+   | `npm run build` | Generate Prisma client and build the app |
+   | `npm run start` | Start the production server |
+   | `npm run lint` | Run ESLint |
+   | `npm run db:generate` | Generate the Prisma client |
+   | `npm run db:migrate` | Apply pending Prisma migrations |
+   | `npm run db:studio` | Open Prisma Studio |
+
+   ## Project structure
+
+   ```text
+   app/                 # Next.js App Router pages and API routes
+   components/          # Reusable UI components
+   lib/                 # TMDB, auth, cache, and helper logic
+   prisma/              # Prisma schema and migrations
+   public/              # Static assets
+   auth.ts              # Auth.js configuration
+   auth.config.ts       # Auth-related config
+   middleware.ts        # Edge middleware
+   ```
+
+   ## Attribution
+
+   This product uses the TMDB API but is not endorsed or certified by TMDB.
