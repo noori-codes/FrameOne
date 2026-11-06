@@ -29,7 +29,7 @@ export default function GenreDetailLoading() {
         </aside>
         <section className="px-5 py-7 sm:px-6 lg:px-8 xl:px-10">
           <Skeleton className="mb-7 h-4 w-40" />
-          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+          <ul className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {Array.from({ length: 10 }).map((_, i) => (
               <li key={i}>
                 <Skeleton className="aspect-2/3 w-full rounded-xl" />

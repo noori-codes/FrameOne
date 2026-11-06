@@ -18,9 +18,9 @@ function useGridColumns() {
 
   useEffect(() => {
     const queries = [
-      { mq: window.matchMedia("(min-width: 1280px)"), cols: 6 },
-      { mq: window.matchMedia("(min-width: 1024px)"), cols: 5 },
-      { mq: window.matchMedia("(min-width: 768px)"), cols: 4 },
+      { mq: window.matchMedia("(min-width: 1280px)"), cols: 5 },
+      { mq: window.matchMedia("(min-width: 1024px)"), cols: 4 },
+      { mq: window.matchMedia("(min-width: 768px)"), cols: 3 },
       { mq: window.matchMedia("(min-width: 640px)"), cols: 3 },
     ] as const;
 
@@ -167,7 +167,7 @@ export function InfiniteMovieGrid({
         </p>
       ) : null}
 
-      <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-9 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+      <ul className="grid grid-cols-2 gap-x-5 gap-y-9 sm:grid-cols-3 sm:gap-x-6 sm:gap-y-10 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {visibleMovies.map((movie: TmdbMovie) => (
           <li key={movie.id}>
             <MovieCard
@@ -177,7 +177,7 @@ export function InfiniteMovieGrid({
               voteAverage={movie.vote_average}
               showTitle
               initialFavorite={favoriteSet?.has(movie.id) ?? false}
-              sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, (max-width: 1536px) 14vw, 12vw"
+              sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, (max-width: 1280px) 22vw, 18vw"
             />
           </li>
         ))}
