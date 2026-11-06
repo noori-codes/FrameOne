@@ -72,7 +72,7 @@ export function HomeHeroSkeleton() {
   return (
     <section className="relative flex min-h-dvh w-full flex-col justify-end overflow-hidden">
       <Skeleton className="absolute inset-0 rounded-none" />
-      <div className="relative z-10 w-full px-5 pb-10 sm:px-8 lg:px-12 xl:px-16">
+      <div className="relative z-10 w-full px-5 pb-10 sm:px-6 lg:px-8">
         <Skeleton className="h-7 w-36 rounded-full" />
         <Skeleton className="mt-5 h-20 w-full max-w-3xl rounded-sm sm:h-28" />
         <Skeleton className="mt-5 h-4 w-full max-w-xl" />

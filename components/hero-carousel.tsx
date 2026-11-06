@@ -211,7 +211,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           aria-hidden
           className="absolute -top-20 left-1/4 size-[28rem] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--amber)_22%,transparent),transparent_68%)] blur-3xl"
         />
-        <div className="relative z-10 flex w-full flex-col px-5 pb-10 pt-16 sm:px-8 sm:pb-12 lg:px-12 xl:px-16">
+        <div className="relative z-10 flex w-full flex-col px-5 pb-10 pt-16 sm:px-6 sm:pb-12 lg:px-8">
           <h1 className="max-w-xl font-display text-5xl leading-none tracking-wide text-cream uppercase sm:text-7xl">
             Movies, lit for the night
           </h1>
@@ -262,12 +262,12 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
         <div className="film-grain absolute inset-0" />
       </div>
 
-      <div className="relative z-10 mt-auto flex w-full flex-col px-5 pb-6 pt-20 sm:px-8 sm:pb-8 sm:pt-24 lg:px-12 lg:pb-9 xl:px-16">
+      <div className="relative z-10 mt-auto flex w-full flex-col px-5 pb-5 pt-20 sm:px-6 sm:pb-6 sm:pt-24 lg:px-8 lg:pb-8">
         <div
           key={slide.id}
-          className="grid w-full items-end gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(240px,18vw)] lg:items-center lg:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(260px,16vw)] xl:gap-14"
+          className="grid w-full items-end gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(220px,15vw)] lg:items-end lg:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(250px,14vw)]"
         >
-          <div className="w-full max-w-4xl">
+          <div className="w-full min-w-0 max-w-5xl">
             <p className="hero-line hero-line-1 mb-4 inline-flex items-center gap-2 rounded-full border border-amber/30 bg-black/25 px-3 py-1.5 text-[10px] font-semibold tracking-[0.22em] text-amber uppercase shadow-[0_10px_30px_-18px_color-mix(in_srgb,var(--amber)_40%,transparent)] backdrop-blur-md sm:text-xs">
               <Sparkles className="size-3.5" aria-hidden />
               {slide.categoryLabel}
@@ -351,7 +351,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             <Link
               href={`/movie/${slide.id}`}
               aria-label={`View details for ${slide.title}`}
-              className="group relative mx-auto hidden w-full max-w-72 justify-self-end lg:block xl:max-w-none"
+              className="group relative hidden w-full justify-self-end lg:block"
               onPointerEnter={() => setInteractPause(true)}
               onPointerLeave={() => setInteractPause(false)}
               onFocus={() => setInteractPause(true)}
