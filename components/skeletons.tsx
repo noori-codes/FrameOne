@@ -45,19 +45,19 @@ export function MovieGridSkeleton({
 export function MovieRowSkeleton() {
   return (
     <section className="space-y-5 sm:space-y-6">
-      <div className="flex items-end justify-between gap-3 px-4 sm:px-6 lg:px-8">
+      <div className="flex items-end justify-between gap-3 px-5 sm:px-8 lg:px-12 xl:px-16">
         <Skeleton className="h-8 w-44 rounded-sm sm:h-10 sm:w-64" />
         <div className="mb-0.5 flex gap-2">
           <Skeleton className="size-9 rounded-full" />
           <Skeleton className="size-9 rounded-full" />
         </div>
       </div>
-      <div className="overflow-hidden px-4 pt-2 pb-5 sm:px-6 lg:px-8">
-        <ul className="flex gap-3.5 sm:gap-5">
+      <div className="overflow-hidden px-5 pt-2 pb-5 sm:px-8 lg:px-12 xl:px-16">
+        <ul className="flex gap-4 sm:gap-5 lg:gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <li
               key={i}
-              className="min-w-0 shrink-0 grow-0 basis-30 sm:basis-39 md:basis-44"
+              className="min-w-0 shrink-0 grow-0 basis-36 sm:basis-44 md:basis-52 lg:basis-56"
             >
               <MoviePosterSkeleton />
             </li>

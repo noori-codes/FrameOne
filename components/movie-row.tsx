@@ -140,12 +140,12 @@ export function MovieRow({
         className="overflow-hidden px-5 pt-2 pb-5 sm:px-8 lg:px-12 xl:px-16"
         ref={emblaRef}
       >
-        <ul className="flex gap-3.5 sm:gap-5">
+        <ul className="flex gap-4 sm:gap-5 lg:gap-6">
           {row.map((movie) => (
             <li
               key={movie.id}
               className={cn(
-                "min-w-0 shrink-0 grow-0 basis-30 sm:basis-39 md:basis-44",
+                "min-w-0 shrink-0 grow-0 basis-36 sm:basis-44 md:basis-52 lg:basis-56",
               )}
             >
               <MovieCard
@@ -155,7 +155,7 @@ export function MovieRow({
                 voteAverage={movie.vote_average}
                 mediaType={mediaType}
                 initialFavorite={favoriteSet?.has(movie.id) ?? false}
-                sizes="(max-width: 640px) 120px, (max-width: 768px) 156px, 176px"
+                sizes="(max-width: 640px) 144px, (max-width: 768px) 176px, (max-width: 1024px) 208px, 224px"
               />
             </li>
           ))}
