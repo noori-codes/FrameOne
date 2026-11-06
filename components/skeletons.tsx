@@ -70,11 +70,11 @@ export function MovieRowSkeleton() {
 
 export function HomeHeroSkeleton() {
   return (
-    <section className="relative flex min-h-[min(760px,100dvh)] w-full flex-col justify-end overflow-hidden sm:min-h-[min(820px,100dvh)] lg:min-h-[min(860px,100dvh)]">
+    <section className="relative flex min-h-dvh w-full flex-col justify-end overflow-hidden">
       <Skeleton className="absolute inset-0 rounded-none" />
-      <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-4 pb-10 sm:px-6 lg:px-8">
+      <div className="relative z-10 w-full px-5 pb-10 sm:px-8 lg:px-12 xl:px-16">
         <Skeleton className="h-7 w-36 rounded-full" />
-        <Skeleton className="mt-5 h-20 w-full max-w-2xl rounded-sm sm:h-28" />
+        <Skeleton className="mt-5 h-20 w-full max-w-3xl rounded-sm sm:h-28" />
         <Skeleton className="mt-5 h-4 w-full max-w-xl" />
         <Skeleton className="mt-2 h-4 w-2/3 max-w-md" />
         <div className="mt-8 flex gap-3">
@@ -89,7 +89,7 @@ export function HomeHeroSkeleton() {
 export function EndlessFeedSkeleton() {
   return (
     <section className="border-t border-cream/10 pt-12 sm:pt-16">
-      <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-5 sm:px-8 lg:px-12 xl:px-16">
         <Skeleton className="h-3 w-24" />
         <Skeleton className="mt-3 h-10 w-56" />
         <MovieGridSkeleton count={12} className="mt-10" showTitle={false} />

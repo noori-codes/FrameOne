@@ -211,7 +211,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           aria-hidden
           className="absolute -top-20 left-1/4 size-[28rem] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--amber)_22%,transparent),transparent_68%)] blur-3xl"
         />
-        <div className="relative z-10 flex w-full flex-col px-4 pb-10 pt-16 sm:px-6 sm:pb-12 lg:px-10">
+        <div className="relative z-10 flex w-full flex-col px-5 pb-10 pt-16 sm:px-8 sm:pb-12 lg:px-12 xl:px-16">
           <h1 className="max-w-xl font-display text-5xl leading-none tracking-wide text-cream uppercase sm:text-7xl">
             Movies, lit for the night
           </h1>
@@ -237,7 +237,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
     <section
       ref={rootRef}
       tabIndex={0}
-      className="relative flex min-h-[min(760px,100dvh)] w-full flex-col overflow-hidden outline-none sm:min-h-[min(820px,100dvh)] lg:min-h-[min(860px,100dvh)]"
+      className="relative flex min-h-dvh w-full flex-col overflow-hidden outline-none"
       aria-roledescription="carousel"
       aria-label="Featured movies"
     >
@@ -256,18 +256,18 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           <div className="absolute inset-0 bg-stage" />
         )}
         <div className="absolute inset-0 bg-background/10" />
-        <div className="absolute inset-0 bg-linear-to-t from-background via-background/35 to-transparent" />
-        <div className="absolute inset-0 bg-linear-to-r from-background/85 via-background/45 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_78%_38%,color-mix(in_srgb,var(--amber)_16%,transparent),transparent_44%)]" />
+        <div className="absolute inset-0 bg-linear-to-t from-background via-background/40 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-background/90 via-background/50 to-transparent lg:via-background/35" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_82%_36%,color-mix(in_srgb,var(--amber)_18%,transparent),transparent_46%)]" />
         <div className="film-grain absolute inset-0" />
       </div>
 
-      <div className="relative z-10 mt-auto mx-auto flex w-full max-w-screen-2xl flex-col px-4 pb-7 pt-16 sm:px-6 sm:pb-10 sm:pt-20 lg:px-8 lg:pt-18">
+      <div className="relative z-10 mt-auto flex w-full flex-col px-5 pb-6 pt-20 sm:px-8 sm:pb-8 sm:pt-24 lg:px-12 lg:pb-9 xl:px-16">
         <div
           key={slide.id}
-          className="grid w-full items-center gap-9 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.65fr)] lg:gap-12"
+          className="grid w-full items-end gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(240px,18vw)] lg:items-center lg:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(260px,16vw)] xl:gap-14"
         >
-          <div className="w-full max-w-3xl">
+          <div className="w-full max-w-4xl">
             <p className="hero-line hero-line-1 mb-4 inline-flex items-center gap-2 rounded-full border border-amber/30 bg-black/25 px-3 py-1.5 text-[10px] font-semibold tracking-[0.22em] text-amber uppercase shadow-[0_10px_30px_-18px_color-mix(in_srgb,var(--amber)_40%,transparent)] backdrop-blur-md sm:text-xs">
               <Sparkles className="size-3.5" aria-hidden />
               {slide.categoryLabel}
@@ -280,7 +280,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
             <h1
               aria-label={slide.title}
-              className="hero-line hero-line-3 line-clamp-2 min-h-[1.76em] max-w-3xl font-display text-5xl leading-[0.88] tracking-wide wrap-break-word text-cream uppercase drop-shadow-[0_10px_40px_rgba(0,0,0,0.55)] sm:text-7xl md:text-8xl lg:text-[6.75rem]"
+              className="hero-line hero-line-3 line-clamp-2 min-h-[1.76em] max-w-5xl font-display text-5xl leading-[0.88] tracking-wide wrap-break-word text-cream uppercase drop-shadow-[0_10px_40px_rgba(0,0,0,0.55)] sm:text-7xl md:text-8xl lg:text-[6.5rem] xl:text-[7.25rem]"
             >
               {titleLines.map((line, lineIndex) =>
                 line ? (
@@ -311,7 +311,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                 : null}
             </p>
 
-            <p className="hero-line hero-line-5 mt-4 line-clamp-3 min-h-18 max-w-xl text-sm leading-relaxed text-cream/75 sm:mt-5 sm:min-h-21 sm:text-base sm:leading-7">
+            <p className="hero-line hero-line-5 mt-4 line-clamp-3 min-h-18 max-w-2xl text-sm leading-relaxed text-cream/75 sm:mt-5 sm:min-h-21 sm:text-base sm:leading-7">
               {slide.overview}
             </p>
 
@@ -351,7 +351,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             <Link
               href={`/movie/${slide.id}`}
               aria-label={`View details for ${slide.title}`}
-              className="group relative mx-auto hidden w-full max-w-64 justify-self-center lg:block"
+              className="group relative mx-auto hidden w-full max-w-72 justify-self-end lg:block xl:max-w-none"
               onPointerEnter={() => setInteractPause(true)}
               onPointerLeave={() => setInteractPause(false)}
               onFocus={() => setInteractPause(true)}
@@ -366,7 +366,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                   src={slide.posterUrl}
                   alt=""
                   fill
-                  sizes="290px"
+                  sizes="(min-width: 1280px) 16vw, 290px"
                   className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                 />
                 <div
@@ -379,7 +379,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
         </div>
 
         {count > 1 ? (
-          <div className="mt-9 flex w-full items-center gap-3 border-t border-cream/10 pt-5 sm:mt-12 sm:gap-5 sm:pt-6">
+          <div className="mt-8 flex w-full items-center gap-3 border-t border-cream/10 pt-4 sm:mt-10 sm:gap-5 sm:pt-5 lg:mt-12">
             <div className="flex shrink-0 items-baseline gap-1.5 font-display tracking-wide">
               <span className="text-lg leading-none text-amber sm:text-xl">
                 {String(index + 1).padStart(2, "0")}

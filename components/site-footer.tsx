@@ -103,7 +103,7 @@ function SocialIconLink({
 export function SiteFooter() {
   return (
     <footer className="relative z-10 mt-auto border-t border-cream/[0.06] bg-[#060809]">
-      <div className="mx-auto w-full max-w-screen-2xl px-4 pt-14 pb-8 sm:px-6 sm:pt-16 sm:pb-10 lg:px-8 lg:pt-20">
+      <div className="w-full px-5 pt-14 pb-8 sm:px-8 sm:pt-16 sm:pb-10 lg:px-12 lg:pt-20 xl:px-16">
         <div className="grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-4 md:gap-x-10 lg:gap-x-16">
           {/* Brand */}
           <div className="col-span-2 space-y-4 md:col-span-1">

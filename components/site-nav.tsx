@@ -234,7 +234,7 @@ export function SiteNav({ user }: SiteNavProps) {
           pathname === "/" ? "fixed inset-x-0 top-0" : "sticky top-0",
         )}
       >
-        <div className="mx-auto flex h-14 w-full max-w-screen-2xl items-center gap-3 px-4 sm:h-16 sm:gap-4 sm:px-6 lg:px-8">
+        <div className="flex h-14 w-full items-center gap-3 px-5 sm:h-16 sm:gap-4 sm:px-8 lg:px-12 xl:px-16">
           <Link
             href="/"
             className="inline-flex h-full min-w-0 shrink items-center transition-opacity hover:opacity-90"

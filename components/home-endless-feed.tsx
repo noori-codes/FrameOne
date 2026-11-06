@@ -28,7 +28,7 @@ export async function HomeEndlessFeed() {
       aria-labelledby="endless-feed-heading"
       className="border-t border-cream/10 pt-12 sm:pt-16"
     >
-      <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-5 sm:px-8 lg:px-12 xl:px-16">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4 sm:mb-10">
           <div>
             <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
