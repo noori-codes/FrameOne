@@ -282,14 +282,14 @@ export function SiteNav({ user }: SiteNavProps) {
                 href="/profile"
                 aria-label="Profile"
                 title={user.name ?? user.email ?? "Profile"}
-                className="rounded-full ring-offset-2 ring-offset-background transition-[opacity,box-shadow] hover:opacity-90 hover:ring-2 hover:ring-amber/40"
+                className="group inline-flex size-8 shrink-0 items-center justify-center rounded-full outline-none transition-[box-shadow,opacity] hover:opacity-90 hover:ring-2 hover:ring-amber/40 hover:ring-offset-2 hover:ring-offset-background focus-visible:ring-2 focus-visible:ring-amber/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <UserAvatar
                   name={user.name}
                   email={user.email}
                   image={user.image}
                   size="sm"
-                  className="hover:border-amber"
+                  className="border-cream/20 transition-[border-color] group-hover:border-amber"
                 />
               </Link>
             ) : (
@@ -325,14 +325,14 @@ export function SiteNav({ user }: SiteNavProps) {
                 href="/profile"
                 aria-label="Profile"
                 title={user.name ?? user.email ?? "Profile"}
-                className="rounded-full p-0.5 transition-opacity hover:opacity-90"
+                className="group inline-flex size-8 shrink-0 items-center justify-center rounded-full outline-none transition-[box-shadow,opacity] hover:opacity-90 hover:ring-2 hover:ring-amber/40 hover:ring-offset-2 hover:ring-offset-background focus-visible:ring-2 focus-visible:ring-amber/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <UserAvatar
                   name={user.name}
                   email={user.email}
                   image={user.image}
                   size="sm"
-                  className="hover:border-amber"
+                  className="border-cream/20 transition-[border-color] group-hover:border-amber"
                 />
               </Link>
             ) : (
