@@ -496,3 +496,10 @@ button:disabled {
     transform: translate3d(130%, 0, 0);
   }
 }
+
+/* Hide native clear control — we render our own next to the spinner. */
+.search-field::-webkit-search-cancel-button,
+.search-field::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
