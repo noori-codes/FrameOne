@@ -377,7 +377,7 @@ export async function mapPool<T, R>(
  */
 export function posterUrl(
   posterPath: string | null,
-  size: "w185" | "w342" | "w500" = "w342",
+  size: "w185" | "w342" | "w500" | "w780" | "original" = "w342",
 ) {
   if (!posterPath) return null;
   return `${getImageBase()}/${size}${posterPath}`;
