@@ -76,14 +76,14 @@ function FavoriteHeart({
         aria-pressed={optimisticSaved}
         className={cn(
           "movie-card-heart inline-flex size-7 items-center justify-center rounded-full border border-cream/10 bg-black/55 text-cream/85 shadow-[0_8px_20px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md will-change-transform",
-          "opacity-100 translate-y-0 scale-100 transition-[opacity,transform,color,background-color,border-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          "opacity-100 translate-y-0 scale-100 transition-[opacity,transform,color,background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
           "hover:border-red-400/35 hover:bg-black/75 hover:text-red-400 active:scale-95",
           optimisticSaved &&
             "border-red-400/40 text-red-500 shadow-[0_8px_22px_-10px_rgba(239,68,68,0.55)]",
         )}
       >
         <Heart
-          className="size-3.5 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
+          className="size-3.5 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
           fill={optimisticSaved ? "currentColor" : "none"}
           strokeWidth={optimisticSaved ? 2.25 : 2}
           aria-hidden
@@ -121,7 +121,7 @@ export function MovieCard({
   return (
     <div className={cn("movie-card group relative block", className)}>
       <Link href={mediaPath(mediaType, id)} className="block">
-        <div className="movie-card-frame relative aspect-2/3 overflow-hidden rounded-xl bg-stage shadow-[0_10px_28px_-14px_rgba(0,0,0,0.7)] ring-1 ring-cream/10 transition-[transform,box-shadow,ring-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform group-hover:-translate-y-2 group-hover:shadow-[0_28px_50px_-18px_rgba(0,0,0,0.9),0_0_36px_-18px_color-mix(in_srgb,var(--amber)_35%,transparent)] group-hover:ring-amber/30">
+        <div className="movie-card-frame relative aspect-2/3 overflow-hidden rounded-xl bg-stage shadow-[0_10px_28px_-14px_rgba(0,0,0,0.7)] ring-1 ring-cream/10 transition-[transform,box-shadow,ring-color] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform group-hover:-translate-y-1.5 group-hover:shadow-[0_28px_50px_-18px_rgba(0,0,0,0.9),0_0_36px_-18px_color-mix(in_srgb,var(--amber)_35%,transparent)] group-hover:ring-amber/30">
           {showImage ? (
             <Image
               src={src!}
@@ -130,7 +130,7 @@ export function MovieCard({
               sizes={sizes}
               priority={priority}
               onError={() => setFailed(true)}
-              className="movie-card-image object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform group-hover:scale-[1.07]"
+              className="movie-card-image object-cover transition-transform duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform group-hover:scale-[1.045]"
             />
           ) : (
             <span className="flex h-full items-center justify-center bg-stage p-3 text-center text-xs leading-snug text-cream/45">
@@ -146,11 +146,11 @@ export function MovieCard({
 
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,transparent_40%,rgba(0,0,0,0.35)_100%)] opacity-50 transition-opacity duration-300 group-hover:opacity-70"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,transparent_40%,rgba(0,0,0,0.35)_100%)] opacity-50 transition-opacity duration-700 ease-out group-hover:opacity-70"
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-linear-to-b from-black/45 to-transparent opacity-70 transition-opacity duration-300 group-hover:opacity-90"
+            className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-linear-to-b from-black/45 to-transparent opacity-70 transition-opacity duration-700 ease-out group-hover:opacity-90"
           />
           <div
             aria-hidden
@@ -158,7 +158,7 @@ export function MovieCard({
           />
 
           {!showTitle ? (
-            <div className="movie-card-caption pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/95 via-black/55 to-transparent px-2.5 pt-14 pb-2.5 opacity-100 translate-y-0 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]">
+            <div className="movie-card-caption pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/95 via-black/55 to-transparent px-2.5 pt-14 pb-2.5 opacity-100 translate-y-0 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
               <span
                 aria-hidden
                 className="mb-1.5 block h-0.5 w-6 rounded-full bg-amber/80"
@@ -171,7 +171,7 @@ export function MovieCard({
         </div>
 
         {showTitle ? (
-          <p className="mt-2.5 line-clamp-2 text-sm text-cream/65 transition-colors duration-300 group-hover:text-cream">
+          <p className="mt-2.5 line-clamp-2 text-sm text-cream/65 transition-colors duration-500 group-hover:text-cream">
             {title}
           </p>
         ) : null}
@@ -179,9 +179,9 @@ export function MovieCard({
 
       <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex h-7 items-center justify-between">
         {rating ? (
-          <span className="movie-card-rating inline-flex h-6 items-center gap-1 rounded-full border border-amber/20 bg-black/55 px-2 text-[11px] font-medium leading-none text-cream/90 shadow-[0_6px_16px_-10px_rgba(0,0,0,0.8)] backdrop-blur-md transition-[background-color,transform,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:border-amber/40 group-hover:bg-black/70 group-hover:shadow-[0_8px_18px_-8px_color-mix(in_srgb,var(--amber)_40%,transparent)]">
+          <span className="movie-card-rating inline-flex h-6 items-center gap-1 rounded-full border border-amber/20 bg-black/55 px-2 text-[11px] font-medium leading-none text-cream/90 shadow-[0_6px_16px_-10px_rgba(0,0,0,0.8)] backdrop-blur-md transition-[background-color,transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:border-amber/40 group-hover:bg-black/70 group-hover:shadow-[0_8px_18px_-8px_color-mix(in_srgb,var(--amber)_40%,transparent)]">
             <Star
-              className="size-3 fill-amber text-amber transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
+              className="size-3 fill-amber text-amber transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110"
               aria-hidden
             />
             {rating}

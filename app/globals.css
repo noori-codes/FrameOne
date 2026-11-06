@@ -424,7 +424,10 @@ button:disabled {
 @media (hover: hover) and (pointer: fine) {
   .movie-card .movie-card-caption {
     opacity: 0;
-    transform: translateY(0.5rem);
+    transform: translateY(0.65rem);
+    transition:
+      opacity 500ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 550ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .movie-card:hover .movie-card-caption,
@@ -435,7 +438,14 @@ button:disabled {
 
   .movie-card .movie-card-heart:not([aria-pressed="true"]) {
     opacity: 0;
-    transform: translateY(0.125rem) scale(0.9);
+    transform: translateY(0.2rem) scale(0.92);
+    transition:
+      opacity 450ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 500ms cubic-bezier(0.16, 1, 0.3, 1),
+      color 450ms ease,
+      background-color 450ms ease,
+      border-color 450ms ease,
+      box-shadow 450ms ease;
   }
 
   .movie-card:hover .movie-card-heart,
@@ -451,7 +461,7 @@ button:disabled {
     105deg,
     transparent 36%,
     color-mix(in srgb, white 8%, transparent) 46%,
-    color-mix(in srgb, white 28%, transparent) 50%,
+    color-mix(in srgb, white 22%, transparent) 50%,
     color-mix(in srgb, white 8%, transparent) 54%,
     transparent 64%
   );
@@ -465,7 +475,7 @@ button:disabled {
 .movie-card:focus-within .movie-card-sheen,
 .group:hover .movie-card-sheen,
 .group:focus-within .movie-card-sheen {
-  animation: movieCardSheen 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation: movieCardSheen 3.6s cubic-bezier(0.16, 1, 0.3, 1) 180ms infinite;
 }
 
 @keyframes movieCardSheen {
@@ -473,14 +483,14 @@ button:disabled {
     opacity: 0;
     transform: translate3d(-130%, 0, 0);
   }
-  8% {
-    opacity: 1;
+  12% {
+    opacity: 0.85;
   }
-  38% {
-    opacity: 0.9;
+  42% {
+    opacity: 0.7;
     transform: translate3d(130%, 0, 0);
   }
-  48%,
+  55%,
   100% {
     opacity: 0;
     transform: translate3d(130%, 0, 0);
