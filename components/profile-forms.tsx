@@ -15,18 +15,19 @@ import {
   updateName,
   type ProfileFormState,
 } from "@/app/actions/profile";
-import { Camera } from "lucide-react";
+import { Camera, Pencil } from "lucide-react";
 import { AvatarCropModal } from "@/components/avatar-crop-modal";
 import { UserAvatar } from "@/components/user-avatar";
+import { cn } from "@/lib/utils";
 
 const nameInitial: ProfileFormState = {};
 const passwordInitial: ProfileFormState = {};
 const avatarInitial: ProfileFormState = {};
 
 const fieldClass =
-  "w-full rounded-sm border border-cream/15 bg-black/35 px-3.5 py-2.5 text-sm text-cream outline-none transition-[border-color,background-color] placeholder:text-cream/30 focus:border-amber/50 focus:bg-black/50";
+  "w-full rounded-xl border border-cream/12 bg-black/35 px-4 py-3 text-sm text-cream outline-none transition-[border-color,background-color,box-shadow] placeholder:text-cream/30 focus:border-amber/45 focus:bg-black/50 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--amber)_12%,transparent)]";
 
-/** Display name as text with an inline edit control. */
+/** Display name as hero text with an inline edit control. */
 export function UpdateNameForm({ defaultName }: { defaultName: string }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -44,21 +45,22 @@ export function UpdateNameForm({ defaultName }: { defaultName: string }) {
 
   if (!editing) {
     return (
-      <div className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 sm:justify-start">
-        <p className="max-w-full text-xl font-semibold tracking-tight wrap-break-word text-cream sm:text-2xl">
+      <div className="flex flex-wrap items-end justify-center gap-x-3 gap-y-2 lg:justify-start">
+        <h2 className="max-w-full font-display text-4xl leading-[0.9] tracking-wide text-cream uppercase wrap-break-word sm:text-5xl lg:text-6xl">
           {defaultName.trim() || (
-            <span className="font-normal text-cream/40">No display name</span>
+            <span className="font-display text-cream/35">No display name</span>
           )}
-        </p>
+        </h2>
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="min-h-11 shrink-0 px-1 text-sm text-cream/45 transition-colors hover:text-amber sm:min-h-0 sm:px-0"
+          className="mb-1 inline-flex min-h-10 items-center gap-1.5 rounded-full border border-cream/12 bg-black/30 px-3 py-1.5 text-xs font-medium tracking-wide text-cream/55 backdrop-blur-md transition-colors hover:border-amber/40 hover:text-amber sm:min-h-0"
         >
+          <Pencil className="size-3" aria-hidden />
           Edit
         </button>
         {state.success ? (
-          <p className="basis-full text-sm text-amber sm:text-left" role="status">
+          <p className="basis-full text-sm text-amber lg:text-left" role="status">
             {state.success}
           </p>
         ) : null}
@@ -69,9 +71,9 @@ export function UpdateNameForm({ defaultName }: { defaultName: string }) {
   return (
     <form
       action={action}
-      className="mx-auto flex w-full max-w-sm flex-col gap-3 sm:mx-0"
+      className="mx-auto flex w-full max-w-md flex-col gap-3 lg:mx-0"
     >
-      <label className="flex flex-col gap-1.5 text-sm text-cream/70">
+      <label className="flex flex-col gap-2 text-[10px] font-semibold tracking-[0.18em] text-cream/45 uppercase">
         Display name
         <input
           name="name"
@@ -79,7 +81,7 @@ export function UpdateNameForm({ defaultName }: { defaultName: string }) {
           defaultValue={defaultName}
           autoComplete="name"
           autoFocus
-          className={fieldClass}
+          className={cn(fieldClass, "normal-case tracking-normal")}
         />
       </label>
       {state.error ? (
@@ -87,11 +89,11 @@ export function UpdateNameForm({ defaultName }: { defaultName: string }) {
           {state.error}
         </p>
       ) : null}
-      <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
+      <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
         <button
           type="submit"
           disabled={pending}
-          className="min-h-11 rounded-full bg-amber px-5 py-2 text-sm font-medium text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60 sm:min-h-0 sm:px-4 sm:py-1.5"
+          className="cta-shine relative min-h-11 overflow-hidden rounded-full bg-amber px-5 py-2 text-sm font-semibold text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60 sm:min-h-0"
         >
           {pending ? "Saving…" : "Save"}
         </button>
@@ -99,7 +101,7 @@ export function UpdateNameForm({ defaultName }: { defaultName: string }) {
           type="button"
           disabled={pending}
           onClick={() => setEditing(false)}
-          className="min-h-11 rounded-full px-4 py-2 text-sm text-cream/50 transition-colors hover:text-cream disabled:opacity-60 sm:min-h-0 sm:px-3 sm:py-1.5"
+          className="min-h-11 rounded-full px-4 py-2 text-sm text-cream/50 transition-colors hover:text-cream disabled:opacity-60 sm:min-h-0"
         >
           Cancel
         </button>
@@ -116,18 +118,18 @@ export function ChangePasswordForm() {
 
   return (
     <form action={action} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1.5 text-xs font-medium tracking-wide text-cream/55">
+      <label className="flex flex-col gap-2 text-[10px] font-semibold tracking-[0.18em] text-cream/45 uppercase">
         Current password
         <input
           name="currentPassword"
           type="password"
           required
           autoComplete="current-password"
-          className={fieldClass}
+          className={cn(fieldClass, "normal-case tracking-normal")}
         />
       </label>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5 text-xs font-medium tracking-wide text-cream/55">
+        <label className="flex flex-col gap-2 text-[10px] font-semibold tracking-[0.18em] text-cream/45 uppercase">
           New password
           <input
             name="newPassword"
@@ -135,10 +137,10 @@ export function ChangePasswordForm() {
             required
             minLength={6}
             autoComplete="new-password"
-            className={fieldClass}
+            className={cn(fieldClass, "normal-case tracking-normal")}
           />
         </label>
-        <label className="flex flex-col gap-1.5 text-xs font-medium tracking-wide text-cream/55">
+        <label className="flex flex-col gap-2 text-[10px] font-semibold tracking-[0.18em] text-cream/45 uppercase">
           Confirm new
           <input
             name="confirmPassword"
@@ -146,7 +148,7 @@ export function ChangePasswordForm() {
             required
             minLength={6}
             autoComplete="new-password"
-            className={fieldClass}
+            className={cn(fieldClass, "normal-case tracking-normal")}
           />
         </label>
       </div>
@@ -163,7 +165,7 @@ export function ChangePasswordForm() {
       <button
         type="submit"
         disabled={pending}
-        className="min-h-11 w-full rounded-full bg-amber px-5 py-2.5 text-sm font-medium text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim) disabled:opacity-60 sm:w-fit"
+        className="cta-shine relative min-h-11 w-full overflow-hidden rounded-full bg-amber px-5 py-2.5 text-sm font-semibold text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60 sm:w-fit"
       >
         {pending ? "Updating…" : "Update password"}
       </button>
@@ -201,7 +203,6 @@ export function AvatarForm({ name, email, image }: AvatarFormProps) {
     };
   }, []);
 
-  // Keep header + portrait in sync after upload/remove
   useEffect(() => {
     if (uploadState.success || removeState.success) {
       router.refresh();
@@ -257,7 +258,7 @@ export function AvatarForm({ name, email, image }: AvatarFormProps) {
   const busy = uploading || removing;
 
   return (
-    <div className="flex w-auto shrink-0 flex-col items-center gap-3 sm:items-start">
+    <div className="flex w-auto shrink-0 flex-col items-center gap-3">
       <input
         ref={inputRef}
         type="file"
@@ -273,35 +274,32 @@ export function AvatarForm({ name, email, image }: AvatarFormProps) {
         disabled={busy}
         onClick={() => inputRef.current?.click()}
         aria-label={image ? "Change photo" : "Upload photo"}
-        className="group relative isolate h-28 w-28 shrink-0 rounded-full outline-none transition-transform duration-300 ease-out active:scale-[0.98] hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-amber/60 focus-visible:ring-offset-4 focus-visible:ring-offset-background disabled:opacity-60 sm:h-32 sm:w-32"
+        className="group relative isolate size-32 shrink-0 rounded-full outline-none transition-transform duration-500 ease-out hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-amber/60 focus-visible:ring-offset-4 focus-visible:ring-offset-background active:scale-[0.98] disabled:opacity-60 sm:size-40 lg:size-44"
       >
-        {/* Glow — same center & diameter as the photo (scaled out, not offset) */}
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-0 scale-[1.14] rounded-full bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--amber)_32%,transparent),transparent_68%)] blur-md sm:scale-[1.12]"
+          className="pointer-events-none absolute inset-0 scale-[1.18] rounded-full bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--amber)_38%,transparent),transparent_68%)] blur-xl"
         />
         <UserAvatar
           name={name}
           email={email}
           image={image}
           size="xl"
-          className="relative z-10 h-full w-full border border-cream/20 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85),inset_0_0_0_1px_rgba(0,0,0,0.35)]"
+          className="relative z-10 h-full w-full border border-cream/20 text-4xl shadow-[0_20px_50px_-16px_rgba(0,0,0,0.9),inset_0_0_0_1px_rgba(0,0,0,0.35)] sm:text-5xl"
         />
-        {/* Rim — same circle as the photo */}
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-0 z-[15] rounded-full ring-1 ring-inset ring-cream/20 transition-opacity group-hover:ring-cream/30"
+          className="pointer-events-none absolute inset-0 z-15 rounded-full ring-1 ring-inset ring-cream/20 transition-[box-shadow,opacity] duration-500 group-hover:ring-amber/40 group-hover:shadow-[0_0_0_6px_color-mix(in_srgb,var(--amber)_12%,transparent)]"
         />
-        {/* Always visible on touch; hover-reveal on fine pointers */}
-        <span className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 rounded-full bg-black/50 opacity-100 backdrop-blur-[2px] transition-opacity duration-200 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-visible:opacity-100">
-          <Camera className="h-5 w-5 text-cream" strokeWidth={1.75} />
-          <span className="text-[11px] font-medium tracking-wide text-cream/90">
-            {uploading ? "Uploading…" : image ? "Edit" : "Add"}
+        <span className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1.5 rounded-full bg-black/55 opacity-100 backdrop-blur-[2px] transition-opacity duration-300 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-visible:opacity-100">
+          <Camera className="size-5 text-cream sm:size-6" strokeWidth={1.75} />
+          <span className="text-[11px] font-medium tracking-wide text-cream/90 sm:text-xs">
+            {uploading ? "Uploading…" : image ? "Edit" : "Add photo"}
           </span>
         </span>
       </button>
 
-      <div className="flex max-w-[16rem] flex-col items-center gap-1.5 text-center sm:max-w-none sm:items-start sm:text-left">
+      <div className="flex max-w-[14rem] flex-col items-center gap-1.5 text-center">
         {image ? (
           <form action={removeAction}>
             <button
@@ -313,7 +311,7 @@ export function AvatarForm({ name, email, image }: AvatarFormProps) {
             </button>
           </form>
         ) : (
-          <p className="text-xs text-cream/35">Tap the portrait to add a photo</p>
+          <p className="text-xs text-cream/35">Tap to add a portrait</p>
         )}
 
         {message ? (
