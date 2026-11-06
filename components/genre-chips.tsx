@@ -7,22 +7,29 @@ type GenreChipsProps = {
   activeId?: number;
   /** Preserve current sort when switching genres. */
   sort?: GenreSort;
+  /** Horizontal scroll rail (default) or vertical sidebar list. */
+  orientation?: "horizontal" | "vertical";
   className?: string;
 };
 
 /**
- * Horizontal genre switcher — active chip is highlighted.
+ * Genre switcher — horizontal rail or vertical sidebar list.
  */
 export function GenreChips({
   genres,
   activeId,
   sort = "popular",
+  orientation = "horizontal",
   className,
 }: GenreChipsProps) {
+  const vertical = orientation === "vertical";
+
   return (
     <ul
       className={cn(
-        "flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        vertical
+          ? "flex flex-col gap-0.5"
+          : "flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         className,
       )}
     >
@@ -34,15 +41,25 @@ export function GenreChips({
             : `/genres/${g.id}?sort=${sort}`;
 
         return (
-          <li key={g.id} className="shrink-0">
+          <li key={g.id} className={vertical ? undefined : "shrink-0"}>
             <Link
               href={href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "inline-flex rounded-full border px-3.5 py-1.5 text-sm transition-colors",
-                active
-                  ? "border-amber/60 bg-amber/10 text-amber"
-                  : "border-cream/12 bg-background/40 text-cream/60 hover:border-amber/50 hover:text-amber",
+                "font-medium tracking-wide transition-[color,background-color,box-shadow,border-color] duration-300",
+                vertical
+                  ? cn(
+                      "flex w-full items-center rounded-xl px-3 py-2 text-sm",
+                      active
+                        ? "bg-amber/12 text-amber shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--amber)_22%,transparent)]"
+                        : "text-cream/55 hover:bg-cream/[0.04] hover:text-cream",
+                    )
+                  : cn(
+                      "inline-flex rounded-full px-3.5 py-1.5 text-[13px]",
+                      active
+                        ? "bg-amber/15 text-amber shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--amber)_28%,transparent)]"
+                        : "border border-cream/10 bg-cream/[0.03] text-cream/55 hover:border-cream/20 hover:bg-cream/[0.06] hover:text-cream",
+                    ),
               )}
             >
               {g.name}

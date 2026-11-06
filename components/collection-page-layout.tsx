@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Clapperboard, Sparkles } from "lucide-react";
+import { ArrowLeft, Clapperboard } from "lucide-react";
 import { backdropUrl, posterUrl, type TmdbMovie } from "@/lib/tmdb";
 
 type CollectionPageLayoutProps = {
@@ -12,14 +12,16 @@ type CollectionPageLayoutProps = {
   totalResults: number;
   selectionLabel: string;
   featuredMovie?: TmdbMovie;
-  controlsLabel: string;
+  /** Primary controls (sort / browse kind). */
   controls: ReactNode;
+  /** Optional secondary rail (genre chips). */
   secondaryControls?: ReactNode;
-  resultsEyebrow: string;
-  resultsTitle: string;
   children: ReactNode;
 };
 
+/**
+ * Shared cinematic collection shell — hero + one toolbar + full-bleed grid.
+ */
 export function CollectionPageLayout({
   title,
   description,
@@ -28,11 +30,8 @@ export function CollectionPageLayout({
   totalResults,
   selectionLabel,
   featuredMovie,
-  controlsLabel,
   controls,
   secondaryControls,
-  resultsEyebrow,
-  resultsTitle,
   children,
 }: CollectionPageLayoutProps) {
   const featuredBackdrop = backdropUrl(featuredMovie?.backdrop_path ?? null);
@@ -40,7 +39,7 @@ export function CollectionPageLayout({
 
   return (
     <main className="relative flex min-h-dvh w-full flex-1 flex-col">
-      <section className="relative isolate overflow-hidden border-b border-cream/10 bg-stage">
+      <section className="relative isolate overflow-hidden border-b border-cream/8 bg-stage">
         {featuredBackdrop ? (
           <Image
             src={featuredBackdrop}
@@ -48,53 +47,47 @@ export function CollectionPageLayout({
             fill
             priority
             sizes="100vw"
-            className="absolute inset-0 -z-20 object-cover object-center opacity-40"
+            className="absolute inset-0 -z-20 object-cover object-[center_20%] opacity-45"
           />
         ) : null}
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-linear-to-r from-background via-background/90 to-background/45"
+          className="absolute inset-0 -z-10 bg-linear-to-r from-background via-background/88 to-background/40"
         />
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-linear-to-t from-background via-background/20 to-background/35"
+          className="absolute inset-0 -z-10 bg-linear-to-t from-background via-background/25 to-background/40"
         />
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_78%_40%,rgba(47,230,200,0.13),transparent_42%)]"
+          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_82%_36%,color-mix(in_srgb,var(--amber)_14%,transparent),transparent_46%)]"
         />
 
-        <div className="grid min-h-[350px] w-full grid-cols-1 items-end gap-8 px-3 pb-10 pt-8 sm:min-h-[390px] sm:px-5 sm:pb-12 sm:pt-10 lg:min-h-[430px] lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center lg:px-8 lg:py-12">
-          <div className="relative z-10 max-w-3xl">
-            <div className="mb-8 block sm:mb-12">
-              <Link
-                href={backHref}
-                className="inline-flex items-center gap-2 text-sm text-cream/60 transition-colors hover:text-amber"
-              >
-                <ArrowLeft className="size-4" aria-hidden />
-                {backLabel}
-              </Link>
-            </div>
+        <div className="grid min-h-[min(52vh,420px)] w-full grid-cols-1 items-end gap-8 px-5 pb-10 pt-8 sm:min-h-[min(48vh,460px)] sm:px-6 sm:pb-12 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(200px,14vw)] lg:items-center lg:px-8 lg:py-14 xl:px-10">
+          <div className="relative z-10 max-w-4xl">
+            <Link
+              href={backHref}
+              className="inline-flex items-center gap-2 text-sm text-cream/55 transition-colors duration-300 hover:text-amber"
+            >
+              <ArrowLeft className="size-4" aria-hidden />
+              {backLabel}
+            </Link>
 
-            <p className="flex w-fit items-center gap-2 rounded-full border border-amber/30 bg-background/40 px-3 py-1.5 text-[11px] font-semibold tracking-[0.18em] text-amber uppercase backdrop-blur-sm">
-              <Sparkles className="size-3.5" aria-hidden />
-              Explore the collection
-            </p>
-            <h1 className="mt-4 max-w-3xl font-display text-6xl leading-[0.88] tracking-wide wrap-break-word text-cream uppercase drop-shadow-[0_8px_30px_rgba(0,0,0,0.55)] sm:text-8xl md:text-9xl">
+            <h1 className="mt-6 max-w-4xl font-display text-6xl leading-[0.88] tracking-wide wrap-break-word text-cream uppercase drop-shadow-[0_8px_30px_rgba(0,0,0,0.55)] sm:mt-8 sm:text-8xl md:text-9xl">
               {title}
             </h1>
-            <p className="mt-5 max-w-xl text-sm leading-relaxed text-cream/70 sm:text-base">
+            <p className="mt-4 max-w-xl text-sm leading-relaxed text-cream/65 sm:mt-5 sm:text-base">
               {description}
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-cream/55 sm:text-sm">
-              <span className="inline-flex items-center gap-2 rounded-full border border-cream/15 bg-background/35 px-3 py-1.5 backdrop-blur-sm">
-                <Clapperboard className="size-4 text-amber" aria-hidden />
+            <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-cream/50 sm:text-sm">
+              <span className="inline-flex items-center gap-2 rounded-full border border-cream/12 bg-black/30 px-3 py-1.5 backdrop-blur-md">
+                <Clapperboard className="size-3.5 text-amber" aria-hidden />
                 {totalResults.toLocaleString()} titles
               </span>
-              <span className="text-cream/30" aria-hidden>
-                /
+              <span className="text-cream/25" aria-hidden>
+                ·
               </span>
-              <span>{selectionLabel}</span>
+              <span className="tracking-wide text-cream/55">{selectionLabel}</span>
             </div>
           </div>
 
@@ -102,20 +95,24 @@ export function CollectionPageLayout({
             <Link
               href={`/movie/${featuredMovie.id}`}
               aria-label={`View ${featuredMovie.title}`}
-              className="group relative hidden w-full max-w-52 justify-self-end lg:block"
+              className="group relative hidden w-full justify-self-end lg:block"
             >
-              <div className="relative aspect-2/3 overflow-hidden rounded-md bg-stage shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)] ring-1 ring-cream/25 transition-transform duration-500 group-hover:-translate-y-2 group-hover:rotate-1">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -inset-6 rounded-[2rem] bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--amber)_22%,transparent),transparent_68%)] opacity-60 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
+              />
+              <div className="relative aspect-2/3 overflow-hidden rounded-xl bg-stage shadow-[0_36px_80px_-24px_rgba(0,0,0,0.95)] ring-1 ring-cream/20 transition-[transform,box-shadow,ring-color] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-1.5 group-hover:ring-amber/35">
                 <Image
                   src={featuredPoster}
                   alt=""
                   fill
-                  sizes="208px"
-                  className="object-cover"
+                  sizes="(min-width: 1024px) 14vw, 208px"
+                  className="object-cover transition-transform duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-black/90 via-transparent to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-4">
                   <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
-                    Featured pick
+                    Featured
                   </p>
                   <p className="mt-1 line-clamp-2 text-sm font-medium text-cream">
                     {featuredMovie.title}
@@ -128,40 +125,22 @@ export function CollectionPageLayout({
       </section>
 
       <section
-        aria-label={controlsLabel}
-        className="border-b border-cream/8 bg-background/80"
+        aria-label="Collection filters"
+        className="sticky top-14 z-20 border-b border-cream/8 bg-background/80 backdrop-blur-2xl sm:top-16"
       >
-        <div className="w-full px-3 py-5 sm:px-5 sm:py-6 lg:px-8">
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="shrink-0 text-xs font-semibold tracking-[0.16em] text-cream/45 uppercase">
-                {controlsLabel}
-              </p>
-              {controls}
-            </div>
-            {secondaryControls ? (
-              <div className="border-t border-cream/8 pt-4">
-                {secondaryControls}
-              </div>
-            ) : null}
-          </div>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-amber/25 to-transparent"
+        />
+        <div className="flex w-full flex-col gap-3 px-5 py-3.5 sm:px-6 sm:py-4 lg:px-8 xl:px-10">
+          {secondaryControls ? (
+            <div className="min-w-0">{secondaryControls}</div>
+          ) : null}
+          <div className="flex items-center justify-end gap-3">{controls}</div>
         </div>
       </section>
 
-      <section className="w-full flex-1 px-3 py-8 sm:px-5 sm:py-10 lg:px-8">
-        <div className="mb-7 flex flex-wrap items-end justify-between gap-3 border-b border-cream/10 pb-4 sm:mb-9 sm:pb-5">
-          <div>
-            <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
-              {resultsEyebrow}
-            </p>
-            <h2 className="mt-1 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl">
-              {resultsTitle}
-            </h2>
-          </div>
-          <span className="text-xs text-cream/40 sm:text-sm">
-            Scroll to discover more
-          </span>
-        </div>
+      <section className="w-full flex-1 px-5 py-8 sm:px-6 sm:py-10 lg:px-8 xl:px-10">
         {children}
       </section>
     </main>

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CollectionPageLayout } from "@/components/collection-page-layout";
 import { GenreChips } from "@/components/genre-chips";
-import { InfiniteMovieGrid } from "@/components/infinite-movie-grid";
 import { GenreSortNav } from "@/components/genre-sort-nav";
+import { GenreSplitLayout } from "@/components/genre-split-layout";
+import { InfiniteMovieGrid } from "@/components/infinite-movie-grid";
 import {
   GENRE_SORTS,
   emptyMoviesPage,
@@ -63,32 +63,31 @@ export default async function GenrePage({
   const featuredMovie = initial.results.find((movie) => movie.backdrop_path);
 
   return (
-    <CollectionPageLayout
+    <GenreSplitLayout
       title={genre.name}
       description={`Find your next favorite from the world of ${genre.name.toLowerCase()} cinema.`}
-      backHref="/genres"
-      backLabel="All genres"
       totalResults={initial.totalResults}
       selectionLabel={`${sortLabel} picks`}
       featuredMovie={featuredMovie}
-      controlsLabel="Sort collection"
-      controls={<GenreSortNav genreId={genreId} active={sort} />}
-      secondaryControls={
+      sortNav={<GenreSortNav genreId={genreId} active={sort} />}
+      genreNav={
         <GenreChips
           genres={genres}
           activeId={genreId}
           sort={sort}
+          orientation="vertical"
         />
       }
-      resultsEyebrow="Browse collection"
-      resultsTitle={`${sortLabel} ${genre.name}`}
+      mobileGenreNav={
+        <GenreChips genres={genres} activeId={genreId} sort={sort} />
+      }
     >
-        <InfiniteMovieGrid
-          key={`${genreId}-${sort}`}
-          endpoint={`/api/genres/${genreId}/movies`}
-          sort={sort}
-          initial={initial}
-        />
-    </CollectionPageLayout>
+      <InfiniteMovieGrid
+        key={`${genreId}-${sort}`}
+        endpoint={`/api/genres/${genreId}/movies`}
+        sort={sort}
+        initial={initial}
+      />
+    </GenreSplitLayout>
   );
 }

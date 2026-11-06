@@ -110,44 +110,37 @@ export function CollectionPageSkeleton({
       aria-busy
       aria-label="Loading collection"
     >
-      <section className="relative isolate overflow-hidden border-b border-cream/10 bg-stage">
-        <div className="grid min-h-[350px] w-full grid-cols-1 items-end gap-8 px-3 pb-10 pt-8 sm:min-h-[390px] sm:px-5 sm:pb-12 sm:pt-10 lg:min-h-[430px] lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center lg:px-8 lg:py-12">
+      <section className="relative isolate overflow-hidden border-b border-cream/8 bg-stage">
+        <div className="grid min-h-[min(52vh,420px)] w-full grid-cols-1 items-end gap-8 px-5 pb-10 pt-8 sm:px-6 sm:pb-12 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(200px,14vw)] lg:items-center lg:px-8 lg:py-14 xl:px-10">
           <div className="relative z-10 max-w-3xl">
             <Skeleton className="h-4 w-28" />
-            <Skeleton className="mt-10 h-7 w-48 rounded-full" />
-            <Skeleton className="mt-4 h-[3.5rem] w-full max-w-lg rounded-sm sm:h-24" />
+            <Skeleton className="mt-6 h-16 w-full max-w-lg rounded-sm sm:mt-8 sm:h-24" />
             <Skeleton className="mt-5 h-4 w-full max-w-md" />
             <div className="mt-6 flex flex-wrap gap-3">
               <Skeleton className="h-8 w-28 rounded-full" />
               <Skeleton className="h-8 w-24 rounded-full" />
             </div>
           </div>
-          <Skeleton className="hidden aspect-2/3 w-full max-w-52 justify-self-end rounded-md lg:block" />
+          <Skeleton className="hidden aspect-2/3 w-full justify-self-end rounded-xl lg:block" />
         </div>
       </section>
 
       <section className="border-b border-cream/8 bg-background/80">
-        <div className="w-full px-3 py-5 sm:px-5 sm:py-6 lg:px-8">
-          <div className="flex flex-wrap gap-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-24 rounded-full" />
-            ))}
-          </div>
+        <div className="flex w-full flex-col gap-3 px-5 py-3.5 sm:px-6 sm:py-4 lg:px-8 xl:px-10">
           {genreChips ? (
-            <div className="mt-4 flex flex-wrap gap-2 border-t border-cream/8 pt-4">
+            <div className="flex gap-1.5 overflow-hidden">
               {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="h-8 w-20 rounded-full" />
+                <Skeleton key={i} className="h-8 w-20 shrink-0 rounded-full" />
               ))}
             </div>
           ) : null}
+          <div className="flex justify-end">
+            <Skeleton className="h-9 w-56 rounded-full" />
+          </div>
         </div>
       </section>
 
-      <section className="w-full flex-1 px-3 py-8 sm:px-5 sm:py-10 lg:px-8">
-        <div className="mb-7 border-b border-cream/10 pb-4 sm:mb-9 sm:pb-5">
-          <Skeleton className="h-3 w-28" />
-          <Skeleton className="mt-2 h-9 w-48 sm:h-10 sm:w-56" />
-        </div>
+      <section className="w-full flex-1 px-5 py-8 sm:px-6 sm:py-10 lg:px-8 xl:px-10">
         <MovieGridSkeleton count={12} />
       </section>
     </main>

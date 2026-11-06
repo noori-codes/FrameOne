@@ -21,7 +21,10 @@ type BrowsePageProps = {
 
 function BrowseKindNav({ active }: { active: BrowseKind }) {
   return (
-    <nav aria-label="Browse lists" className="flex flex-wrap gap-2">
+    <nav
+      aria-label="Browse lists"
+      className="ml-auto flex flex-wrap items-center gap-0.5 rounded-full border border-cream/10 bg-cream/[0.035] p-1 shadow-[inset_0_1px_0_color-mix(in_srgb,white_6%,transparent)]"
+    >
       {Object.entries(BROWSE_KINDS).map(([kind, browseKind]) => {
         const isActive = kind === active;
         return (
@@ -30,10 +33,10 @@ function BrowseKindNav({ active }: { active: BrowseKind }) {
             href={`/browse/${kind}`}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "rounded-full px-3.5 py-1.5 text-sm transition-colors",
+              "rounded-full px-3.5 py-1.5 text-[13px] font-medium tracking-wide transition-[color,background-color,box-shadow] duration-300",
               isActive
-                ? "bg-amber text-[color:var(--on-amber)]"
-                : "border border-cream/15 text-cream/60 hover:border-amber/50 hover:text-amber",
+                ? "bg-amber/15 text-amber shadow-[0_8px_24px_-14px_color-mix(in_srgb,var(--amber)_55%,transparent)]"
+                : "text-cream/55 hover:bg-cream/[0.05] hover:text-cream",
             )}
           >
             {browseKind.title}
@@ -83,11 +86,8 @@ export default async function BrowsePage({
       totalResults={moviesPage.totalResults}
       selectionLabel={kind === "trending" ? "Today’s picks" : "TMDB picks"}
       featuredMovie={featuredMovie}
-      controlsLabel="Browse collection"
       controls={<BrowseKindNav active={kind} />}
       secondaryControls={<GenreChips genres={genres} />}
-      resultsEyebrow="Browse collection"
-      resultsTitle={meta.title}
     >
       <InfiniteMovieGrid
         key={`${kind}-${page}`}

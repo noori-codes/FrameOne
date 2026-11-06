@@ -159,7 +159,7 @@ export function InfiniteMovieGrid({
   return (
     <div>
       {showCount ? (
-        <p className="mb-6 text-sm text-cream/40" aria-live="polite">
+        <p className="mb-7 text-[13px] tracking-wide text-cream/40" aria-live="polite">
           Showing {visibleMovies.length.toLocaleString()}
           {totalResults > 0
             ? ` of ${totalResults.toLocaleString()} titles`
@@ -167,7 +167,7 @@ export function InfiniteMovieGrid({
         </p>
       ) : null}
 
-      <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+      <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-9 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
         {visibleMovies.map((movie: TmdbMovie) => (
           <li key={movie.id}>
             <MovieCard
@@ -177,7 +177,7 @@ export function InfiniteMovieGrid({
               voteAverage={movie.vote_average}
               showTitle
               initialFavorite={favoriteSet?.has(movie.id) ?? false}
-              sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 160px"
+              sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, (max-width: 1536px) 14vw, 12vw"
             />
           </li>
         ))}
