@@ -63,7 +63,7 @@ export function GuestAuthNudge() {
       aria-label="Sign in to save titles"
       className="guest-nudge pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5"
     >
-      <div className="guest-nudge-card pointer-events-auto relative mx-auto flex max-w-screen-2xl items-center gap-3 overflow-hidden rounded-2xl border border-cream/12 bg-[linear-gradient(118deg,rgba(16,22,23,0.94),rgba(7,10,11,0.9))] px-3.5 py-3.5 shadow-[0_-24px_60px_-28px_rgba(0,0,0,0.95),0_0_0_1px_color-mix(in_srgb,var(--amber)_8%,transparent)] backdrop-blur-2xl sm:gap-5 sm:px-6 sm:py-4">
+      <div className="guest-nudge-card pointer-events-auto relative mx-auto flex max-w-screen-2xl items-center gap-3 overflow-hidden rounded-2xl border border-cream/12 bg-[linear-gradient(118deg,rgba(20,18,16,0.94),rgba(9,8,7,0.9))] px-3.5 py-3.5 shadow-[0_-24px_60px_-28px_rgba(0,0,0,0.95),0_0_0_1px_color-mix(in_srgb,var(--amber)_8%,transparent)] backdrop-blur-2xl sm:gap-5 sm:px-6 sm:py-4">
         <div
           aria-hidden
           className="pointer-events-none absolute -left-8 top-1/2 size-40 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--amber)_32%,transparent),transparent_68%)] blur-2xl"

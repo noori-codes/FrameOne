@@ -35,7 +35,7 @@ export async function AuthShell({
         <AuthCinematicPanel scenes={scenes} />
         <div
           aria-hidden
-          className="absolute inset-0 bg-[linear-gradient(165deg,rgba(7,10,11,0.22)_0%,rgba(7,10,11,0.52)_48%,rgba(7,10,11,0.9)_100%)]"
+          className="absolute inset-0 bg-[linear-gradient(165deg,rgba(9,8,7,0.22)_0%,rgba(9,8,7,0.52)_48%,rgba(9,8,7,0.9)_100%)]"
         />
         <div
           aria-hidden

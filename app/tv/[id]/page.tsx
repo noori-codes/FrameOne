@@ -150,15 +150,15 @@ export default async function TvPage({ params }: TvPageProps) {
         ) : null}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(7,10,11,0.96)_0%,rgba(7,10,11,0.72)_48%,rgba(7,10,11,0.24)_100%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(9,8,7,0.96)_0%,rgba(9,8,7,0.72)_48%,rgba(9,8,7,0.24)_100%)]"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,#070a0b_0%,rgba(7,10,11,0.48)_28%,transparent_72%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,#090807_0%,rgba(9,8,7,0.48)_28%,transparent_72%)]"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(7,10,11,0.42)_0%,transparent_22%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(9,8,7,0.42)_0%,transparent_22%)]"
         />
         <div
           aria-hidden

@@ -16,7 +16,8 @@ type BrandLogoProps = {
 };
 
 /**
- * Site brand mark — charcoal + electric-teal F/aperture monogram.
+ * Site brand mark — charcoal + tungsten-gold F/aperture monogram.
+ * Wordmark tracks `--amber`; PNG mark asset should match the gold accent.
  */
 export function BrandLogo({
   size = "sm",

@@ -34,7 +34,7 @@ function SettingsCard({
   children: ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-sm border border-cream/10 bg-[linear-gradient(165deg,rgba(16,22,23,0.92),rgba(7,10,11,0.55))] shadow-[0_24px_60px_-40px_rgba(0,0,0,0.9)]">
+    <section className="overflow-hidden rounded-sm border border-cream/10 bg-[linear-gradient(165deg,rgba(20,18,16,0.92),rgba(9,8,7,0.55))] shadow-[0_24px_60px_-40px_rgba(0,0,0,0.9)]">
       <div className="flex items-start gap-3 border-b border-cream/10 px-5 py-4 sm:px-6 sm:py-5">
         <span className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-amber/25 bg-amber/10 text-amber">
           {icon}
@@ -160,7 +160,7 @@ export default async function ProfilePage() {
       <section className="relative isolate overflow-hidden border-b border-cream/10">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_18%_0%,color-mix(in_srgb,var(--amber)_18%,transparent),transparent_45%),radial-gradient(ellipse_at_90%_20%,color-mix(in_srgb,var(--amber)_8%,transparent),transparent_40%),linear-gradient(180deg,#101617_0%,#070a0b_100%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_18%_0%,color-mix(in_srgb,var(--amber)_18%,transparent),transparent_45%),radial-gradient(ellipse_at_90%_20%,color-mix(in_srgb,var(--amber)_8%,transparent),transparent_40%),linear-gradient(180deg,#141210_0%,#090807_100%)]"
         />
         <div className="film-grain absolute inset-0" />
 

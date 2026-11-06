@@ -203,11 +203,11 @@ export default async function PersonPage({ params }: PersonPageProps) {
         ) : null}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(7,10,11,0.98)_0%,rgba(7,10,11,0.82)_42%,rgba(7,10,11,0.55)_100%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(9,8,7,0.98)_0%,rgba(9,8,7,0.82)_42%,rgba(9,8,7,0.55)_100%)]"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,#070a0b_0%,rgba(7,10,11,0.4)_38%,transparent_72%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,#090807_0%,rgba(9,8,7,0.4)_38%,transparent_72%)]"
         />
         <div
           aria-hidden
@@ -397,7 +397,7 @@ export default async function PersonPage({ params }: PersonPageProps) {
             </div>
 
             <aside className="lg:pt-1">
-              <div className="overflow-hidden rounded-xl border border-cream/10 bg-[linear-gradient(180deg,rgba(16,22,23,0.9),rgba(7,10,11,0.55))] shadow-[0_24px_60px_-36px_rgba(0,0,0,0.85)] backdrop-blur-md lg:sticky lg:top-24">
+              <div className="overflow-hidden rounded-xl border border-cream/10 bg-[linear-gradient(180deg,rgba(20,18,16,0.9),rgba(9,8,7,0.55))] shadow-[0_24px_60px_-36px_rgba(0,0,0,0.85)] backdrop-blur-md lg:sticky lg:top-24">
                 <div className="border-b border-cream/10 px-5 py-4">
                   <p className="text-[10px] font-semibold tracking-[0.22em] text-amber uppercase">
                     Profile
