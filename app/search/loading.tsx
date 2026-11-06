@@ -7,18 +7,23 @@ export default function SearchLoading() {
       aria-busy
       aria-label="Loading search"
     >
-      <header className="w-full px-5 pt-10 pb-2 sm:px-6 sm:pt-14 lg:px-8 xl:px-10">
+      <header className="border-b border-cream/8 px-5 pt-8 pb-7 sm:px-8 lg:px-12 xl:px-16">
         <Skeleton className="h-3 w-20" />
-        <Skeleton className="mt-3 h-14 w-48 sm:h-20 sm:w-64" />
-        <Skeleton className="mt-4 h-4 w-full max-w-lg" />
+        <Skeleton className="mt-2 h-14 w-48 sm:h-16 sm:w-56" />
+        <Skeleton className="mt-6 h-12 w-full rounded-full sm:h-14" />
+        <div className="mt-5 flex gap-2 overflow-hidden">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <Skeleton key={i} className="h-8 w-20 shrink-0 rounded-full" />
+          ))}
+        </div>
       </header>
-      <div className="border-b border-cream/8 px-5 py-4 sm:px-6 lg:px-8 xl:px-10">
-        <Skeleton className="mx-auto h-14 w-full max-w-3xl rounded-full" />
-      </div>
-      <div className="w-full px-5 pt-8 sm:px-6 lg:px-8 xl:px-10">
-        <Skeleton className="h-3 w-20" />
-        <Skeleton className="mt-2 h-4 w-56" />
-        <MovieGridSkeleton count={10} className="mt-7" />
+
+      <div className="w-full px-5 py-8 sm:px-8 sm:py-10 lg:px-12 xl:px-16">
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="mt-2 h-9 w-52" />
+        <div className="mt-7">
+          <MovieGridSkeleton count={12} />
+        </div>
       </div>
     </main>
   );
