@@ -5,17 +5,20 @@ type ListPageNavProps = {
   active: "favorites" | "watchlist";
 };
 
-/** Pills between Favorites and Watchlist. */
+/** Segmented control between Favorites and Watchlist. */
 export function ListPageNav({ active }: ListPageNavProps) {
   return (
-    <nav aria-label="Your lists" className="flex flex-wrap gap-2">
+    <nav
+      aria-label="Your lists"
+      className="inline-flex rounded-full border border-cream/12 bg-black/35 p-1 backdrop-blur-md"
+    >
       <Link
         href="/favorites"
         className={cn(
-          "rounded-full px-3.5 py-1.5 text-sm transition-colors",
+          "rounded-full px-4 py-1.5 text-sm transition-[background-color,color,box-shadow] duration-300",
           active === "favorites"
-            ? "bg-amber text-[color:var(--on-amber)]"
-            : "border border-cream/15 text-cream/60 hover:border-amber/50 hover:text-amber",
+            ? "bg-amber text-[color:var(--on-amber)] shadow-[0_8px_24px_-12px_color-mix(in_srgb,var(--amber)_70%,transparent)]"
+            : "text-cream/55 hover:text-cream",
         )}
         aria-current={active === "favorites" ? "page" : undefined}
       >
@@ -24,10 +27,10 @@ export function ListPageNav({ active }: ListPageNavProps) {
       <Link
         href="/watchlist"
         className={cn(
-          "rounded-full px-3.5 py-1.5 text-sm transition-colors",
+          "rounded-full px-4 py-1.5 text-sm transition-[background-color,color,box-shadow] duration-300",
           active === "watchlist"
-            ? "bg-amber text-[color:var(--on-amber)]"
-            : "border border-cream/15 text-cream/60 hover:border-amber/50 hover:text-amber",
+            ? "bg-amber text-[color:var(--on-amber)] shadow-[0_8px_24px_-12px_color-mix(in_srgb,var(--amber)_70%,transparent)]"
+            : "text-cream/55 hover:text-cream",
         )}
         aria-current={active === "watchlist" ? "page" : undefined}
       >

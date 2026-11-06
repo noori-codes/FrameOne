@@ -5,7 +5,7 @@ export type FavoritesSort = "recent" | "rating" | "title";
 
 const SORTS: { id: FavoritesSort; label: string }[] = [
   { id: "recent", label: "Recent" },
-  { id: "rating", label: "Your rating" },
+  { id: "rating", label: "Highest rated" },
   { id: "title", label: "A–Z" },
 ];
 
@@ -22,7 +22,10 @@ type FavoritesSortNavProps = {
 
 export function FavoritesSortNav({ active }: FavoritesSortNavProps) {
   return (
-    <nav aria-label="Sort favorites" className="flex flex-wrap gap-2">
+    <nav
+      aria-label="Sort favorites"
+      className="inline-flex flex-wrap gap-1 rounded-full border border-cream/10 bg-black/25 p-1 backdrop-blur-md"
+    >
       {SORTS.map((sort) => {
         const href =
           sort.id === "recent" ? "/favorites" : `/favorites?sort=${sort.id}`;
@@ -34,10 +37,10 @@ export function FavoritesSortNav({ active }: FavoritesSortNavProps) {
             href={href}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "rounded-full px-3.5 py-1.5 text-sm transition-colors",
+              "rounded-full px-3.5 py-1.5 text-sm transition-[background-color,color] duration-300",
               isActive
-                ? "border border-amber/50 bg-amber/10 text-amber"
-                : "border border-cream/12 text-cream/50 hover:border-amber/40 hover:text-amber",
+                ? "bg-cream/10 text-cream"
+                : "text-cream/45 hover:text-cream/80",
             )}
           >
             {sort.label}
