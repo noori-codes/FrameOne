@@ -22,18 +22,20 @@ type SearchExperienceProps = {
   suggestions?: string[];
 };
 
-function syncUrl(query: string, page: number) {
+function syncUrl(query: string) {
   const params = new URLSearchParams();
   if (query) params.set("q", query);
-  if (page > 1) params.set("page", String(page));
   const qs = params.toString();
   const next = qs ? `/search?${qs}` : "/search";
   window.history.replaceState(null, "", next);
 }
 
+function hitKey(hit: SearchHit) {
+  return `${hit.mediaType}-${hit.id}`;
+}
+
 /**
- * Live search — debounced fetch, no full page reload.
- * URL stays shareable via replaceState.
+ * Live search with infinite scroll — debounced query, append pages on scroll.
  */
 export function SearchExperience({
   initialQuery = "",
@@ -43,7 +45,7 @@ export function SearchExperience({
 }: SearchExperienceProps) {
   const [input, setInput] = useState(initialQuery);
   const [query, setQuery] = useState(initialQuery.trim());
-  const [page, setPage] = useState(initialPage);
+  const [page, setPage] = useState(initialData?.page ?? initialPage);
   const [results, setResults] = useState<SearchHit[]>(
     initialData?.results ?? [],
   );
@@ -51,35 +53,59 @@ export function SearchExperience({
   const [totalResults, setTotalResults] = useState(
     initialData?.totalResults ?? 0,
   );
-  const [loading, setLoading] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+
   const abortRef = useRef<AbortController | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  /** Skip the first effect tick so SSR initial results aren’t immediately re-fetched. */
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const loadingMoreRef = useRef(false);
+  const pausedRef = useRef(false);
   const skipFirstDebounce = useRef(true);
+  const queryRef = useRef(query);
+  const pageRef = useRef(page);
+  const totalPagesRef = useRef(totalPages);
 
-  const fetchPage = useCallback(async (q: string, nextPage: number) => {
+  useEffect(() => {
+    queryRef.current = query;
+  }, [query]);
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
+  useEffect(() => {
+    totalPagesRef.current = totalPages;
+  }, [totalPages]);
+
+  const hasMore = page < totalPages;
+
+  const runSearch = useCallback(async (q: string) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+    pausedRef.current = false;
+    loadingMoreRef.current = false;
 
     if (!q) {
       setResults([]);
       setTotalPages(0);
       setTotalResults(0);
-      setLoading(false);
+      setPage(1);
+      setSearching(false);
+      setLoadingMore(false);
       setError(null);
-      syncUrl("", 1);
+      syncUrl("");
       return;
     }
 
-    setLoading(true);
+    setSearching(true);
+    setLoadingMore(false);
     setError(null);
 
     try {
       const res = await fetch(
-        `/api/search/movies?q=${encodeURIComponent(q)}&page=${nextPage}`,
+        `/api/search/movies?q=${encodeURIComponent(q)}&page=1`,
         { signal: controller.signal },
       );
       if (!res.ok) throw new Error("Search failed");
@@ -92,12 +118,76 @@ export function SearchExperience({
         setTotalResults(data.totalResults);
         setPage(data.page);
       });
-      syncUrl(q, data.page);
+      syncUrl(q);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       setError("Couldn’t search right now. Try again.");
+      setResults([]);
+      setTotalPages(0);
+      setTotalResults(0);
+      setPage(1);
     } finally {
-      if (!controller.signal.aborted) setLoading(false);
+      if (!controller.signal.aborted) setSearching(false);
+    }
+  }, []);
+
+  const loadMore = useCallback(async (opts?: { resume?: boolean }) => {
+    if (opts?.resume) pausedRef.current = false;
+    const q = queryRef.current;
+    const currentPage = pageRef.current;
+    const pages = totalPagesRef.current;
+    if (
+      !q ||
+      loadingMoreRef.current ||
+      pausedRef.current ||
+      currentPage >= pages
+    ) {
+      return;
+    }
+
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    setError(null);
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const nextPage = currentPage + 1;
+    try {
+      const res = await fetch(
+        `/api/search/movies?q=${encodeURIComponent(q)}&page=${nextPage}`,
+        { signal: controller.signal },
+      );
+      if (!res.ok) throw new Error("Couldn’t load more titles");
+      const data = (await res.json()) as PaginatedSearch;
+      if (controller.signal.aborted) return;
+
+      setResults((prev) => {
+        const seen = new Set(prev.map(hitKey));
+        const merged = [...prev];
+        for (const hit of data.results) {
+          const key = hitKey(hit);
+          if (seen.has(key)) continue;
+          seen.add(key);
+          merged.push(hit);
+        }
+        return merged;
+      });
+      setPage(data.page);
+      setTotalPages(data.totalPages);
+      setTotalResults(data.totalResults);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      pausedRef.current = true;
+      setError(
+        err instanceof Error ? err.message : "Couldn’t load more titles",
+      );
+    } finally {
+      if (abortRef.current === controller) {
+        loadingMoreRef.current = false;
+        setLoadingMore(false);
+      }
     }
   }, []);
 
@@ -111,39 +201,46 @@ export function SearchExperience({
 
     const id = window.setTimeout(() => {
       setQuery(trimmed);
-      setPage(1);
-      void fetchPage(trimmed, 1);
+      void runSearch(trimmed);
     }, DEBOUNCE_MS);
 
     return () => window.clearTimeout(id);
-  }, [input, fetchPage, initialQuery]);
+  }, [input, runSearch, initialQuery]);
 
   useEffect(() => {
     return () => abortRef.current?.abort();
   }, []);
 
-  function goToPage(next: number) {
-    if (next < 1 || next > totalPages || next === page || !query) return;
-    setPage(next);
-    void fetchPage(query, next);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node || !query || !hasMore || searching) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) void loadMore();
+      },
+      { rootMargin: "500px 0px" },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [query, hasMore, searching, loadMore, results.length]);
 
   function applySuggestion(title: string) {
     setInput(title);
     setQuery(title);
-    setPage(1);
-    void fetchPage(title, 1);
+    void runSearch(title);
     inputRef.current?.focus();
   }
 
   function clearSearch() {
     setInput("");
     setQuery("");
-    setPage(1);
-    void fetchPage("", 1);
+    void runSearch("");
     inputRef.current?.focus();
   }
+
+  const busy = searching || loadingMore;
 
   return (
     <>
@@ -170,14 +267,14 @@ export function SearchExperience({
               autoCorrect="off"
               spellCheck={false}
               enterKeyHint="search"
-              aria-busy={loading}
+              aria-busy={busy}
               className={cn(
                 "search-field w-full rounded-full border border-cream/12 bg-cream/[0.04] py-4 pl-14 text-base text-cream outline-none transition-[border-color,box-shadow,background-color] duration-300 placeholder:text-cream/28 focus:border-amber/45 focus:bg-cream/[0.06] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--amber)_14%,transparent),0_18px_48px_-24px_rgba(0,0,0,0.7)] sm:text-[15px]",
-                input || loading ? "pr-14" : "pr-5",
+                input || searching ? "pr-14" : "pr-5",
               )}
             />
             <span className="pointer-events-none absolute top-1/2 right-3 flex -translate-y-1/2 items-center gap-1">
-              {loading ? (
+              {searching ? (
                 <Loader2
                   className="size-4 animate-spin text-amber/80"
                   aria-hidden
@@ -198,11 +295,8 @@ export function SearchExperience({
         </div>
       </div>
 
-      <div
-        className="w-full flex-1 px-5 pt-8 pb-16 sm:px-6 sm:pt-10 sm:pb-20 lg:px-8 xl:px-10"
-        aria-live="polite"
-      >
-        {error ? (
+      <div className="w-full flex-1 px-5 pt-8 pb-16 sm:px-6 sm:pt-10 sm:pb-20 lg:px-8 xl:px-10">
+        {error && results.length === 0 ? (
           <p
             className="rounded-2xl border border-red-400/20 bg-red-500/10 px-5 py-4 text-sm text-red-300"
             role="alert"
@@ -221,7 +315,8 @@ export function SearchExperience({
                 Start typing
               </p>
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-cream/50">
-                Search any movie or series title. Results update as you type.
+                Search any movie or series title. Keep scrolling for more
+                matches.
               </p>
 
               {suggestions.length > 0 ? (
@@ -246,7 +341,12 @@ export function SearchExperience({
               ) : null}
             </div>
           </div>
-        ) : !loading && results.length === 0 ? (
+        ) : searching && results.length === 0 ? (
+          <div className="flex items-center justify-center gap-2 py-20 text-sm text-cream/45">
+            <Loader2 className="size-4 animate-spin text-amber/80" aria-hidden />
+            Searching…
+          </div>
+        ) : !searching && results.length === 0 ? (
           <div className="mx-auto max-w-xl rounded-3xl border border-cream/10 bg-cream/[0.025] px-6 py-10 text-center sm:px-8">
             <p className="font-display text-3xl tracking-wide text-cream uppercase">
               No matches
@@ -266,36 +366,36 @@ export function SearchExperience({
           </div>
         ) : (
           <>
-            <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
-                  Results
-                </p>
-                <p className="mt-1 text-sm tracking-wide text-cream/55">
-                  {loading ? (
-                    <span className="inline-flex items-center gap-2 text-cream/45">
-                      <Loader2 className="size-3.5 animate-spin" aria-hidden />
-                      Searching…
-                    </span>
-                  ) : (
-                    <>
-                      <span className="text-cream/80">&ldquo;{query}&rdquo;</span>
-                      {` · ${totalResults.toLocaleString()} titles`}
-                      {totalPages > 1 ? ` · page ${page}` : null}
-                    </>
-                  )}
-                </p>
-              </div>
+            <div className="mb-7">
+              <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
+                Results
+              </p>
+              <p className="mt-1 text-sm tracking-wide text-cream/55" aria-live="polite">
+                {searching ? (
+                  <span className="inline-flex items-center gap-2 text-cream/45">
+                    <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                    Searching…
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-cream/80">&ldquo;{query}&rdquo;</span>
+                    {` · showing ${results.length.toLocaleString()}`}
+                    {totalResults > 0
+                      ? ` of ${totalResults.toLocaleString()} titles`
+                      : " titles"}
+                  </>
+                )}
+              </p>
             </div>
 
             <ul
               className={cn(
                 "grid grid-cols-2 gap-x-5 gap-y-9 sm:grid-cols-3 sm:gap-x-6 sm:gap-y-10 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5",
-                loading && "opacity-60 transition-opacity duration-300",
+                searching && "opacity-70 transition-opacity duration-300",
               )}
             >
               {results.map((hit) => (
-                <li key={`${hit.mediaType}-${hit.id}`}>
+                <li key={hitKey(hit)}>
                   <MovieCard
                     id={hit.id}
                     title={hit.title}
@@ -310,31 +410,41 @@ export function SearchExperience({
               ))}
             </ul>
 
-            {totalPages > 1 ? (
-              <nav
-                className="mt-10 flex items-center justify-between gap-3 border-t border-cream/10 pt-6 sm:mt-12"
-                aria-label="Pagination"
-              >
-                <button
-                  type="button"
-                  disabled={page <= 1 || loading}
-                  onClick={() => goToPage(page - 1)}
-                  className="min-h-10 rounded-full border border-cream/15 bg-cream/[0.03] px-4 py-2 text-sm text-cream/80 transition-[border-color,color,background-color] hover:border-amber/40 hover:bg-amber/10 hover:text-amber disabled:cursor-not-allowed disabled:opacity-30"
-                >
-                  ← Previous
-                </button>
-                <p className="shrink-0 rounded-full border border-cream/10 bg-cream/[0.03] px-3.5 py-1.5 text-xs tabular-nums text-cream/50 sm:text-sm">
-                  {page} / {totalPages}
+            <div ref={sentinelRef} className="h-10" aria-hidden />
+
+            <div aria-live="polite" className="sr-only">
+              {loadingMore ? "Loading more results" : null}
+            </div>
+
+            {loadingMore ? (
+              <p className="mt-6 flex items-center justify-center gap-2 py-2 text-sm text-cream/40">
+                <span
+                  aria-hidden
+                  className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-cream/20 border-t-amber"
+                />
+                Loading more…
+              </p>
+            ) : null}
+
+            {error && results.length > 0 ? (
+              <div className="mt-6 flex flex-col items-start gap-3">
+                <p className="text-sm text-cream/50" role="alert">
+                  {error}
                 </p>
                 <button
                   type="button"
-                  disabled={page >= totalPages || loading}
-                  onClick={() => goToPage(page + 1)}
-                  className="min-h-10 rounded-full border border-cream/15 bg-cream/[0.03] px-4 py-2 text-sm text-cream/80 transition-[border-color,color,background-color] hover:border-amber/40 hover:bg-amber/10 hover:text-amber disabled:cursor-not-allowed disabled:opacity-30"
+                  onClick={() => void loadMore({ resume: true })}
+                  className="rounded-full border border-cream/25 px-4 py-1.5 text-sm text-cream transition-colors hover:border-amber hover:text-amber"
                 >
-                  Next →
+                  Try again
                 </button>
-              </nav>
+              </div>
+            ) : null}
+
+            {!hasMore && !loadingMore && !searching && results.length > 0 ? (
+              <p className="mt-10 text-center text-sm text-cream/35">
+                That’s everything for this search
+              </p>
             ) : null}
           </>
         )}
