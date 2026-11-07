@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { SaveListButtons } from "@/components/save-list-buttons";
 import { TrailerButton } from "@/components/trailer-button";
+import { MEDIA_MOVIE, type MediaListType } from "@/lib/lists";
 import type { WatchProviderOffer } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +12,7 @@ type MovieHeroActionsProps = {
   posterPath: string | null;
   trailerKey: string | null;
   watchOffer: WatchProviderOffer | null;
+  mediaType?: MediaListType;
   initialFavorite: boolean;
   initialWatchlist: boolean;
   initialWatched: boolean;
@@ -41,6 +43,7 @@ export function MovieHeroActions({
   posterPath,
   trailerKey,
   watchOffer,
+  mediaType = MEDIA_MOVIE,
   initialFavorite,
   initialWatchlist,
   initialWatched,
@@ -77,10 +80,11 @@ export function MovieHeroActions({
       ) : null}
 
       <SaveListButtons
-        key={`${movieId}-${initialFavorite}-${initialWatchlist}-${initialWatched}`}
+        key={`${mediaType}-${movieId}-${initialFavorite}-${initialWatchlist}-${initialWatched}`}
         movieId={movieId}
         title={title}
         posterPath={posterPath}
+        mediaType={mediaType}
         initialFavorite={initialFavorite}
         initialWatchlist={initialWatchlist}
         initialWatched={initialWatched}

@@ -1092,10 +1092,30 @@ export type TmdbTvShow = {
   genre_ids?: number[];
 };
 
+export type TvAppend =
+  | "credits"
+  | "videos"
+  | "images"
+  | "keywords"
+  | "content_ratings"
+  | "external_ids";
+
+type TmdbContentRating = {
+  iso_3166_1: string;
+  rating: string;
+};
+
 export type TmdbTvDetails = TmdbTvShow & {
   tagline: string | null;
   genres: { id: number; name: string }[];
   videos?: { results: TmdbVideo[] };
+  images?: {
+    backdrops?: TmdbImageAsset[];
+    posters?: TmdbImageAsset[];
+  };
+  /** TV keywords live under `results` (movies use `keywords`). */
+  keywords?: { results?: TmdbKeyword[]; keywords?: TmdbKeyword[] };
+  content_ratings?: { results?: TmdbContentRating[] };
   original_name?: string;
   original_language?: string;
   status?: string;
@@ -1204,7 +1224,7 @@ export async function getTrendingTvPage(
 /** Single TV show by id. Returns null when TMDB says 404. */
 export async function getTv(
   id: string | number,
-  options: { appendToResponse?: ("credits" | "videos" | "external_ids")[] } = {},
+  options: { appendToResponse?: TvAppend[] } = {},
 ): Promise<TmdbTvDetails | null> {
   const url = new URL(`${getBaseUrl()}/tv/${id}`);
   url.searchParams.set("api_key", getApiKey());
@@ -1225,6 +1245,41 @@ export async function getTv(
   }
 
   return (await res.json()) as TmdbTvDetails;
+}
+
+/** TV content rating for a region (e.g. "TV-MA"). */
+export function getTvCertification(
+  show: TmdbTvDetails,
+  region = process.env.TMDB_WATCH_REGION?.trim().toUpperCase() || "US",
+): string | null {
+  const results = show.content_ratings?.results;
+  if (!results?.length) return null;
+  const pick = (iso: string) =>
+    results.find((r) => r.iso_3166_1 === iso)?.rating?.trim() || null;
+  return pick(region) ?? pick("US") ?? null;
+}
+
+export function getTvKeywords(
+  show: TmdbTvDetails,
+  limit = 12,
+): TmdbKeyword[] {
+  const list = show.keywords?.results ?? show.keywords?.keywords ?? [];
+  return list.slice(0, limit);
+}
+
+/** Backdrop stills for TV galleries (skips the hero backdrop when possible). */
+export function getTvStills(
+  show: TmdbTvDetails,
+  limit = 12,
+): TmdbImageAsset[] {
+  const backdrops = [...(show.images?.backdrops ?? [])].sort(
+    (a, b) => (b.vote_average ?? 0) - (a.vote_average ?? 0),
+  );
+  const hero = show.backdrop_path;
+  const filtered = hero
+    ? backdrops.filter((img) => img.file_path !== hero)
+    : backdrops;
+  return (filtered.length > 0 ? filtered : backdrops).slice(0, limit);
 }
 
 /**

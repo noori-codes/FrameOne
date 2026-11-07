@@ -1,36 +1,44 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  ArrowUpRight,
-  CalendarDays,
-  Clock3,
-  Star,
-} from "lucide-react";
+import { ArrowUpRight, Clock3, Heart, Star } from "lucide-react";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
+import { DetailBackLink } from "@/components/detail-back-link";
 import { FavoriteMetaForm } from "@/components/favorite-meta-form";
+import { MovieHeroActions } from "@/components/movie-hero-actions";
 import { MovieRow } from "@/components/movie-row";
-import { SaveListButtons } from "@/components/save-list-buttons";
-import { TrailerButton } from "@/components/trailer-button";
+import { TitleMedia } from "@/components/title-media";
 import { WhereToWatch } from "@/components/where-to-watch";
 import { MEDIA_TV } from "@/lib/lists";
 import { prisma } from "@/lib/prisma";
 import {
   backdropUrl,
+  getMovieTrailerKeyFromVideos,
+  getMovieVideoClips,
   getSimilarTv,
   getTv,
-  getTvTrailerKey,
+  getTvCertification,
+  getTvKeywords,
+  getTvStills,
   getWatchProviders,
   posterUrl,
   profileUrl,
   tvShowAsMovie,
+  type TmdbCrewMember,
 } from "@/lib/tmdb";
 
 type TvPageProps = {
   params: Promise<{ id: string }>;
 };
+
+const KEY_CREW_JOBS: { job: string; label: string }[] = [
+  { job: "Director", label: "Director" },
+  { job: "Executive Producer", label: "Executive producer" },
+  { job: "Producer", label: "Producer" },
+  { job: "Writer", label: "Writer" },
+  { job: "Original Music Composer", label: "Music" },
+];
 
 function formatAirDate(date: string) {
   if (!date) return null;
@@ -48,6 +56,17 @@ function formatEpisodeRuntime(runtimes: number[] | undefined) {
   const minutes = runtimes?.find((value) => value > 0);
   if (minutes == null) return null;
   return `~${minutes}m / ep`;
+}
+
+function formatWatchedDate(iso: Date | string | null | undefined) {
+  if (!iso) return null;
+  const parsed = iso instanceof Date ? iso : new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(parsed);
 }
 
 function Fact({
@@ -68,6 +87,22 @@ function Fact({
   );
 }
 
+function pickKeyCrew(crew: TmdbCrewMember[] | undefined) {
+  if (!crew?.length) return [];
+  const out: { label: string; person: TmdbCrewMember }[] = [];
+  const used = new Set<string>();
+  for (const { job, label } of KEY_CREW_JOBS) {
+    const matches = crew.filter((person) => person.job === job);
+    for (const person of matches.slice(0, job.includes("Producer") ? 2 : 1)) {
+      const key = `${person.id}-${person.job}`;
+      if (used.has(key)) continue;
+      used.add(key);
+      out.push({ label, person });
+    }
+  }
+  return out;
+}
+
 export async function generateMetadata({
   params,
 }: TvPageProps): Promise<Metadata> {
@@ -80,16 +115,25 @@ export async function generateMetadata({
   };
 }
 
-/** Series detail — trailer, lists, cast, similar. */
+/** Series detail — trailer, lists, cast, media, similar. */
 export default async function TvPage({ params }: TvPageProps) {
   const { id } = await params;
-  const show = await getTv(id);
+  const show = await getTv(id, {
+    appendToResponse: [
+      "credits",
+      "videos",
+      "images",
+      "keywords",
+      "content_ratings",
+      "external_ids",
+    ],
+  });
   if (!show) notFound();
 
   const session = await auth();
   const userId = session?.user?.id;
 
-  const [favorite, watchlistItem, watchedItem, trailerKey, similar, watchOffer] =
+  const [favorite, watchlistItem, watchedItem, similar, watchOffer] =
     await Promise.all([
       userId
         ? prisma.favorite.findUnique({
@@ -127,17 +171,23 @@ export default async function TvPage({ params }: TvPageProps) {
             },
           })
         : Promise.resolve(null),
-      getTvTrailerKey(show.id),
       getSimilarTv(show.id, 20),
       getWatchProviders("tv", show.id),
     ]);
 
+  const trailerKey = getMovieTrailerKeyFromVideos(show.videos?.results);
+  const clips = getMovieVideoClips(show.videos?.results);
+  const stills = getTvStills(show);
+  const keywords = getTvKeywords(show);
+  const certification = getTvCertification(show);
+
   const poster = posterUrl(show.poster_path, "w500");
   const backdrop = backdropUrl(show.backdrop_path);
-  const firstAir = formatAirDate(show.first_air_date);
+  const firstAirYear = show.first_air_date?.slice(0, 4) || null;
   const episodeRuntime = formatEpisodeRuntime(show.episode_run_time);
   const creators = show.created_by?.slice(0, 3) ?? [];
-  const cast = show.credits?.cast.slice(0, 10) ?? [];
+  const cast = show.credits?.cast.slice(0, 16) ?? [];
+  const keyCrew = pickKeyCrew(show.credits?.crew);
   const language =
     show.spoken_languages?.find(
       (item) => item.iso_639_1 === show.original_language,
@@ -150,6 +200,18 @@ export default async function TvPage({ params }: TvPageProps) {
     ?.map((country) => country.name)
     .join(", ");
   const imdbId = show.external_ids?.imdb_id ?? null;
+  const watchedDate = formatWatchedDate(watchedItem?.watchedAt);
+  const signedIn = Boolean(session?.user);
+  const seasonsLabel =
+    show.number_of_seasons != null
+      ? `${show.number_of_seasons} ${
+          show.number_of_seasons === 1 ? "season" : "seasons"
+        }${
+          show.number_of_episodes != null
+            ? ` · ${show.number_of_episodes} eps`
+            : ""
+        }`
+      : null;
 
   return (
     <main className="flex min-h-dvh flex-1 flex-col">
@@ -182,95 +244,75 @@ export default async function TvPage({ params }: TvPageProps) {
         />
         <div aria-hidden className="film-grain absolute inset-0 opacity-70" />
 
-        <div className="relative mx-auto flex w-full max-w-screen-2xl flex-1 flex-col px-4 pb-6 pt-16 sm:px-6 sm:pb-10 sm:pt-20 lg:px-8 lg:pb-12 lg:pt-24">
-          <Link
-            href="/#trending-series"
-            className="inline-flex min-h-10 w-fit items-center gap-2 rounded-full border border-cream/15 bg-black/25 px-3.5 text-xs font-medium text-cream/75 backdrop-blur-md transition-[border-color,color,background-color] hover:border-amber/40 hover:bg-black/40 hover:text-amber sm:text-sm"
-          >
-            <ArrowLeft className="size-4" aria-hidden />
-            Back to series
-          </Link>
+        <div className="relative mx-auto flex w-full flex-1 flex-col px-5 pb-6 pt-16 sm:px-8 sm:pb-10 sm:pt-20 lg:px-12 lg:pb-12 lg:pt-24 xl:px-16">
+          <DetailBackLink />
 
-          <div className="mt-auto grid grid-cols-1 items-end gap-7 pt-8 sm:gap-10 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-12 lg:pt-16">
+          <div className="mt-auto grid grid-cols-1 items-end gap-7 pt-8 sm:gap-10 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-12 lg:pt-12 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="min-w-0 lg:pb-2">
-              <div className="relative mx-auto mb-6 w-full max-w-[140px] sm:mb-8 sm:max-w-[160px] lg:hidden">
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute -inset-4 rounded-[2rem] bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--amber)_22%,transparent),transparent_68%)] blur-2xl"
-                />
-                <div className="relative aspect-2/3 overflow-hidden rounded-xl bg-stage shadow-[0_28px_70px_-28px_rgba(0,0,0,0.95)] ring-1 ring-cream/20">
+              <div className="relative mb-5 w-[5.5rem] sm:mb-6 sm:w-28 lg:hidden">
+                <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-stage shadow-[0_20px_50px_-24px_rgba(0,0,0,0.95)] ring-1 ring-cream/20">
                   {poster ? (
                     <Image
                       src={poster}
                       alt={show.name}
                       fill
-                      sizes="160px"
+                      sizes="112px"
                       className="object-cover"
                       priority
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center p-4 text-center font-display text-2xl text-cream/45">
-                      {show.name}
+                    <div className="flex h-full items-center justify-center p-2 text-center font-display text-lg text-cream/45">
+                      {show.name.slice(0, 1)}
                     </div>
                   )}
                 </div>
               </div>
-              <p className="mb-3 inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.22em] text-amber uppercase sm:text-xs">
+
+              <p className="hero-line hero-line-1 mb-3 inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.22em] text-amber uppercase sm:text-xs">
                 <span className="h-px w-5 bg-amber/70" aria-hidden />
                 FrameOne <span className="px-1 text-cream/35">/</span> Series
-                {show.first_air_date
-                  ? ` · ${show.first_air_date.slice(0, 4)}`
-                  : ""}
               </p>
-              <h1 className="max-w-4xl font-display text-4xl leading-[0.9] text-balance wrap-break-word text-cream uppercase drop-shadow-[0_10px_40px_rgba(0,0,0,0.45)] sm:text-6xl md:text-7xl lg:text-8xl">
+
+              <h1 className="hero-line hero-line-2 max-w-4xl font-display text-4xl leading-[0.9] text-balance wrap-break-word text-cream uppercase drop-shadow-[0_10px_40px_rgba(0,0,0,0.45)] sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-8xl">
                 {show.name}
               </h1>
+
               {show.tagline ? (
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-cream/75 italic sm:mt-4 sm:text-lg">
+                <p className="hero-line hero-line-3 mt-2 max-w-2xl text-sm leading-relaxed text-cream/70 italic sm:mt-3 sm:text-base">
                   “{show.tagline}”
                 </p>
               ) : null}
 
-              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-cream/80 sm:mt-5 sm:gap-x-5 sm:gap-y-3 sm:text-sm">
-                {firstAir ? (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-cream/12 bg-black/25 px-2.5 py-1 backdrop-blur-sm">
-                    <CalendarDays
-                      className="size-3.5 text-amber sm:size-4"
-                      aria-hidden
-                    />
-                    {firstAir}
+              <div className="hero-line hero-line-3 mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-cream/80 sm:mt-5 sm:gap-x-4 sm:text-sm">
+                {certification ? (
+                  <span className="inline-flex min-h-8 items-center rounded border border-cream/25 bg-black/35 px-2 font-semibold tracking-wide text-cream/90 backdrop-blur-sm">
+                    {certification}
                   </span>
                 ) : null}
+                {firstAirYear ? (
+                  <span className="text-cream/75">{firstAirYear}</span>
+                ) : null}
                 {episodeRuntime ? (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-cream/12 bg-black/25 px-2.5 py-1 backdrop-blur-sm">
-                    <Clock3
-                      className="size-3.5 text-amber sm:size-4"
-                      aria-hidden
-                    />
+                  <span className="inline-flex items-center gap-1.5 text-cream/75">
+                    <Clock3 className="size-3.5 text-amber/80" aria-hidden />
                     {episodeRuntime}
                   </span>
                 ) : null}
-                {show.number_of_seasons != null ? (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-cream/12 bg-black/25 px-2.5 py-1 text-cream/70 backdrop-blur-sm">
-                    {show.number_of_seasons}{" "}
-                    {show.number_of_seasons === 1 ? "season" : "seasons"}
-                    {show.number_of_episodes != null
-                      ? ` · ${show.number_of_episodes} eps`
-                      : ""}
-                  </span>
+                {seasonsLabel ? (
+                  <span className="text-cream/65">{seasonsLabel}</span>
                 ) : null}
-                <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-amber/35 bg-black/35 px-2.5 text-amber shadow-[0_10px_28px_-16px_color-mix(in_srgb,var(--amber)_45%,transparent)] backdrop-blur-md sm:min-h-9 sm:px-3">
+                <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-amber/35 bg-black/35 px-2.5 text-amber backdrop-blur-md sm:min-h-9 sm:px-3">
                   <Star
                     className="size-3.5 fill-current sm:size-4"
                     aria-hidden
                   />
                   <strong>{show.vote_average.toFixed(1)}</strong>
-                  <span className="text-amber/65">/ 10</span>
+                  <span className="text-amber/65">TMDB</span>
                 </span>
               </div>
 
               {show.genres.length > 0 ? (
-                <div className="mt-3 flex flex-wrap gap-2 sm:mt-4">
+                <div className="hero-line hero-line-4 mt-3 flex flex-wrap gap-2 sm:mt-4">
                   {show.genres.map((genre) => (
                     <Link
                       key={genre.id}
@@ -283,25 +325,24 @@ export default async function TvPage({ params }: TvPageProps) {
                 </div>
               ) : null}
 
-              <div className="mt-4 flex flex-wrap items-center gap-2.5 sm:mt-6 sm:gap-3">
-                {trailerKey ? (
-                  <TrailerButton
-                    youtubeKey={trailerKey}
-                    title={show.name}
-                    label="Watch trailer"
-                    className="min-h-10 px-5 text-sm sm:min-h-12 sm:px-6"
-                  />
-                ) : null}
-                <SaveListButtons
-                  key={`${show.id}-${Boolean(favorite)}-${Boolean(watchlistItem)}-${Boolean(watchedItem)}`}
+              {show.overview ? (
+                <p className="hero-line hero-line-4 mt-4 line-clamp-3 max-w-2xl text-sm leading-relaxed text-cream/72 sm:mt-5 sm:text-base sm:leading-7">
+                  {show.overview}
+                </p>
+              ) : null}
+
+              <div className="hero-line hero-line-5 mt-5 sm:mt-6">
+                <MovieHeroActions
                   movieId={show.id}
                   title={show.name}
                   posterPath={show.poster_path}
+                  trailerKey={trailerKey}
+                  watchOffer={watchOffer}
                   mediaType={MEDIA_TV}
                   initialFavorite={Boolean(favorite)}
                   initialWatchlist={Boolean(watchlistItem)}
                   initialWatched={Boolean(watchedItem)}
-                  signedIn={Boolean(session?.user)}
+                  signedIn={signedIn}
                 />
               </div>
             </div>
@@ -317,7 +358,7 @@ export default async function TvPage({ params }: TvPageProps) {
                     src={poster}
                     alt={show.name}
                     fill
-                    sizes="300px"
+                    sizes="320px"
                     className="object-cover"
                     priority
                   />
@@ -332,8 +373,8 @@ export default async function TvPage({ params }: TvPageProps) {
         </div>
       </section>
 
-      <div className="mx-auto grid w-full max-w-screen-2xl gap-10 border-t border-cream/10 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-12 lg:px-8 lg:py-16">
-        <div className="min-w-0 space-y-14 sm:space-y-20">
+      <div className="mx-auto grid w-full gap-10 border-t border-cream/10 px-5 py-10 sm:px-8 sm:py-14 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-12 lg:px-12 lg:py-16 xl:grid-cols-[minmax(0,1fr)_320px] xl:px-16">
+        <div className="min-w-0 space-y-14 sm:space-y-16">
           <section aria-labelledby="overview-heading">
             <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase sm:text-xs">
               The story
@@ -369,6 +410,8 @@ export default async function TvPage({ params }: TvPageProps) {
             ) : null}
           </section>
 
+          <TitleMedia title={show.name} clips={clips} stills={stills} />
+
           {cast.length > 0 ? (
             <section
               aria-labelledby="cast-heading"
@@ -402,7 +445,7 @@ export default async function TvPage({ params }: TvPageProps) {
                         href={`/person/${person.id}`}
                         className="group block min-w-0"
                       >
-                        <div className="relative aspect-4/5 overflow-hidden rounded-xl bg-stage shadow-[0_16px_36px_-20px_rgba(0,0,0,0.8)] ring-1 ring-cream/10 transition-[ring-color,transform,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:ring-amber/30 group-hover:shadow-[0_22px_44px_-18px_rgba(0,0,0,0.9),0_0_28px_-16px_color-mix(in_srgb,var(--amber)_30%,transparent)]">
+                        <div className="relative aspect-4/5 overflow-hidden rounded-xl bg-stage shadow-[0_16px_36px_-20px_rgba(0,0,0,0.8)] ring-1 ring-cream/10 transition-[ring-color,transform,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:ring-amber/30">
                           {profile ? (
                             <Image
                               src={profile}
@@ -428,31 +471,103 @@ export default async function TvPage({ params }: TvPageProps) {
                   );
                 })}
               </ul>
+
+              {keyCrew.length > 0 ? (
+                <div className="mt-10 border-t border-cream/10 pt-8">
+                  <h3 className="font-display text-2xl tracking-wide text-cream uppercase sm:text-3xl">
+                    Key crew
+                  </h3>
+                  <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+                    {keyCrew.map(({ label, person }) => (
+                      <li
+                        key={`${person.id}-${person.job}`}
+                        className="flex items-baseline justify-between gap-3 border-b border-cream/8 py-2.5"
+                      >
+                        <span className="shrink-0 text-xs tracking-wide text-cream/40 uppercase">
+                          {label}
+                        </span>
+                        <Link
+                          href={`/person/${person.id}`}
+                          className="min-w-0 truncate text-right text-sm text-cream/85 transition-colors hover:text-amber"
+                        >
+                          {person.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </section>
           ) : null}
 
-          {favorite ? (
+          {keywords.length > 0 ? (
             <section
-              aria-labelledby="your-notes-heading"
+              aria-labelledby="keywords-heading"
               className="border-t border-cream/10 pt-8 sm:pt-10"
             >
               <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
-                Your collection
+                Themes
               </p>
               <h2
-                id="your-notes-heading"
+                id="keywords-heading"
+                className="mt-2 font-display text-3xl text-cream uppercase sm:text-4xl"
+              >
+                Keywords
+              </h2>
+              <ul className="mt-5 flex flex-wrap gap-2">
+                {keywords.map((keyword) => (
+                  <li key={keyword.id}>
+                    <span className="inline-flex min-h-8 items-center rounded-full border border-cream/12 bg-cream/[0.02] px-3 text-xs text-cream/55">
+                      {keyword.name}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {signedIn ? (
+            <section
+              aria-labelledby="your-shelf-heading"
+              className="border-t border-cream/10 pt-8 sm:pt-10"
+            >
+              <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
+                Your shelf
+              </p>
+              <h2
+                id="your-shelf-heading"
                 className="mt-2 font-display text-4xl text-cream uppercase sm:text-5xl"
               >
-                Your notes
+                Personal
               </h2>
-              <FavoriteMetaForm
-                key={`${favorite.id}-${favorite.rating}-${favorite.note}`}
-                movieId={show.id}
-                mediaType={MEDIA_TV}
-                initialRating={favorite.rating}
-                initialNote={favorite.note}
-                className="mt-5 max-w-xl"
-              />
+
+              {watchedDate ? (
+                <p className="mt-4 text-sm text-cream/60">
+                  Watched{" "}
+                  <span className="text-cream/85">{watchedDate}</span>
+                </p>
+              ) : null}
+
+              {favorite ? (
+                <FavoriteMetaForm
+                  key={`${favorite.id}-${favorite.rating}-${favorite.note}`}
+                  movieId={show.id}
+                  mediaType={MEDIA_TV}
+                  initialRating={favorite.rating}
+                  initialNote={favorite.note}
+                  className="mt-5 max-w-xl"
+                />
+              ) : (
+                <div className="mt-5 flex max-w-xl flex-col gap-3 rounded-2xl border border-cream/12 bg-cream/[0.02] px-5 py-5">
+                  <p className="text-sm leading-relaxed text-cream/65">
+                    Favorite this series to add a rating and personal notes.
+                  </p>
+                  <p className="inline-flex items-center gap-2 text-xs text-cream/45">
+                    <Heart className="size-3.5 text-amber/80" aria-hidden />
+                    Use the heart in the hero to save it first
+                  </p>
+                </div>
+              )}
             </section>
           ) : null}
         </div>
@@ -478,6 +593,18 @@ export default async function TvPage({ params }: TvPageProps) {
             </h2>
             <dl className="mt-4">
               <Fact label="Status" value={show.status} />
+              <Fact
+                label="First aired"
+                value={formatAirDate(show.first_air_date)}
+              />
+              <Fact
+                label="Last aired"
+                value={
+                  show.last_air_date
+                    ? formatAirDate(show.last_air_date)
+                    : null
+                }
+              />
               <Fact label="Original title" value={show.original_name} />
               <Fact label="Language" value={language} />
               <Fact label="Network" value={networks} />
@@ -486,6 +613,16 @@ export default async function TvPage({ params }: TvPageProps) {
               <Fact label="Seasons" value={show.number_of_seasons} />
               <Fact label="Episodes" value={show.number_of_episodes} />
             </dl>
+
+            {favorite?.rating != null ? (
+              <div className="mt-7 flex items-center justify-between border-t border-cream/10 pt-5">
+                <span className="text-sm text-cream/50">Your rating</span>
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber">
+                  <Star className="size-4 fill-current" aria-hidden />
+                  {favorite.rating}/10
+                </span>
+              </div>
+            ) : null}
 
             {show.homepage || imdbId ? (
               <div className="mt-7 flex flex-wrap gap-x-5 gap-y-3 border-t border-cream/10 pt-5">
@@ -521,7 +658,7 @@ export default async function TvPage({ params }: TvPageProps) {
           <MovieRow
             id="similar"
             title="More like this"
-            subtitle={`Because you watched ${show.name}`}
+            subtitle="Similar titles"
             movies={similar.map(tvShowAsMovie)}
             mediaType="tv"
           />
