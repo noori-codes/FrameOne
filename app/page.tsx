@@ -14,6 +14,7 @@ import {
   getHomeMovieFavoriteIds,
   getHomeTvFavoriteIds,
 } from "@/lib/home-favorites";
+import { getTasteRows } from "@/lib/taste-recommendations";
 import { tmdbImageUrl } from "@/lib/tmdb-image-loader";
 import {
   backdropUrl,
@@ -136,6 +137,34 @@ async function HomeGenreRows() {
   return <DeferredGenreRows favoriteIds={favoriteIds} />;
 }
 
+async function TasteRows() {
+  const [rows, movieFavoriteIds, tvFavoriteIds] = await Promise.all([
+    getTasteRows(),
+    getHomeMovieFavoriteIds(),
+    getHomeTvFavoriteIds(),
+  ]);
+
+  if (rows.length === 0) return null;
+
+  return (
+    <>
+      {rows.map((row) => (
+        <MovieRow
+          key={row.id}
+          id={row.id}
+          title={`Because you rated ${row.seedTitle}`}
+          subtitle="Based on your rating"
+          movies={row.movies}
+          mediaType={row.mediaType}
+          favoriteIds={
+            row.mediaType === "tv" ? tvFavoriteIds : movieFavoriteIds
+          }
+        />
+      ))}
+    </>
+  );
+}
+
 async function DiscoveryRows() {
   const [pools, favoriteIds, tvFavoriteIds] = await Promise.all([
     Promise.allSettled([
@@ -246,11 +275,15 @@ export default function Home() {
       {/*
         Home scroll story:
         1) Hero
-        2) 4 curated discovery rows (trending / series / popular / top rated)
-        3) Genre wave A (4 rows) → Genre wave B (4 rows), deferred on scroll
-        4) Endless popular grid
+        2) Taste rows (signed-in, high ratings only)
+        3) 4 curated discovery rows (trending / series / popular / top rated)
+        4) Genre wave A (4 rows) → Genre wave B (4 rows), deferred on scroll
+        5) Endless popular grid
       */}
       <div className="relative z-10 flex w-full flex-col gap-14 border-t border-cream/8 pt-12 pb-12 sm:gap-24 sm:pt-20 sm:pb-20">
+        <Suspense fallback={<RowsSkeleton count={2} />}>
+          <TasteRows />
+        </Suspense>
         <Suspense fallback={<RowsSkeleton count={4} />}>
           <DiscoveryRows />
         </Suspense>

@@ -1002,6 +1002,43 @@ export async function getSimilarMovies(
 }
 
 /**
+ * Movies recommended from a title (taste / “because you liked”).
+ * Prefers recommendations; falls back to similar when empty.
+ * TMDB: GET /movie/{id}/recommendations · GET /movie/{id}/similar
+ */
+export async function getMovieRecommendations(
+  id: string | number,
+  limit = 20,
+): Promise<TmdbMovie[]> {
+  const movieId = Number(id);
+
+  async function fetchList(path: "recommendations" | "similar") {
+    const url = new URL(`${getBaseUrl()}/movie/${id}/${path}`);
+    url.searchParams.set("api_key", getApiKey());
+    url.searchParams.set("page", "1");
+
+    const res = await tmdbFetch(url.toString(), 3600);
+    if (res.status === 404) return [] as TmdbMovie[];
+    if (!res.ok) {
+      throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    }
+    const data = (await res.json()) as PaginatedMoviesResponse;
+    return data.results.filter((m) => m.id !== movieId);
+  }
+
+  try {
+    const recommended = await fetchList("recommendations");
+    if (recommended.length > 0) return recommended.slice(0, limit);
+
+    const similar = await fetchList("similar");
+    return similar.slice(0, limit);
+  } catch (err) {
+    warnTmdb(`Failed to load recommendations for movie ${id}:`, err);
+    return [];
+  }
+}
+
+/**
  * Official movie genre list (Action, Comedy, …).
  * TMDB: GET /genre/movie/list
  */
@@ -1341,6 +1378,43 @@ export async function getSimilarTv(
     return recommended.slice(0, limit);
   } catch (err) {
     warnTmdb(`Failed to load similar TV for ${id}:`, err);
+    return [];
+  }
+}
+
+/**
+ * TV shows recommended from a title (taste / “because you liked”).
+ * Prefers recommendations; falls back to similar when empty.
+ * TMDB: GET /tv/{id}/recommendations · GET /tv/{id}/similar
+ */
+export async function getTvRecommendations(
+  id: string | number,
+  limit = 20,
+): Promise<TmdbTvShow[]> {
+  const showId = Number(id);
+
+  async function fetchList(path: "recommendations" | "similar") {
+    const url = new URL(`${getBaseUrl()}/tv/${id}/${path}`);
+    url.searchParams.set("api_key", getApiKey());
+    url.searchParams.set("page", "1");
+
+    const res = await tmdbFetch(url.toString(), 3600);
+    if (res.status === 404) return [] as TmdbTvShow[];
+    if (!res.ok) {
+      throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    }
+    const data = (await res.json()) as PaginatedTvResponse;
+    return data.results.filter((show) => show.id !== showId);
+  }
+
+  try {
+    const recommended = await fetchList("recommendations");
+    if (recommended.length > 0) return recommended.slice(0, limit);
+
+    const similar = await fetchList("similar");
+    return similar.slice(0, limit);
+  } catch (err) {
+    warnTmdb(`Failed to load recommendations for TV ${id}:`, err);
     return [];
   }
 }
