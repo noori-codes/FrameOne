@@ -14,6 +14,7 @@ const EXPLORE_LINKS = [
 const ACCOUNT_LINKS = [
   { href: "/favorites", label: "Favorites" },
   { href: "/watchlist", label: "Watchlist" },
+  { href: "/watched", label: "Watched" },
   { href: "/profile", label: "Profile" },
 ] as const;
 

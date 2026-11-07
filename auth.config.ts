@@ -24,6 +24,7 @@ export const authConfig = {
       const isProtected =
         pathname.startsWith("/favorites") ||
         pathname.startsWith("/watchlist") ||
+        pathname.startsWith("/watched") ||
         pathname.startsWith("/profile");
 
       if (isProtected) {

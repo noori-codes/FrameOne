@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import { Check, Heart } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useActionState, useOptimistic } from "react";
-import { toggleList, type ToggleListState } from "@/app/actions/favorites";
+import {
+  toggleList,
+  toggleWatched,
+  type ToggleListState,
+} from "@/app/actions/favorites";
 import {
   LIST_FAVORITE,
   LIST_WATCHLIST,
@@ -20,6 +24,7 @@ type SaveListButtonsProps = {
   posterPath: string | null;
   initialFavorite: boolean;
   initialWatchlist: boolean;
+  initialWatched: boolean;
   signedIn: boolean;
   mediaType?: MediaListType;
 };
@@ -104,8 +109,69 @@ function ListToggle({
   );
 }
 
+function WatchedToggle({
+  movieId,
+  title,
+  posterPath,
+  mediaType,
+  initialSaved,
+}: {
+  movieId: number;
+  title: string;
+  posterPath: string | null;
+  mediaType: MediaListType;
+  initialSaved: boolean;
+}) {
+  const [state, dispatch, pending] = useActionState(toggleWatched, {
+    saved: initialSaved,
+    listType: "watched",
+  } satisfies ToggleListState);
+  const saved = state.saved ?? initialSaved;
+  const [optimisticSaved, setOptimisticSaved] = useOptimistic(saved);
+  const buttonLabel = optimisticSaved ? "Watched" : "Mark watched";
+
+  function action(formData: FormData) {
+    if (pending) return;
+    setOptimisticSaved(!optimisticSaved);
+    dispatch(formData);
+  }
+
+  return (
+    <form action={action}>
+      <input type="hidden" name="movieId" value={movieId} />
+      <input type="hidden" name="title" value={title} />
+      <input type="hidden" name="posterPath" value={posterPath ?? ""} />
+      <input type="hidden" name="mediaType" value={mediaType} />
+      <button
+        type="submit"
+        aria-busy={pending}
+        aria-label={buttonLabel}
+        aria-pressed={optimisticSaved}
+        className={cn(
+          "inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 py-2 text-xs font-medium backdrop-blur-md transition-[border-color,background-color,color,box-shadow,transform] active:scale-95 sm:min-h-11 sm:px-4 sm:text-sm",
+          optimisticSaved
+            ? "border border-amber/50 bg-amber/15 text-amber shadow-[0_10px_28px_-14px_color-mix(in_srgb,var(--amber)_45%,transparent)] hover:border-amber hover:bg-amber/20"
+            : "border border-cream/20 bg-black/30 text-cream hover:border-cream/40 hover:bg-black/45 hover:text-cream",
+        )}
+      >
+        <Check
+          aria-hidden
+          className="size-4"
+          strokeWidth={optimisticSaved ? 2.75 : 2}
+        />
+        {buttonLabel}
+      </button>
+      {state.error ? (
+        <p className="mt-2 text-sm text-red-400" role="alert">
+          {state.error}
+        </p>
+      ) : null}
+    </form>
+  );
+}
+
 /**
- * Favorites + Watchlist toggles on movie / TV detail pages.
+ * Favorites + Watchlist + Watched toggles on movie / TV detail pages.
  */
 export function SaveListButtons({
   movieId,
@@ -113,6 +179,7 @@ export function SaveListButtons({
   posterPath,
   initialFavorite,
   initialWatchlist,
+  initialWatched,
   signedIn,
   mediaType = MEDIA_MOVIE,
 }: SaveListButtonsProps) {
@@ -156,6 +223,14 @@ export function SaveListButtons({
         initialSaved={initialWatchlist}
         idleLabel="Add to watchlist"
         activeLabel="On watchlist"
+      />
+      <WatchedToggle
+        key={`watched-${mediaType}-${movieId}-${initialWatched}`}
+        movieId={movieId}
+        title={title}
+        posterPath={posterPath}
+        mediaType={mediaType}
+        initialSaved={initialWatched}
       />
     </div>
   );

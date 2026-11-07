@@ -1,8 +1,12 @@
 /** Saved-list kinds stored on Favorite.listType */
 export const LIST_FAVORITE = "favorite" as const;
 export const LIST_WATCHLIST = "watchlist" as const;
+export const LIST_WATCHED = "watched" as const;
 
-export type ListType = typeof LIST_FAVORITE | typeof LIST_WATCHLIST;
+export type ListType =
+  | typeof LIST_FAVORITE
+  | typeof LIST_WATCHLIST
+  | typeof LIST_WATCHED;
 
 export const MEDIA_MOVIE = "movie" as const;
 export const MEDIA_TV = "tv" as const;
@@ -10,7 +14,11 @@ export const MEDIA_TV = "tv" as const;
 export type MediaListType = typeof MEDIA_MOVIE | typeof MEDIA_TV;
 
 export function isListType(value: string): value is ListType {
-  return value === LIST_FAVORITE || value === LIST_WATCHLIST;
+  return (
+    value === LIST_FAVORITE ||
+    value === LIST_WATCHLIST ||
+    value === LIST_WATCHED
+  );
 }
 
 export function isMediaListType(value: string): value is MediaListType {

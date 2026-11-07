@@ -94,34 +94,47 @@ export default async function MoviePage({ params }: MoviePageProps) {
   const session = await auth();
   const userId = session?.user?.id;
 
-  const [favorite, watchlistItem, trailerKey, similar] = await Promise.all([
-    userId
-      ? prisma.favorite.findUnique({
-          where: {
-            userId_movieId_listType_mediaType: {
-              userId,
-              movieId: movie.id,
-              listType: "favorite",
-              mediaType: "movie",
+  const [favorite, watchlistItem, watchedItem, trailerKey, similar] =
+    await Promise.all([
+      userId
+        ? prisma.favorite.findUnique({
+            where: {
+              userId_movieId_listType_mediaType: {
+                userId,
+                movieId: movie.id,
+                listType: "favorite",
+                mediaType: "movie",
+              },
             },
-          },
-        })
-      : Promise.resolve(null),
-    userId
-      ? prisma.favorite.findUnique({
-          where: {
-            userId_movieId_listType_mediaType: {
-              userId,
-              movieId: movie.id,
-              listType: "watchlist",
-              mediaType: "movie",
+          })
+        : Promise.resolve(null),
+      userId
+        ? prisma.favorite.findUnique({
+            where: {
+              userId_movieId_listType_mediaType: {
+                userId,
+                movieId: movie.id,
+                listType: "watchlist",
+                mediaType: "movie",
+              },
             },
-          },
-        })
-      : Promise.resolve(null),
-    getMovieTrailerKey(movie.id),
-    getSimilarMovies(movie.id, 20),
-  ]);
+          })
+        : Promise.resolve(null),
+      userId
+        ? prisma.favorite.findUnique({
+            where: {
+              userId_movieId_listType_mediaType: {
+                userId,
+                movieId: movie.id,
+                listType: "watched",
+                mediaType: "movie",
+              },
+            },
+          })
+        : Promise.resolve(null),
+      getMovieTrailerKey(movie.id),
+      getSimilarMovies(movie.id, 20),
+    ]);
 
   const poster = posterUrl(movie.poster_path, "w500");
   const backdrop = backdropUrl(movie.backdrop_path);
@@ -283,12 +296,13 @@ export default async function MoviePage({ params }: MoviePageProps) {
                   />
                 ) : null}
                 <SaveListButtons
-                  key={`${movie.id}-${Boolean(favorite)}-${Boolean(watchlistItem)}`}
+                  key={`${movie.id}-${Boolean(favorite)}-${Boolean(watchlistItem)}-${Boolean(watchedItem)}`}
                   movieId={movie.id}
                   title={movie.title}
                   posterPath={movie.poster_path}
                   initialFavorite={Boolean(favorite)}
                   initialWatchlist={Boolean(watchlistItem)}
+                  initialWatched={Boolean(watchedItem)}
                   signedIn={Boolean(session?.user)}
                 />
               </div>

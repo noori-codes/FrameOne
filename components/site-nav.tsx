@@ -30,6 +30,7 @@ const links = [
   { href: "/genres", label: "Genres" },
   { href: "/favorites", label: "Favorites", auth: true },
   { href: "/watchlist", label: "Watchlist", auth: true },
+  { href: "/watched", label: "Watched", auth: true },
 ] as const;
 
 const AUTH_PATHS = new Set([

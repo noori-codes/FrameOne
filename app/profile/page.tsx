@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { Heart, ListVideo, Lock, LogOut } from "lucide-react";
+import { Check, Heart, ListVideo, Lock, LogOut } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import {
   AvatarForm,
@@ -11,7 +11,7 @@ import {
 } from "@/components/profile-forms";
 import { ProfileShelfStrip } from "@/components/profile-shelf-strip";
 import { SiteFooter } from "@/components/site-footer";
-import { LIST_FAVORITE, LIST_WATCHLIST } from "@/lib/lists";
+import { LIST_FAVORITE, LIST_WATCHED, LIST_WATCHLIST } from "@/lib/lists";
 import { prisma } from "@/lib/prisma";
 import { posterUrl } from "@/lib/tmdb";
 
@@ -100,7 +100,7 @@ export default async function ProfilePage() {
       .catch(() => undefined);
   }
 
-  const [favorites, watchlist, ratedCount] = await Promise.all([
+  const [favorites, watchlist, watched, ratedCount] = await Promise.all([
     prisma.favorite.findMany({
       where: { userId, listType: LIST_FAVORITE },
       orderBy: { createdAt: "desc" },
@@ -116,6 +116,18 @@ export default async function ProfilePage() {
     prisma.favorite.findMany({
       where: { userId, listType: LIST_WATCHLIST },
       orderBy: { createdAt: "desc" },
+      take: 12,
+      select: {
+        id: true,
+        movieId: true,
+        title: true,
+        posterPath: true,
+        mediaType: true,
+      },
+    }),
+    prisma.favorite.findMany({
+      where: { userId, listType: LIST_WATCHED },
+      orderBy: [{ watchedAt: "desc" }, { createdAt: "desc" }],
       take: 12,
       select: {
         id: true,
@@ -134,16 +146,19 @@ export default async function ProfilePage() {
     }),
   ]);
 
-  const [favoriteCount, watchlistCount] = await Promise.all([
+  const [favoriteCount, watchlistCount, watchedCount] = await Promise.all([
     prisma.favorite.count({
       where: { userId, listType: LIST_FAVORITE },
     }),
     prisma.favorite.count({
       where: { userId, listType: LIST_WATCHLIST },
     }),
+    prisma.favorite.count({
+      where: { userId, listType: LIST_WATCHED },
+    }),
   ]);
 
-  const mosaic = [...favorites, ...watchlist]
+  const mosaic = [...favorites, ...watchlist, ...watched]
     .filter((item) => item.posterPath)
     .slice(0, 6)
     .map((item) => posterUrl(item.posterPath, "w500"))
@@ -256,6 +271,17 @@ export default async function ProfilePage() {
                     {watchlistCount}
                   </dd>
                 </Link>
+                <Link
+                  href="/watched"
+                  className="group min-w-[6.5rem] rounded-2xl border border-cream/10 bg-black/30 px-4 py-3 text-left backdrop-blur-md transition-[border-color,background-color] hover:border-amber/35 hover:bg-amber/5"
+                >
+                  <dt className="text-[10px] font-semibold tracking-[0.16em] text-cream/40 uppercase">
+                    Watched
+                  </dt>
+                  <dd className="mt-1 font-display text-3xl tracking-wide text-cream tabular-nums transition-colors group-hover:text-amber">
+                    {watchedCount}
+                  </dd>
+                </Link>
                 <div className="min-w-[6.5rem] rounded-2xl border border-cream/10 bg-black/30 px-4 py-3 text-left backdrop-blur-md">
                   <dt className="text-[10px] font-semibold tracking-[0.16em] text-cream/40 uppercase">
                     Rated
@@ -285,6 +311,13 @@ export default async function ProfilePage() {
           count={watchlistCount}
           emptyLabel="Watchlist is empty"
           items={toShelf(watchlist)}
+        />
+        <ProfileShelfStrip
+          title="Watched"
+          href="/watched"
+          count={watchedCount}
+          emptyLabel="Nothing logged yet"
+          items={toShelf(watched)}
         />
       </div>
 
@@ -328,6 +361,13 @@ export default async function ProfilePage() {
                 >
                   <ListVideo className="size-3.5" aria-hidden />
                   Watchlist
+                </Link>
+                <Link
+                  href="/watched"
+                  className="inline-flex items-center gap-2 rounded-full border border-cream/12 bg-black/25 px-3.5 py-2 text-xs text-cream/60 transition-colors hover:border-amber/35 hover:text-amber"
+                >
+                  <Check className="size-3.5" aria-hidden />
+                  Watched
                 </Link>
               </div>
 

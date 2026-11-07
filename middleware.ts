@@ -14,6 +14,7 @@ export default auth((req) => {
   const isProtected =
     pathname.startsWith("/favorites") ||
     pathname.startsWith("/watchlist") ||
+    pathname.startsWith("/watched") ||
     pathname.startsWith("/profile");
   const isAuthPage =
     pathname === "/signin" ||
@@ -40,6 +41,7 @@ export const config = {
   matcher: [
     "/favorites/:path*",
     "/watchlist/:path*",
+    "/watched/:path*",
     "/profile/:path*",
     "/signin",
     "/signup",

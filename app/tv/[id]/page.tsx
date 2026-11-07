@@ -87,34 +87,47 @@ export default async function TvPage({ params }: TvPageProps) {
   const session = await auth();
   const userId = session?.user?.id;
 
-  const [favorite, watchlistItem, trailerKey, similar] = await Promise.all([
-    userId
-      ? prisma.favorite.findUnique({
-          where: {
-            userId_movieId_listType_mediaType: {
-              userId,
-              movieId: show.id,
-              listType: "favorite",
-              mediaType: MEDIA_TV,
+  const [favorite, watchlistItem, watchedItem, trailerKey, similar] =
+    await Promise.all([
+      userId
+        ? prisma.favorite.findUnique({
+            where: {
+              userId_movieId_listType_mediaType: {
+                userId,
+                movieId: show.id,
+                listType: "favorite",
+                mediaType: MEDIA_TV,
+              },
             },
-          },
-        })
-      : Promise.resolve(null),
-    userId
-      ? prisma.favorite.findUnique({
-          where: {
-            userId_movieId_listType_mediaType: {
-              userId,
-              movieId: show.id,
-              listType: "watchlist",
-              mediaType: MEDIA_TV,
+          })
+        : Promise.resolve(null),
+      userId
+        ? prisma.favorite.findUnique({
+            where: {
+              userId_movieId_listType_mediaType: {
+                userId,
+                movieId: show.id,
+                listType: "watchlist",
+                mediaType: MEDIA_TV,
+              },
             },
-          },
-        })
-      : Promise.resolve(null),
-    getTvTrailerKey(show.id),
-    getSimilarTv(show.id, 20),
-  ]);
+          })
+        : Promise.resolve(null),
+      userId
+        ? prisma.favorite.findUnique({
+            where: {
+              userId_movieId_listType_mediaType: {
+                userId,
+                movieId: show.id,
+                listType: "watched",
+                mediaType: MEDIA_TV,
+              },
+            },
+          })
+        : Promise.resolve(null),
+      getTvTrailerKey(show.id),
+      getSimilarTv(show.id, 20),
+    ]);
 
   const poster = posterUrl(show.poster_path, "w500");
   const backdrop = backdropUrl(show.backdrop_path);
@@ -277,13 +290,14 @@ export default async function TvPage({ params }: TvPageProps) {
                   />
                 ) : null}
                 <SaveListButtons
-                  key={`${show.id}-${Boolean(favorite)}-${Boolean(watchlistItem)}`}
+                  key={`${show.id}-${Boolean(favorite)}-${Boolean(watchlistItem)}-${Boolean(watchedItem)}`}
                   movieId={show.id}
                   title={show.name}
                   posterPath={show.poster_path}
                   mediaType={MEDIA_TV}
                   initialFavorite={Boolean(favorite)}
                   initialWatchlist={Boolean(watchlistItem)}
+                  initialWatched={Boolean(watchedItem)}
                   signedIn={Boolean(session?.user)}
                 />
               </div>

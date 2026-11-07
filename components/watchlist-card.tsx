@@ -1,10 +1,14 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useActionState } from "react";
-import { toggleList, type ToggleListState } from "@/app/actions/favorites";
+import {
+  toggleList,
+  toggleWatched,
+  type ToggleListState,
+} from "@/app/actions/favorites";
 import {
   LIST_WATCHLIST,
   MEDIA_MOVIE,
@@ -29,9 +33,10 @@ type WatchlistCardProps = {
 };
 
 const removeInitial: ToggleListState = {};
+const watchedInitial: ToggleListState = {};
 
 /**
- * Letterboxd-style watchlist tile — poster-first; hover reveals title + remove.
+ * Letterboxd-style watchlist tile — poster-first; hover reveals mark watched / remove.
  */
 export function WatchlistCard({
   item,
@@ -39,6 +44,10 @@ export function WatchlistCard({
   queueIndex,
 }: WatchlistCardProps) {
   const [, removeAction, removing] = useActionState(toggleList, removeInitial);
+  const [, watchedAction, marking] = useActionState(
+    toggleWatched,
+    watchedInitial,
+  );
   const poster = posterUrl(item.posterPath, "w500");
   const mediaType = item.mediaType ?? MEDIA_MOVIE;
   const href = mediaHref(mediaType, item.movieId);
@@ -64,7 +73,6 @@ export function WatchlistCard({
           </span>
         )}
 
-        {/* Idle: queue index + media chip */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/35 to-transparent px-2.5 pt-12 pb-2.5 transition-opacity duration-300 group-hover:opacity-0">
           <div className="flex items-center justify-between gap-2">
             {queueIndex != null ? (
@@ -80,7 +88,6 @@ export function WatchlistCard({
           </div>
         </div>
 
-        {/* Hover reveal */}
         <div className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-linear-to-t from-black via-black/70 to-black/10 p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
           {queueIndex != null ? (
             <p className="text-[10px] font-semibold tracking-[0.18em] text-amber uppercase">
@@ -96,7 +103,25 @@ export function WatchlistCard({
         </div>
       </Link>
 
-      <div className="pointer-events-none absolute top-2 right-2 z-10 opacity-0 transition-opacity duration-300 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+      <div className="pointer-events-none absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 transition-opacity duration-300 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+        <form action={watchedAction}>
+          <input type="hidden" name="movieId" value={item.movieId} />
+          <input type="hidden" name="title" value={item.title} />
+          <input type="hidden" name="mediaType" value={mediaType} />
+          <input
+            type="hidden"
+            name="posterPath"
+            value={item.posterPath ?? ""}
+          />
+          <button
+            type="submit"
+            disabled={marking}
+            aria-label={`Mark ${item.title} as watched`}
+            className="flex size-8 items-center justify-center rounded-full border border-cream/15 bg-black/65 text-cream/85 backdrop-blur-md transition-[border-color,background-color,color] hover:border-amber/45 hover:bg-amber/15 hover:text-amber disabled:opacity-60"
+          >
+            <Check className="size-3.5" strokeWidth={2.5} />
+          </button>
+        </form>
         <form action={removeAction}>
           <input type="hidden" name="listType" value={LIST_WATCHLIST} />
           <input type="hidden" name="movieId" value={item.movieId} />
