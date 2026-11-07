@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
         hostname: "blob.ramaki.app",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "i.ytimg.com",
+        pathname: "/vi/**",
+      },
     ],
   },
 };

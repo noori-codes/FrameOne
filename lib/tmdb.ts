@@ -29,7 +29,7 @@ export type TmdbMovie = {
   genre_ids?: number[];
 };
 
-type TmdbVideo = {
+export type TmdbVideo = {
   id: string;
   key: string;
   name: string;
@@ -38,12 +38,54 @@ type TmdbVideo = {
   official: boolean;
 };
 
+export type TmdbCollectionRef = {
+  id: number;
+  name: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+};
+
+export type TmdbKeyword = {
+  id: number;
+  name: string;
+};
+
+export type TmdbImageAsset = {
+  file_path: string;
+  width: number;
+  height: number;
+  aspect_ratio: number;
+  vote_average?: number;
+  vote_count?: number;
+};
+
+type TmdbReleaseDateEntry = {
+  certification: string;
+  descriptors?: string[];
+  iso_639_1?: string;
+  note?: string;
+  release_date: string;
+  type: number;
+};
+
+type TmdbReleaseDatesResult = {
+  iso_3166_1: string;
+  release_dates: TmdbReleaseDateEntry[];
+};
+
 /** Extra fields returned by GET /movie/{id} */
 export type TmdbMovieDetails = TmdbMovie & {
   runtime: number | null;
   tagline: string | null;
   genres: { id: number; name: string }[];
   videos?: { results: TmdbVideo[] };
+  images?: {
+    backdrops?: TmdbImageAsset[];
+    posters?: TmdbImageAsset[];
+  };
+  keywords?: { keywords?: TmdbKeyword[] };
+  release_dates?: { results?: TmdbReleaseDatesResult[] };
+  belongs_to_collection?: TmdbCollectionRef | null;
   original_title?: string;
   original_language?: string;
   status?: string;
@@ -69,6 +111,13 @@ export type TmdbMovieDetails = TmdbMovie & {
     crew: TmdbCrewMember[];
   };
 };
+
+export type MovieAppend =
+  | "credits"
+  | "videos"
+  | "images"
+  | "keywords"
+  | "release_dates";
 
 export type TmdbCastMember = {
   id: number;
@@ -625,7 +674,7 @@ export async function searchMulti(
 /** Single movie by id. Returns null when TMDB says 404. */
 export async function getMovie(
   id: string | number,
-  options: { appendToResponse?: ("credits" | "videos")[] } = {},
+  options: { appendToResponse?: MovieAppend[] } = {},
 ): Promise<TmdbMovieDetails | null> {
   const url = new URL(`${getBaseUrl()}/movie/${id}`);
   url.searchParams.set("api_key", getApiKey());
@@ -658,6 +707,122 @@ export function getMovieTrailerKeyFromVideos(
     youtube[0];
 
   return pick?.key ?? null;
+}
+
+/** YouTube clips for a title page (trailer first, then teasers/featurettes). */
+export function getMovieVideoClips(
+  videos: TmdbVideo[] | undefined,
+  limit = 8,
+): TmdbVideo[] {
+  if (!videos?.length) return [];
+  const youtube = videos.filter((v) => v.site === "YouTube" && v.key);
+  const order = ["Trailer", "Teaser", "Clip", "Featurette", "Behind the Scenes"];
+  const ranked = [...youtube].sort((a, b) => {
+    const ai = order.indexOf(a.type);
+    const bi = order.indexOf(b.type);
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+  const seen = new Set<string>();
+  const out: TmdbVideo[] = [];
+  for (const clip of ranked) {
+    if (seen.has(clip.key)) continue;
+    seen.add(clip.key);
+    out.push(clip);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+/** Theatrical / digital certification for a region (e.g. "PG-13"). */
+export function getMovieCertification(
+  movie: TmdbMovieDetails,
+  region = process.env.TMDB_WATCH_REGION?.trim().toUpperCase() || "US",
+): string | null {
+  const results = movie.release_dates?.results;
+  if (!results?.length) return null;
+
+  const pickFrom = (iso: string) => {
+    const entry = results.find((r) => r.iso_3166_1 === iso);
+    if (!entry) return null;
+    const withCert = entry.release_dates.filter((d) => d.certification?.trim());
+    // Prefer theatrical (3) then digital (4) then any
+    const preferred =
+      withCert.find((d) => d.type === 3) ??
+      withCert.find((d) => d.type === 4) ??
+      withCert[0];
+    return preferred?.certification.trim() || null;
+  };
+
+  return pickFrom(region) ?? pickFrom("US") ?? null;
+}
+
+export function getMovieKeywords(
+  movie: TmdbMovieDetails,
+  limit = 12,
+): TmdbKeyword[] {
+  return (movie.keywords?.keywords ?? []).slice(0, limit);
+}
+
+/** Backdrop stills for galleries (skips the hero backdrop when possible). */
+export function getMovieStills(
+  movie: TmdbMovieDetails,
+  limit = 12,
+): TmdbImageAsset[] {
+  const backdrops = [...(movie.images?.backdrops ?? [])].sort(
+    (a, b) => (b.vote_average ?? 0) - (a.vote_average ?? 0),
+  );
+  const hero = movie.backdrop_path;
+  const filtered = hero
+    ? backdrops.filter((img) => img.file_path !== hero)
+    : backdrops;
+  return (filtered.length > 0 ? filtered : backdrops).slice(0, limit);
+}
+
+export function stillUrl(
+  filePath: string | null | undefined,
+  size: "w780" | "w1280" | "original" = "w780",
+) {
+  if (!filePath) return null;
+  return `${getImageBase()}/${size}${filePath}`;
+}
+
+/**
+ * Movies in a TMDB collection (franchise parts), ordered as TMDB returns them.
+ * TMDB: GET /collection/{id}
+ */
+export async function getMovieCollectionParts(
+  collectionId: number,
+): Promise<TmdbMovie[]> {
+  const url = new URL(`${getBaseUrl()}/collection/${collectionId}`);
+  url.searchParams.set("api_key", getApiKey());
+
+  try {
+    const res = await tmdbFetch(url.toString(), 86400);
+    if (res.status === 404) return [];
+    if (!res.ok) {
+      throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    }
+    const data = (await res.json()) as {
+      parts?: Array<
+        TmdbMovie & { media_type?: string; release_date?: string }
+      >;
+    };
+    return (data.parts ?? [])
+      .filter((part) => part.id && part.title)
+      .map((part) => ({
+        id: part.id,
+        title: part.title,
+        overview: part.overview ?? "",
+        poster_path: part.poster_path,
+        backdrop_path: part.backdrop_path,
+        vote_average: part.vote_average ?? 0,
+        release_date: part.release_date ?? "",
+        genre_ids: part.genre_ids,
+      }));
+  } catch (err) {
+    warnTmdb(`Failed to load collection ${collectionId}:`, err);
+    return [];
+  }
 }
 
 /**

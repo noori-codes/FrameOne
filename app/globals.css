@@ -29,12 +29,18 @@ body {
 }
 
 .movie-detail-hero {
-  min-height: calc(100svh - 3.5rem);
+  min-height: calc(100svh - 3.5rem - 4rem);
 }
 
 @media (min-width: 640px) {
   .movie-detail-hero {
-    min-height: calc(100svh - 4rem);
+    min-height: calc(100svh - 4rem - 5rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  .movie-detail-hero {
+    min-height: calc(100svh - 4rem - 2rem);
   }
 }
 
