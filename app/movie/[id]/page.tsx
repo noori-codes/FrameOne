@@ -14,12 +14,14 @@ import { FavoriteMetaForm } from "@/components/favorite-meta-form";
 import { MovieRow } from "@/components/movie-row";
 import { SaveListButtons } from "@/components/save-list-buttons";
 import { TrailerButton } from "@/components/trailer-button";
+import { WhereToWatch } from "@/components/where-to-watch";
 import { prisma } from "@/lib/prisma";
 import {
   backdropUrl,
   getMovie,
   getMovieTrailerKey,
   getSimilarMovies,
+  getWatchProviders,
   posterUrl,
   profileUrl,
 } from "@/lib/tmdb";
@@ -94,7 +96,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
   const session = await auth();
   const userId = session?.user?.id;
 
-  const [favorite, watchlistItem, watchedItem, trailerKey, similar] =
+  const [favorite, watchlistItem, watchedItem, trailerKey, similar, watchOffer] =
     await Promise.all([
       userId
         ? prisma.favorite.findUnique({
@@ -134,6 +136,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
         : Promise.resolve(null),
       getMovieTrailerKey(movie.id),
       getSimilarMovies(movie.id, 20),
+      getWatchProviders("movie", movie.id),
     ]);
 
   const poster = posterUrl(movie.poster_path, "w500");
@@ -470,6 +473,14 @@ export default async function MoviePage({ params }: MoviePageProps) {
         </div>
 
         <aside className="h-fit border-t border-cream/10 pt-7 lg:sticky lg:top-24 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+          {watchOffer ? (
+            <WhereToWatch
+              offer={watchOffer}
+              title={movie.title}
+              className="mb-8 border-b border-cream/10 pb-8"
+            />
+          ) : null}
+
           <section aria-labelledby="details-heading">
             <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
               At a glance

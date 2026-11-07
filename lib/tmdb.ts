@@ -688,6 +688,117 @@ export async function getMovieTrailerKey(
   }
 }
 
+export type TmdbWatchProvider = {
+  provider_id: number;
+  provider_name: string;
+  logo_path: string | null;
+  display_priority: number;
+};
+
+/** Normalized JustWatch offers for one region. */
+export type WatchProviderOffer = {
+  region: string;
+  link: string | null;
+  /** Free / free-with-ads services. */
+  free: TmdbWatchProvider[];
+  flatrate: TmdbWatchProvider[];
+  rent: TmdbWatchProvider[];
+  buy: TmdbWatchProvider[];
+};
+
+type TmdbWatchProvidersResponse = {
+  id: number;
+  results: Record<
+    string,
+    {
+      link?: string;
+      flatrate?: TmdbWatchProvider[];
+      rent?: TmdbWatchProvider[];
+      buy?: TmdbWatchProvider[];
+      ads?: TmdbWatchProvider[];
+      free?: TmdbWatchProvider[];
+    }
+  >;
+};
+
+function sortProviders(list: TmdbWatchProvider[] | undefined) {
+  return [...(list ?? [])].sort(
+    (a, b) => a.display_priority - b.display_priority,
+  );
+}
+
+function getWatchRegion() {
+  const raw = process.env.TMDB_WATCH_REGION?.trim().toUpperCase();
+  return raw && /^[A-Z]{2}$/.test(raw) ? raw : "US";
+}
+
+/**
+ * Streaming / rent / buy availability for a title in one region (JustWatch via TMDB).
+ * TMDB: GET /movie/{id}/watch/providers · GET /tv/{id}/watch/providers
+ */
+export async function getWatchProviders(
+  kind: MediaKind,
+  id: string | number,
+  region = getWatchRegion(),
+): Promise<WatchProviderOffer | null> {
+  const url = new URL(`${getBaseUrl()}/${kind}/${id}/watch/providers`);
+  url.searchParams.set("api_key", getApiKey());
+
+  try {
+    const res = await tmdbFetch(url.toString(), 21600);
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+    }
+
+    const data = (await res.json()) as TmdbWatchProvidersResponse;
+    const entry =
+      data.results[region] ??
+      data.results.US ??
+      Object.values(data.results)[0];
+
+    if (!entry) return null;
+
+    const resolvedRegion =
+      data.results[region] != null
+        ? region
+        : data.results.US != null
+          ? "US"
+          : (Object.keys(data.results)[0] ?? region);
+
+    const flatrate = sortProviders(entry.flatrate);
+    const rent = sortProviders(entry.rent);
+    const buy = sortProviders(entry.buy);
+    const free = sortProviders([...(entry.free ?? []), ...(entry.ads ?? [])]);
+
+    if (
+      flatrate.length === 0 &&
+      rent.length === 0 &&
+      buy.length === 0 &&
+      free.length === 0
+    ) {
+      return null;
+    }
+
+    return {
+      region: resolvedRegion,
+      link: entry.link ?? null,
+      free,
+      flatrate,
+      rent,
+      buy,
+    };
+  } catch (err) {
+    warnTmdb(`Failed to load watch providers for ${kind} ${id}:`, err);
+    return null;
+  }
+}
+
+export function providerLogoUrl(logoPath: string | null) {
+  if (!logoPath) return null;
+  return `${getImageBase()}/w92${logoPath}`;
+}
+
 /**
  * Movies similar to a title (TMDB “similar”).
  * Falls back to recommendations when similar is empty.

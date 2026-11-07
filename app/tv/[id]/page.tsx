@@ -14,6 +14,7 @@ import { FavoriteMetaForm } from "@/components/favorite-meta-form";
 import { MovieRow } from "@/components/movie-row";
 import { SaveListButtons } from "@/components/save-list-buttons";
 import { TrailerButton } from "@/components/trailer-button";
+import { WhereToWatch } from "@/components/where-to-watch";
 import { MEDIA_TV } from "@/lib/lists";
 import { prisma } from "@/lib/prisma";
 import {
@@ -21,6 +22,7 @@ import {
   getSimilarTv,
   getTv,
   getTvTrailerKey,
+  getWatchProviders,
   posterUrl,
   profileUrl,
   tvShowAsMovie,
@@ -87,7 +89,7 @@ export default async function TvPage({ params }: TvPageProps) {
   const session = await auth();
   const userId = session?.user?.id;
 
-  const [favorite, watchlistItem, watchedItem, trailerKey, similar] =
+  const [favorite, watchlistItem, watchedItem, trailerKey, similar, watchOffer] =
     await Promise.all([
       userId
         ? prisma.favorite.findUnique({
@@ -127,6 +129,7 @@ export default async function TvPage({ params }: TvPageProps) {
         : Promise.resolve(null),
       getTvTrailerKey(show.id),
       getSimilarTv(show.id, 20),
+      getWatchProviders("tv", show.id),
     ]);
 
   const poster = posterUrl(show.poster_path, "w500");
@@ -455,6 +458,14 @@ export default async function TvPage({ params }: TvPageProps) {
         </div>
 
         <aside className="h-fit border-t border-cream/10 pt-7 lg:sticky lg:top-24 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+          {watchOffer ? (
+            <WhereToWatch
+              offer={watchOffer}
+              title={show.name}
+              className="mb-8 border-b border-cream/10 pb-8"
+            />
+          ) : null}
+
           <section aria-labelledby="details-heading">
             <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
               At a glance
