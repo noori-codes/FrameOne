@@ -14,7 +14,8 @@ export default function HomeLoading() {
     >
       <HomeHeroSkeleton />
       <div className="relative z-10 flex w-full flex-col gap-14 border-t border-cream/8 pt-12 pb-12 sm:gap-24 sm:pt-20 sm:pb-20">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {/* Taste + discovery rows */}
+        {Array.from({ length: 6 }).map((_, i) => (
           <MovieRowSkeleton key={i} />
         ))}
         <EndlessFeedSkeleton />

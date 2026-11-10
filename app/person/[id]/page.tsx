@@ -215,7 +215,7 @@ export default async function PersonPage({ params }: PersonPageProps) {
         />
         <div className="film-grain absolute inset-0" />
 
-        <div className="relative mx-auto flex w-full max-w-screen-2xl flex-col px-4 pb-6 pt-14 sm:px-6 sm:pb-8 sm:pt-16 lg:px-8 lg:pb-10 lg:pt-18">
+        <div className="relative mx-auto flex w-full flex-col px-5 pb-6 pt-14 sm:px-8 sm:pb-8 sm:pt-16 lg:px-12 lg:pb-10 lg:pt-20 xl:px-16">
           <Link
             href="/"
             className="inline-flex min-h-9 w-fit items-center gap-2 rounded-full border border-cream/15 bg-black/25 px-3.5 text-xs font-medium text-cream/75 backdrop-blur-md transition-[border-color,color,background-color] hover:border-amber/40 hover:bg-black/40 hover:text-amber sm:text-sm"
@@ -343,8 +343,8 @@ export default async function PersonPage({ params }: PersonPageProps) {
           className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-linear-to-b from-stage/40 to-transparent"
         />
 
-        <div className="relative mx-auto w-full max-w-screen-2xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
-          <div className="grid grid-cols-1 gap-14 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-20">
+        <div className="relative mx-auto w-full px-5 py-12 sm:px-8 sm:py-16 lg:px-12 lg:py-20 xl:px-16">
+          <div className="grid grid-cols-1 gap-14 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-16 xl:gap-20">
             <div className="min-w-0 space-y-16 sm:space-y-20">
               <section aria-labelledby="bio-heading">
                 <div className="flex items-end justify-between gap-4 border-b border-cream/10 pb-5">

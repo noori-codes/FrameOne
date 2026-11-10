@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Clapperboard } from "lucide-react";
+import { PAGE_GUTTER } from "@/lib/layout";
 import { backdropUrl, posterUrl, type TmdbMovie } from "@/lib/tmdb";
+import { cn } from "@/lib/utils";
 
 type CollectionPageLayoutProps = {
   title: string;
@@ -63,7 +65,12 @@ export function CollectionPageLayout({
           className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_82%_36%,color-mix(in_srgb,var(--amber)_14%,transparent),transparent_46%)]"
         />
 
-        <div className="grid min-h-[min(52vh,420px)] w-full grid-cols-1 items-end gap-8 px-5 pb-10 pt-8 sm:min-h-[min(48vh,460px)] sm:px-6 sm:pb-12 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(200px,14vw)] lg:items-center lg:px-8 lg:py-14 xl:px-10">
+        <div
+          className={cn(
+            "grid min-h-[min(52vh,420px)] w-full grid-cols-1 items-end gap-8 pb-10 pt-8 sm:min-h-[min(48vh,460px)] sm:pb-12 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(200px,14vw)] lg:items-center lg:py-14",
+            PAGE_GUTTER,
+          )}
+        >
           <div className="relative z-10 max-w-4xl">
             <Link
               href={backHref}
@@ -132,7 +139,12 @@ export function CollectionPageLayout({
           aria-hidden
           className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-amber/25 to-transparent"
         />
-        <div className="flex w-full flex-col gap-3 px-5 py-3.5 sm:px-6 sm:py-4 lg:px-8 xl:px-10">
+        <div
+          className={cn(
+            "flex w-full flex-col gap-3 py-3.5 sm:py-4",
+            PAGE_GUTTER,
+          )}
+        >
           {secondaryControls ? (
             <div className="min-w-0">{secondaryControls}</div>
           ) : null}
@@ -140,7 +152,7 @@ export function CollectionPageLayout({
         </div>
       </section>
 
-      <section className="w-full flex-1 px-5 py-8 sm:px-6 sm:py-10 lg:px-8 xl:px-10">
+      <section className={cn("w-full flex-1 py-8 sm:py-10", PAGE_GUTTER)}>
         {children}
       </section>
     </main>

@@ -61,7 +61,7 @@ export default async function GenresPage() {
           aria-hidden
           className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-amber/35 to-transparent"
         />
-        <div className="relative w-full px-5 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20 xl:px-10">
+        <div className="relative w-full px-5 py-12 sm:px-8 sm:py-16 lg:px-12 lg:py-20 xl:px-16">
           <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
             Catalog
           </p>
@@ -75,7 +75,7 @@ export default async function GenresPage() {
         </div>
       </header>
 
-      <div className="w-full flex-1 px-5 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10 xl:px-10">
+      <div className="w-full flex-1 px-5 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10 xl:px-16">
         <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 2xl:gap-3.5">
           {cards.map(({ genre, poster, titleCount }, index) => (
             <li key={genre.id}>

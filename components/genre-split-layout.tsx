@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Clapperboard } from "lucide-react";
+import { PAGE_GUTTER } from "@/lib/layout";
 import { backdropUrl, posterUrl, type TmdbMovie } from "@/lib/tmdb";
+import { cn } from "@/lib/utils";
 
 type GenreSplitLayoutProps = {
   title: string;
@@ -60,7 +62,7 @@ export function GenreSplitLayout({
           className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_30%_0%,color-mix(in_srgb,var(--amber)_14%,transparent),transparent_50%)]"
         />
 
-        <div className="relative px-5 pt-6 pb-5 sm:px-6">
+        <div className={cn("relative pt-6 pb-5", PAGE_GUTTER)}>
           <Link
             href="/genres"
             className="inline-flex items-center gap-2 text-sm text-cream/70 transition-colors hover:text-amber"
@@ -91,7 +93,12 @@ export function GenreSplitLayout({
             </Link>
           ) : null}
         </div>
-        <div className="relative sticky top-14 z-20 border-t border-cream/8 bg-background/85 px-5 py-3 backdrop-blur-2xl sm:top-16 sm:px-6">
+        <div
+          className={cn(
+            "relative sticky top-14 z-20 border-t border-cream/8 bg-background/85 py-3 backdrop-blur-2xl sm:top-16",
+            PAGE_GUTTER,
+          )}
+        >
           <div className="mb-3 min-w-0">{mobileGenreNav}</div>
           <div className="flex justify-end">{sortNav}</div>
         </div>
@@ -180,7 +187,12 @@ export function GenreSplitLayout({
         </aside>
 
         {/* Right field */}
-        <section className="relative min-w-0 bg-background/80 px-5 py-7 sm:px-6 sm:py-8 lg:bg-background/90 lg:px-8 lg:py-10 xl:px-10">
+        <section
+          className={cn(
+            "relative min-w-0 bg-background/80 py-7 sm:py-8 lg:bg-background/90 lg:py-10",
+            PAGE_GUTTER,
+          )}
+        >
           {children}
         </section>
       </div>
