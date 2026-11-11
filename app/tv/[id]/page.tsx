@@ -35,7 +35,7 @@ import {
   tvShowAsMovie,
   type TmdbCrewMember,
 } from "@/lib/tmdb";
-import { getPreferredWatchRegion } from "@/lib/watch-region";
+import { getPreferredWatchRegion } from "@/lib/watch-region-server";
 
 type TvPageProps = {
   params: Promise<{ id: string }>;

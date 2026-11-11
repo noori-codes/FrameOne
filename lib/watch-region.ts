@@ -1,5 +1,3 @@
-import { cookies } from "next/headers";
-
 export const WATCH_REGION_COOKIE = "fo_watch_region";
 
 /** Common JustWatch/TMDB regions — keep the list short and readable. */
@@ -26,10 +24,4 @@ export function resolveWatchRegion(raw?: string | null): WatchRegionCode {
   const env = process.env.TMDB_WATCH_REGION?.trim().toUpperCase();
   const envMatch = WATCH_REGIONS.find((r) => r.code === env);
   return envMatch?.code ?? "US";
-}
-
-/** Server: cookie override, else env, else US. */
-export async function getPreferredWatchRegion(): Promise<WatchRegionCode> {
-  const jar = await cookies();
-  return resolveWatchRegion(jar.get(WATCH_REGION_COOKIE)?.value);
 }

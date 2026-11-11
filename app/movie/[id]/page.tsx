@@ -33,7 +33,7 @@ import {
   profileUrl,
   type TmdbCrewMember,
 } from "@/lib/tmdb";
-import { getPreferredWatchRegion } from "@/lib/watch-region";
+import { getPreferredWatchRegion } from "@/lib/watch-region-server";
 
 type MoviePageProps = {
   params: Promise<{ id: string }>;
