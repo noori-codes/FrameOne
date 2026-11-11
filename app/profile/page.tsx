@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
@@ -9,6 +8,7 @@ import {
   ChangePasswordForm,
   UpdateNameForm,
 } from "@/components/profile-forms";
+import { ListHeaderMosaic } from "@/components/list-header-mosaic";
 import { ProfileActivityFeed } from "@/components/profile-activity-feed";
 import { ProfileShelfStrip } from "@/components/profile-shelf-strip";
 import { SiteFooter } from "@/components/site-footer";
@@ -199,39 +199,13 @@ export default async function ProfilePage() {
     <main className="relative flex min-h-dvh flex-1 flex-col overflow-x-hidden bg-background">
       {/* Hero */}
       <header className="relative isolate overflow-hidden border-b border-cream/8">
-        {mosaic.length > 0 ? (
+        <ListHeaderMosaic sources={mosaic} />
+        {mosaic.length === 0 ? (
           <div
             aria-hidden
-            className="absolute inset-0 -z-20 flex items-center justify-center gap-3 opacity-35 blur-[2px] sm:gap-4"
-          >
-            {mosaic.map((src, i) => (
-              <div
-                key={`${src}-${i}`}
-                className="relative aspect-2/3 w-[15%] max-w-40 min-w-20 overflow-hidden rounded-lg"
-                style={{
-                  transform: `translateY(${(i % 2 === 0 ? -1 : 1) * 10}%) rotate(${(i - 2.5) * 2.5}deg)`,
-                }}
-              >
-                <Image
-                  src={src}
-                  alt=""
-                  fill
-                  priority={i < 3}
-                  sizes="160px"
-                  className="object-cover"
-                />
-              </div>
-            ))}
-          </div>
+            className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_0%,color-mix(in_srgb,var(--amber)_18%,transparent),transparent_55%)]"
+          />
         ) : null}
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 bg-linear-to-b from-background/35 via-background/88 to-background"
-        />
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_0%,color-mix(in_srgb,var(--amber)_18%,transparent),transparent_55%)]"
-        />
         <div className="film-grain absolute inset-0 -z-10" />
 
         <div className="relative w-full px-5 pt-10 pb-10 sm:px-8 sm:pt-12 sm:pb-12 lg:px-12 xl:px-16">

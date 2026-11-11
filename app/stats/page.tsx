@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Star } from "lucide-react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { ListHeaderMosaic } from "@/components/list-header-mosaic";
 import { ShareYearCard } from "@/components/share-year-card";
 import { PAGE_GUTTER } from "@/lib/layout";
 import { mediaHref } from "@/lib/lists";
@@ -189,39 +190,13 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
   return (
     <main className="relative flex min-h-dvh w-full flex-1 flex-col overflow-x-hidden bg-background">
       <header className="relative isolate overflow-hidden border-b border-cream/8">
-        {mosaicSources.length > 0 ? (
+        <ListHeaderMosaic sources={mosaicSources} />
+        {mosaicSources.length === 0 ? (
           <div
             aria-hidden
-            className="absolute inset-0 -z-20 flex items-center justify-center gap-3 opacity-40 blur-[2px] sm:gap-4"
-          >
-            {mosaicSources.map((src, i) => (
-              <div
-                key={`${src}-${i}`}
-                className="relative aspect-2/3 w-[18%] max-w-44 min-w-24 overflow-hidden rounded-lg"
-                style={{
-                  transform: `translateY(${(i % 2 === 0 ? -1 : 1) * 8}%) rotate(${(i - 2) * 3}deg)`,
-                }}
-              >
-                <Image
-                  src={src}
-                  alt=""
-                  fill
-                  priority={i < 3}
-                  sizes="180px"
-                  className="object-cover"
-                />
-              </div>
-            ))}
-          </div>
+            className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_0%,color-mix(in_srgb,var(--amber)_16%,transparent),transparent_55%)]"
+          />
         ) : null}
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 bg-linear-to-b from-background/40 via-background/88 to-background"
-        />
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_0%,color-mix(in_srgb,var(--amber)_16%,transparent),transparent_55%)]"
-        />
         <div className="film-grain absolute inset-0 -z-10" />
 
         <div

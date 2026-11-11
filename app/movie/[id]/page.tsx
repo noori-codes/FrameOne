@@ -33,6 +33,7 @@ import {
   profileUrl,
   type TmdbCrewMember,
 } from "@/lib/tmdb";
+import { getPreferredWatchRegion } from "@/lib/watch-region";
 
 type MoviePageProps = {
   params: Promise<{ id: string }>;
@@ -147,6 +148,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
   const session = await auth();
   const userId = session?.user?.id;
   const collectionId = movie.belongs_to_collection?.id ?? null;
+  const watchRegion = await getPreferredWatchRegion();
 
   const [favorite, watchlistItem, watchedItem, similar, watchOffer, collectionParts] =
     await Promise.all([
@@ -187,7 +189,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
           })
         : Promise.resolve(null),
       getSimilarMovies(movie.id, 20),
-      getWatchProviders("movie", movie.id),
+      getWatchProviders("movie", movie.id, watchRegion),
       collectionId
         ? getMovieCollectionParts(collectionId)
         : Promise.resolve([]),
@@ -197,7 +199,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
   const clips = getMovieVideoClips(movie.videos?.results);
   const stills = getMovieStills(movie);
   const keywords = getMovieKeywords(movie);
-  const certification = getMovieCertification(movie);
+  const certification = getMovieCertification(movie, watchRegion);
 
   const poster = posterUrl(movie.poster_path, "w500");
   const backdrop = backdropUrl(movie.backdrop_path);

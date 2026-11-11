@@ -8,6 +8,7 @@ import {
   FavoritesSortNav,
   parseFavoritesSort,
 } from "@/components/favorites-sort-nav";
+import { ListHeaderMosaic } from "@/components/list-header-mosaic";
 import { ListPageNav } from "@/components/list-page-nav";
 import { RatingStars } from "@/components/rating-stars";
 import { LIST_FAVORITE, mediaHref } from "@/lib/lists";
@@ -72,40 +73,13 @@ export default async function FavoritesPage({
   return (
     <main className="relative flex min-h-dvh w-full flex-1 flex-col bg-background">
       <header className="relative isolate overflow-hidden border-b border-cream/8">
-        {/* Poster mosaic atmosphere */}
-        {mosaic.length > 0 ? (
+        <ListHeaderMosaic sources={mosaic} />
+        {mosaic.length === 0 ? (
           <div
             aria-hidden
-            className="absolute inset-0 -z-20 flex items-center justify-center gap-3 opacity-40 blur-[2px] sm:gap-4"
-          >
-            {mosaic.map((src, i) => (
-              <div
-                key={`${src}-${i}`}
-                className="relative aspect-2/3 w-[18%] max-w-44 min-w-24 overflow-hidden rounded-lg"
-                style={{
-                  transform: `translateY(${(i % 2 === 0 ? -1 : 1) * 8}%) rotate(${(i - 2) * 3}deg)`,
-                }}
-              >
-                <Image
-                  src={src}
-                  alt=""
-                  fill
-                  priority={i < 3}
-                  sizes="180px"
-                  className="object-cover"
-                />
-              </div>
-            ))}
-          </div>
+            className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_0%,color-mix(in_srgb,var(--amber)_16%,transparent),transparent_55%)]"
+          />
         ) : null}
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 bg-linear-to-b from-background/40 via-background/88 to-background"
-        />
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_0%,color-mix(in_srgb,var(--amber)_16%,transparent),transparent_55%)]"
-        />
 
         <div className="relative w-full px-5 pt-8 pb-8 sm:px-8 sm:pt-10 sm:pb-10 lg:px-12 xl:px-16">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

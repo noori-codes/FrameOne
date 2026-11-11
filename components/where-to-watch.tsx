@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
+import { WatchRegionSelect } from "@/components/watch-region-select";
 import {
   providerLogoUrl,
   type TmdbWatchProvider,
@@ -103,9 +104,9 @@ export function WhereToWatch({ offer, title, className }: WhereToWatchProps) {
           >
             Where to watch
           </h2>
-          <p className="mt-1.5 text-xs text-cream/40">
-            Region {offer.region}
-          </p>
+          <div className="mt-2.5">
+            <WatchRegionSelect region={offer.region} />
+          </div>
         </div>
         {offer.link ? (
           <a

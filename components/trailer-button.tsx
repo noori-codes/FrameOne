@@ -187,10 +187,10 @@ export function TrailerButton({
         disabled={loadingTrailer}
         aria-busy={loadingTrailer}
         className={cn(
-          "group relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold transition-[background-color,box-shadow,border-color,color,transform] disabled:cursor-wait disabled:opacity-70 active:scale-[0.98]",
+          "group relative inline-flex min-h-11 items-center gap-2 overflow-hidden px-5 py-2.5 text-sm font-semibold transition-[background-color,box-shadow,border-color,color,transform] disabled:cursor-wait disabled:opacity-70 active:scale-[0.98]",
           variant === "primary"
-            ? "cta-shine bg-amber text-[color:var(--on-amber)] hover:bg-(--amber-dim) hover:text-cream hover:shadow-[0_14px_40px_-14px_color-mix(in_srgb,var(--amber)_70%,transparent)]"
-            : "border border-cream/30 bg-black/25 text-cream/85 backdrop-blur-md hover:border-cream/50 hover:bg-black/40 hover:text-cream",
+            ? "cta-shine rounded-md bg-amber text-[color:var(--on-amber)] hover:bg-(--amber-dim) hover:text-cream hover:shadow-[0_14px_40px_-14px_color-mix(in_srgb,var(--amber)_70%,transparent)]"
+            : "rounded-full border border-cream/30 bg-black/25 text-cream/85 backdrop-blur-md hover:border-cream/50 hover:bg-black/40 hover:text-cream",
           className,
         )}
       >

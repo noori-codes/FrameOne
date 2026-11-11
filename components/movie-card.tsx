@@ -75,8 +75,9 @@ function FavoriteHeart({
         }
         aria-pressed={optimisticSaved}
         className={cn(
+          // Opacity on fine pointers is driven by globals.css (.movie-card-heart).
           "movie-card-heart inline-flex size-7 items-center justify-center rounded-full border border-cream/10 bg-black/55 text-cream/85 shadow-[0_8px_20px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md will-change-transform",
-          "opacity-100 translate-y-0 scale-100 transition-[opacity,transform,color,background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          "transition-[opacity,transform,color,background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
           "hover:border-red-400/35 hover:bg-black/75 hover:text-red-400 active:scale-95",
           optimisticSaved &&
             "border-red-400/40 text-red-500 shadow-[0_8px_22px_-10px_rgba(239,68,68,0.55)]",

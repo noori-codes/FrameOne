@@ -35,6 +35,7 @@ import {
   tvShowAsMovie,
   type TmdbCrewMember,
 } from "@/lib/tmdb";
+import { getPreferredWatchRegion } from "@/lib/watch-region";
 
 type TvPageProps = {
   params: Promise<{ id: string }>;
@@ -140,6 +141,7 @@ export default async function TvPage({ params }: TvPageProps) {
 
   const session = await auth();
   const userId = session?.user?.id;
+  const watchRegion = await getPreferredWatchRegion();
 
   const seasonSummaries = (show.seasons ?? []).filter(
     (season) => season.episode_count > 0,
@@ -184,7 +186,7 @@ export default async function TvPage({ params }: TvPageProps) {
           })
         : Promise.resolve(null),
       getSimilarTv(show.id, 20),
-      getWatchProviders("tv", show.id),
+      getWatchProviders("tv", show.id, watchRegion),
       mapPool(seasonSummaries, 4, async (season) => {
         const detail = await getTvSeason(show.id, season.season_number);
         return {
@@ -212,7 +214,7 @@ export default async function TvPage({ params }: TvPageProps) {
   const clips = getMovieVideoClips(show.videos?.results);
   const stills = getTvStills(show);
   const keywords = getTvKeywords(show);
-  const certification = getTvCertification(show);
+  const certification = getTvCertification(show, watchRegion);
 
   const poster = posterUrl(show.poster_path, "w500");
   const backdrop = backdropUrl(show.backdrop_path);

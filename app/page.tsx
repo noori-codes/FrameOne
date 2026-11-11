@@ -1,9 +1,11 @@
 import { cache, Suspense } from "react";
+import { auth } from "@/auth";
 import { DeferredGenreRows } from "@/components/deferred-genre-rows";
 import { HeroCarousel, type HeroSlide } from "@/components/hero-carousel";
 import { HomeEndlessFeed } from "@/components/home-endless-feed";
 import { MovieRow } from "@/components/movie-row";
 import { SiteFooter } from "@/components/site-footer";
+import { TasteCoachmark } from "@/components/taste-coachmark";
 import {
   EndlessFeedSkeleton,
   HomeHeroSkeleton,
@@ -148,13 +150,18 @@ async function HomeGenreRows() {
 }
 
 async function TasteRows() {
-  const [rows, movieFavoriteIds, tvFavoriteIds] = await Promise.all([
+  const [rows, movieFavoriteIds, tvFavoriteIds, session] = await Promise.all([
     getTasteRows(),
     getHomeMovieFavoriteIds(),
     getHomeTvFavoriteIds(),
+    auth(),
   ]);
 
-  if (rows.length === 0) return null;
+  const showCoach = Boolean(session?.user?.id) && rows.length === 0;
+
+  if (rows.length === 0) {
+    return showCoach ? <TasteCoachmark show /> : null;
+  }
 
   return (
     <>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bebas_Neue, DM_Sans } from "next/font/google";
+import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
@@ -37,9 +38,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${display.variable} ${body.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col overflow-x-hidden bg-background text-foreground">
+      <body className="flex min-h-full flex-col overflow-x-hidden bg-background pb-16 text-foreground md:pb-0">
         <SiteHeader />
         {children}
+        <MobileTabBar />
       </body>
     </html>
   );
