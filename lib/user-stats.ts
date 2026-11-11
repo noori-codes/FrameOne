@@ -9,21 +9,21 @@ import { prisma } from "@/lib/prisma";
 import { getMovie, getTv, mapPool } from "@/lib/tmdb";
 
 const ENRICH_CAP = 80;
-const TOP_RATED_LIMIT = 8;
-const TOP_GENRES_LIMIT = 6;
+const TOP_RATED_LIMIT = 10;
+const TOP_GENRES_LIMIT = 8;
 const MONTH_LABELS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
+  "January",
+  "February",
+  "March",
+  "April",
   "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ] as const;
 
 export type StatsShelfItem = {
@@ -40,17 +40,34 @@ export type UserYearStats = {
   watchedCount: number;
   movieCount: number;
   tvCount: number;
+  movieShare: number;
+  tvShare: number;
   /** Estimated hours from enriched runtimes; null when nothing enrichable. */
   estimatedHours: number | null;
   hoursAreEstimate: true;
+  avgMinutesPerTitle: number | null;
   avgRating: number | null;
   ratedCount: number;
+  unratedWatchedCount: number;
   monthlyCounts: number[];
+  monthsActive: number;
+  avgPerActiveMonth: number;
   mostWatchedMonth: string | null;
+  mostWatchedMonthCount: number;
   /** ISO date (YYYY-MM-DD) → watch count */
   dailyCounts: Record<string, number>;
-  topGenres: { id: number; name: string; count: number }[];
+  activeDays: number;
+  longestStreak: number;
+  /** Mon=0 … Sun=6 */
+  weekdayCounts: number[];
+  busiestWeekday: string | null;
+  ratingDistribution: { score: number; count: number }[];
+  topGenres: { id: number; name: string; count: number; share: number }[];
   topRated: StatsShelfItem[];
+  firstWatched: StatsShelfItem | null;
+  lastWatched: StatsShelfItem | null;
+  /** Recent watched titles this year (for mosaic / shelf). */
+  watchedShelf: StatsShelfItem[];
 };
 
 function activityDate(watchedAt: Date | null, createdAt: Date) {
@@ -72,6 +89,44 @@ function parseYearParam(raw: string | undefined | null, fallback: number) {
   const n = Number(raw);
   if (!Number.isInteger(n) || n < 1970 || n > 2100) return fallback;
   return n;
+}
+
+function toShelfItem(
+  row: {
+    movieId: number;
+    title: string;
+    posterPath: string | null;
+    mediaType: string;
+  },
+  rating: number | null = null,
+): StatsShelfItem {
+  return {
+    movieId: row.movieId,
+    title: row.title,
+    posterPath: row.posterPath,
+    mediaType: row.mediaType === MEDIA_TV ? MEDIA_TV : MEDIA_MOVIE,
+    rating,
+  };
+}
+
+/** Longest run of consecutive calendar days with ≥1 watch. */
+function longestDayStreak(isoDays: string[]): number {
+  if (isoDays.length === 0) return 0;
+  const sorted = [...isoDays].sort();
+  let best = 1;
+  let run = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = new Date(`${sorted[i - 1]}T00:00:00Z`).getTime();
+    const cur = new Date(`${sorted[i]}T00:00:00Z`).getTime();
+    const diffDays = (cur - prev) / 86_400_000;
+    if (diffDays === 1) {
+      run += 1;
+      best = Math.max(best, run);
+    } else if (diffDays > 1) {
+      run = 1;
+    }
+  }
+  return best;
 }
 
 export function resolveStatsYear(
@@ -154,7 +209,7 @@ async function enrichTitle(
 }
 
 /**
- * Year-in-review stats for a signed-in user.
+ * Year stats for a signed-in user.
  * Hours/genres come from capped TMDB enrichment (no schema cache).
  */
 export async function getUserYearStats(
@@ -203,26 +258,64 @@ export async function getUserYearStats(
     (row) => row.mediaType !== MEDIA_TV,
   ).length;
   const tvCount = watchedYear.length - movieCount;
+  const watchedTotal = watchedYear.length;
+  const movieShare =
+    watchedTotal > 0 ? Math.round((movieCount / watchedTotal) * 100) : 0;
+  const tvShare =
+    watchedTotal > 0 ? Math.round((tvCount / watchedTotal) * 100) : 0;
 
   const monthlyCounts = Array.from({ length: 12 }, () => 0);
+  const weekdayCounts = Array.from({ length: 7 }, () => 0);
   const dailyCounts: Record<string, number> = {};
+  const WEEKDAY_LABELS = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ] as const;
 
   for (const row of watchedYear) {
     const d = activityDate(row.watchedAt, row.createdAt);
     monthlyCounts[d.getUTCMonth()]! += 1;
+    // JS getUTCDay: Sun=0 … Sat=6 → shift to Mon=0 … Sun=6
+    const jsDay = d.getUTCDay();
+    const monFirst = jsDay === 0 ? 6 : jsDay - 1;
+    weekdayCounts[monFirst]! += 1;
     const key = toIsoDay(d);
     dailyCounts[key] = (dailyCounts[key] ?? 0) + 1;
   }
 
+  let busiestWeekday: string | null = null;
+  let weekdayPeak = 0;
+  weekdayCounts.forEach((count, index) => {
+    if (count > weekdayPeak) {
+      weekdayPeak = count;
+      busiestWeekday = WEEKDAY_LABELS[index]!;
+    }
+  });
+  if (weekdayPeak === 0) busiestWeekday = null;
+
+  const monthsActive = monthlyCounts.filter((c) => c > 0).length;
+  const avgPerActiveMonth =
+    monthsActive > 0
+      ? Math.round((watchedTotal / monthsActive) * 10) / 10
+      : 0;
+
   let mostWatchedMonth: string | null = null;
-  let peak = 0;
+  let mostWatchedMonthCount = 0;
   monthlyCounts.forEach((count, index) => {
-    if (count > peak) {
-      peak = count;
+    if (count > mostWatchedMonthCount) {
+      mostWatchedMonthCount = count;
       mostWatchedMonth = MONTH_LABELS[index]!;
     }
   });
-  if (peak === 0) mostWatchedMonth = null;
+  if (mostWatchedMonthCount === 0) mostWatchedMonth = null;
+
+  const activeDays = Object.keys(dailyCounts).length;
+  const longestStreak = longestDayStreak(Object.keys(dailyCounts));
 
   const watchedKey = (row: { movieId: number; mediaType: string }) =>
     `${row.mediaType === MEDIA_TV ? MEDIA_TV : MEDIA_MOVIE}:${row.movieId}`;
@@ -240,12 +333,25 @@ export async function getUserYearStats(
     ratingsForWatched.length > 0 ? ratingsForWatched : ratingsThisYear;
 
   const ratedCount = ratingPool.length;
+  const ratedKeys = new Set(ratingPool.map(watchedKey));
+  const unratedWatchedCount = watchedYear.filter(
+    (row) => !ratedKeys.has(watchedKey(row)),
+  ).length;
   const avgRating =
     ratedCount > 0
       ? ratingPool.reduce((sum, row) => sum + (row.rating ?? 0), 0) / ratedCount
       : null;
 
-  /** Prefer rated titles you also watched this year; else ratings logged this year. */
+  const ratingBuckets = Array.from({ length: 10 }, (_, i) => ({
+    score: i + 1,
+    count: 0,
+  }));
+  for (const row of ratingPool) {
+    const score = row.rating;
+    if (score == null || score < 1 || score > 10) continue;
+    ratingBuckets[score - 1]!.count += 1;
+  }
+
   const topRatedSource =
     ratingsForWatched.length > 0 ? ratingsForWatched : ratingsThisYear;
 
@@ -255,15 +361,22 @@ export async function getUserYearStats(
     const key = watchedKey(row);
     if (seenTop.has(key)) continue;
     seenTop.add(key);
-    topRated.push({
-      movieId: row.movieId,
-      title: row.title,
-      posterPath: row.posterPath,
-      mediaType: row.mediaType === MEDIA_TV ? MEDIA_TV : MEDIA_MOVIE,
-      rating: row.rating,
-    });
+    topRated.push(toShelfItem(row, row.rating));
     if (topRated.length >= TOP_RATED_LIMIT) break;
   }
+
+  const chronological = [...watchedYear].sort((a, b) => {
+    return (
+      activityDate(a.watchedAt, a.createdAt).getTime() -
+      activityDate(b.watchedAt, b.createdAt).getTime()
+    );
+  });
+  const firstWatched =
+    chronological[0] != null ? toShelfItem(chronological[0]) : null;
+  const lastWatched =
+    chronological.length > 0
+      ? toShelfItem(chronological[chronological.length - 1]!)
+      : null;
 
   const enrichTargets = watchedYear.slice(0, ENRICH_CAP);
   const enrichments = await mapPool(enrichTargets, 6, (row) =>
@@ -280,7 +393,7 @@ export async function getUserYearStats(
       totalMinutes += enrichment.runtimeMinutes;
       runtimeSamples += 1;
     }
-      for (const genre of enrichment.genres) {
+    for (const genre of enrichment.genres) {
       const prev = genreCounts.get(genre.id);
       if (prev) {
         prev.count += 1;
@@ -290,13 +403,25 @@ export async function getUserYearStats(
     }
   });
 
+  const genreTotal = [...genreCounts.values()].reduce(
+    (sum, g) => sum + g.count,
+    0,
+  );
   const topGenres = [...genreCounts.entries()]
-    .map(([id, value]) => ({ id, name: value.name, count: value.count }))
+    .map(([id, value]) => ({
+      id,
+      name: value.name,
+      count: value.count,
+      share:
+        genreTotal > 0 ? Math.round((value.count / genreTotal) * 100) : 0,
+    }))
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
     .slice(0, TOP_GENRES_LIMIT);
 
   const estimatedHours =
     runtimeSamples > 0 ? Math.round((totalMinutes / 60) * 10) / 10 : null;
+  const avgMinutesPerTitle =
+    runtimeSamples > 0 ? Math.round(totalMinutes / runtimeSamples) : null;
 
   const yearSet = new Set<number>();
   const nowYear = new Date().getUTCFullYear();
@@ -306,21 +431,39 @@ export async function getUserYearStats(
   }
   const availableYears = [...yearSet].sort((a, b) => b - a);
 
+  const watchedShelf: StatsShelfItem[] = watchedYear
+    .slice(0, 14)
+    .map((row) => toShelfItem(row));
+
   return {
     year,
     availableYears,
     watchedCount: watchedYear.length,
     movieCount,
     tvCount,
+    movieShare,
+    tvShare,
     estimatedHours,
     hoursAreEstimate: true,
-    avgRating:
-      avgRating != null ? Math.round(avgRating * 10) / 10 : null,
+    avgMinutesPerTitle,
+    avgRating: avgRating != null ? Math.round(avgRating * 10) / 10 : null,
     ratedCount,
+    unratedWatchedCount,
     monthlyCounts,
+    monthsActive,
+    avgPerActiveMonth,
     mostWatchedMonth,
+    mostWatchedMonthCount,
     dailyCounts,
+    activeDays,
+    longestStreak,
+    weekdayCounts,
+    busiestWeekday,
+    ratingDistribution: ratingBuckets,
     topGenres,
     topRated,
+    firstWatched,
+    lastWatched,
+    watchedShelf,
   };
 }
