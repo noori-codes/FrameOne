@@ -16,9 +16,11 @@ import {
   ChangePasswordForm,
   UpdateNameForm,
 } from "@/components/profile-forms";
+import { ProfileActivityFeed } from "@/components/profile-activity-feed";
 import { ProfileShelfStrip } from "@/components/profile-shelf-strip";
 import { SiteFooter } from "@/components/site-footer";
 import { LIST_FAVORITE, LIST_WATCHED, LIST_WATCHLIST } from "@/lib/lists";
+import { getProfileActivity } from "@/lib/profile-activity";
 import { prisma } from "@/lib/prisma";
 import { posterUrl } from "@/lib/tmdb";
 
@@ -107,7 +109,16 @@ export default async function ProfilePage() {
       .catch(() => undefined);
   }
 
-  const [favorites, watchlist, watched, ratedCount] = await Promise.all([
+  const [
+    favorites,
+    watchlist,
+    watched,
+    ratedCount,
+    favoriteCount,
+    watchlistCount,
+    watchedCount,
+    activity,
+  ] = await Promise.all([
     prisma.favorite.findMany({
       where: { userId, listType: LIST_FAVORITE },
       orderBy: { createdAt: "desc" },
@@ -151,9 +162,6 @@ export default async function ProfilePage() {
         rating: { not: null },
       },
     }),
-  ]);
-
-  const [favoriteCount, watchlistCount, watchedCount] = await Promise.all([
     prisma.favorite.count({
       where: { userId, listType: LIST_FAVORITE },
     }),
@@ -163,6 +171,7 @@ export default async function ProfilePage() {
     prisma.favorite.count({
       where: { userId, listType: LIST_WATCHED },
     }),
+    getProfileActivity(userId),
   ]);
 
   const mosaic = [...favorites, ...watchlist, ...watched]
@@ -315,8 +324,9 @@ export default async function ProfilePage() {
         </div>
       </header>
 
-      {/* Shelves */}
+      {/* Activity + shelves */}
       <div className="relative w-full space-y-12 px-5 py-10 sm:space-y-14 sm:px-8 sm:py-12 lg:px-12 xl:px-16">
+        <ProfileActivityFeed items={activity} />
         <ProfileShelfStrip
           title="Favorites"
           href="/favorites"
