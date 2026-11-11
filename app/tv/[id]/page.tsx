@@ -7,9 +7,13 @@ import { auth } from "@/auth";
 import { DetailBackLink } from "@/components/detail-back-link";
 import { FavoriteMetaForm } from "@/components/favorite-meta-form";
 import { MovieHeroActions } from "@/components/movie-hero-actions";
-import { WatchedDiaryForm } from "@/components/watched-diary-form";
 import { MovieRow } from "@/components/movie-row";
 import { TitleMedia } from "@/components/title-media";
+import {
+  TvProgressPanel,
+  type TvProgressSeasonData,
+} from "@/components/tv-progress-panel";
+import { WatchedDiaryForm } from "@/components/watched-diary-form";
 import { WhereToWatch } from "@/components/where-to-watch";
 import { MEDIA_TV } from "@/lib/lists";
 import { prisma } from "@/lib/prisma";
@@ -21,8 +25,10 @@ import {
   getTv,
   getTvCertification,
   getTvKeywords,
+  getTvSeason,
   getTvStills,
   getWatchProviders,
+  mapPool,
   posterUrl,
   profileUrl,
   tvShowAsMovie,
@@ -134,7 +140,11 @@ export default async function TvPage({ params }: TvPageProps) {
   const session = await auth();
   const userId = session?.user?.id;
 
-  const [favorite, watchlistItem, watchedItem, similar, watchOffer] =
+  const seasonSummaries = (show.seasons ?? []).filter(
+    (season) => season.episode_count > 0,
+  );
+
+  const [favorite, watchlistItem, watchedItem, similar, watchOffer, seasonDetails, episodeWatches] =
     await Promise.all([
       userId
         ? prisma.favorite.findUnique({
@@ -174,7 +184,28 @@ export default async function TvPage({ params }: TvPageProps) {
         : Promise.resolve(null),
       getSimilarTv(show.id, 20),
       getWatchProviders("tv", show.id),
+      mapPool(seasonSummaries, 4, async (season) => {
+        const detail = await getTvSeason(show.id, season.season_number);
+        return {
+          ...season,
+          episodes: detail?.episodes ?? [],
+        } satisfies TvProgressSeasonData;
+      }),
+      userId
+        ? prisma.tvEpisodeWatch.findMany({
+            where: { userId, showId: show.id },
+            select: {
+              seasonNumber: true,
+              episodeNumber: true,
+            },
+          })
+        : Promise.resolve([]),
     ]);
+
+  const progressSeasons = seasonDetails;
+  const watchedKeys = episodeWatches.map(
+    (row) => `${row.seasonNumber}:${row.episodeNumber}`,
+  );
 
   const trailerKey = getMovieTrailerKeyFromVideos(show.videos?.results);
   const clips = getMovieVideoClips(show.videos?.results);
@@ -524,6 +555,36 @@ export default async function TvPage({ params }: TvPageProps) {
                   </li>
                 ))}
               </ul>
+            </section>
+          ) : null}
+
+          {signedIn && progressSeasons.length > 0 ? (
+            <TvProgressPanel
+              showId={show.id}
+              showName={show.name}
+              seasons={progressSeasons}
+              watchedKeys={watchedKeys}
+            />
+          ) : null}
+
+          {!signedIn && progressSeasons.length > 0 ? (
+            <section className="border-t border-cream/10 pt-8 sm:pt-10">
+              <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
+                Continue
+              </p>
+              <h2 className="mt-2 font-display text-4xl text-cream uppercase sm:text-5xl">
+                Progress
+              </h2>
+              <p className="mt-4 max-w-xl text-sm leading-relaxed text-cream/55">
+                Sign in to check off episodes, mark whole seasons, and see what’s
+                up next on {show.name}.
+              </p>
+              <Link
+                href={`/signin?callbackUrl=${encodeURIComponent(`/tv/${show.id}`)}`}
+                className="mt-5 inline-flex rounded-full border border-cream/15 px-5 py-2.5 text-sm text-cream/75 transition-colors hover:border-amber/40 hover:text-amber"
+              >
+                Sign in to track
+              </Link>
             </section>
           ) : null}
 

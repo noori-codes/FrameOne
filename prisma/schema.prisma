@@ -23,6 +23,7 @@ model User {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   favorites Favorite[]
+  tvEpisodeWatches TvEpisodeWatch[]
 }
 
 /// One-time codes for signup email verification.
@@ -65,4 +66,20 @@ model Favorite {
   @@unique([userId, movieId, listType, mediaType])
   @@index([userId])
   @@index([userId, listType])
+}
+
+/// Per-episode watch log for TV progress (season/episode checklist).
+model TvEpisodeWatch {
+  id            String   @id @default(cuid())
+  userId        String
+  /// TMDB TV show id.
+  showId        Int
+  seasonNumber  Int
+  episodeNumber Int
+  watchedAt     DateTime @default(now())
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, showId, seasonNumber, episodeNumber])
+  @@index([userId, showId])
 }

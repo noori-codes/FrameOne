@@ -1142,6 +1142,37 @@ type TmdbContentRating = {
   rating: string;
 };
 
+export type TmdbTvSeasonSummary = {
+  id: number;
+  name: string;
+  overview?: string;
+  poster_path: string | null;
+  season_number: number;
+  episode_count: number;
+  air_date?: string | null;
+};
+
+export type TmdbTvEpisode = {
+  id: number;
+  name: string;
+  overview?: string;
+  episode_number: number;
+  season_number: number;
+  air_date?: string | null;
+  runtime?: number | null;
+  still_path?: string | null;
+};
+
+export type TmdbTvSeasonDetails = {
+  id: number;
+  name: string;
+  overview?: string;
+  poster_path: string | null;
+  season_number: number;
+  air_date?: string | null;
+  episodes: TmdbTvEpisode[];
+};
+
 export type TmdbTvDetails = TmdbTvShow & {
   tagline: string | null;
   genres: { id: number; name: string }[];
@@ -1164,6 +1195,7 @@ export type TmdbTvDetails = TmdbTvShow & {
   episode_run_time?: number[];
   last_air_date?: string | null;
   in_production?: boolean;
+  seasons?: TmdbTvSeasonSummary[];
   networks?: { id: number; name: string; logo_path: string | null }[];
   created_by?: { id: number; name: string; profile_path: string | null }[];
   production_companies?: {
@@ -1282,6 +1314,30 @@ export async function getTv(
   }
 
   return (await res.json()) as TmdbTvDetails;
+}
+
+/**
+ * Season detail with episodes.
+ * TMDB: GET /tv/{id}/season/{season_number}
+ */
+export async function getTvSeason(
+  showId: string | number,
+  seasonNumber: number,
+): Promise<TmdbTvSeasonDetails | null> {
+  const url = new URL(
+    `${getBaseUrl()}/tv/${showId}/season/${seasonNumber}`,
+  );
+  url.searchParams.set("api_key", getApiKey());
+
+  const res = await tmdbFetch(url.toString(), 3600);
+
+  if (res.status === 404) return null;
+
+  if (!res.ok) {
+    throw new Error(`TMDB error: ${res.status} ${res.statusText}`);
+  }
+
+  return (await res.json()) as TmdbTvSeasonDetails;
 }
 
 /** TV content rating for a region (e.g. "TV-MA"). */
