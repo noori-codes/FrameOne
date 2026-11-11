@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { InfiniteMovieGrid } from "@/components/infinite-movie-grid";
 import { getHomeMovieFavoriteIds } from "@/lib/home-favorites";
+import { MEDIA_MOVIE } from "@/lib/lists";
+import {
+  excludeTitleIds,
+  getUserWatchedIds,
+} from "@/lib/taste-recommendations";
 import { getPopularMoviesPage } from "@/lib/tmdb";
 
 /**
@@ -10,17 +15,25 @@ import { getPopularMoviesPage } from "@/lib/tmdb";
 export async function HomeEndlessFeed() {
   let initial;
   try {
-    const [page, favoriteIds] = await Promise.all([
+    const [page, favoriteIds, watchedIds] = await Promise.all([
       getPopularMoviesPage(2),
       getHomeMovieFavoriteIds(),
+      getUserWatchedIds(MEDIA_MOVIE),
     ]);
-    initial = { page, favoriteIds };
+    initial = {
+      page: {
+        ...page,
+        results: excludeTitleIds(page.results, watchedIds),
+      },
+      favoriteIds,
+      watchedIds,
+    };
   } catch (err) {
     console.warn("Home endless feed failed:", err);
     return null;
   }
 
-  const { page: moviesPage, favoriteIds } = initial;
+  const { page: moviesPage, favoriteIds, watchedIds } = initial;
   if (moviesPage.results.length === 0) return null;
 
   return (
@@ -56,6 +69,7 @@ export async function HomeEndlessFeed() {
           endpoint="/api/browse/popular/movies"
           initial={moviesPage}
           favoriteIds={favoriteIds}
+          excludeIds={watchedIds}
           showCount={false}
         />
       </div>

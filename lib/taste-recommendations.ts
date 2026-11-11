@@ -27,6 +27,8 @@ export type TasteRow = {
   seedId: number;
   seedTitle: string;
   mediaType: MediaListType;
+  /** How we chose the seed — drives the row label. */
+  reason: "rated" | "watched";
   movies: TmdbMovie[];
 };
 
@@ -35,10 +37,11 @@ type TasteSeed = {
   title: string;
   mediaType: MediaListType;
   rating: number;
+  reason: "rated" | "watched";
 };
 
-/** All list ids for a media kind — used to keep taste rows fresh. */
-const getExcludedIds = cache(async (mediaType: MediaListType) => {
+/** Titles already on favorites / watchlist / watched — keep taste + discovery fresh. */
+export const getUserKnownTitleIds = cache(async (mediaType: MediaListType) => {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return new Set<number>();
@@ -54,43 +57,93 @@ const getExcludedIds = cache(async (mediaType: MediaListType) => {
   return new Set(rows.map((row) => row.movieId));
 });
 
+/** Watched-only ids — hide from home discovery / endless feed. */
+export const getUserWatchedIds = cache(async (mediaType: MediaListType) => {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return [] as number[];
+
+  const rows = await prisma.favorite.findMany({
+    where: { userId, mediaType, listType: LIST_WATCHED },
+    select: { movieId: true },
+  });
+  return rows.map((row) => row.movieId);
+});
+
 const getTasteSeeds = cache(async (): Promise<TasteSeed[]> => {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return [];
 
-  const rows = await prisma.favorite.findMany({
-    where: {
-      userId,
-      listType: LIST_FAVORITE,
-      rating: { gte: MIN_RATING },
-    },
-    select: {
-      movieId: true,
-      title: true,
-      mediaType: true,
-      rating: true,
-      createdAt: true,
-    },
-    orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
-  });
+  const [ratedRows, watchedRows] = await Promise.all([
+    prisma.favorite.findMany({
+      where: {
+        userId,
+        listType: LIST_FAVORITE,
+        rating: { gte: MIN_RATING },
+      },
+      select: {
+        movieId: true,
+        title: true,
+        mediaType: true,
+        rating: true,
+        createdAt: true,
+      },
+      orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
+    }),
+    prisma.favorite.findMany({
+      where: { userId, listType: LIST_WATCHED },
+      select: {
+        movieId: true,
+        title: true,
+        mediaType: true,
+        watchedAt: true,
+        createdAt: true,
+      },
+      orderBy: [{ watchedAt: "desc" }, { createdAt: "desc" }],
+      take: 24,
+    }),
+  ]);
 
   const movies: TasteSeed[] = [];
   const tv: TasteSeed[] = [];
+  const used = new Set<string>();
 
-  for (const row of rows) {
+  function tryPush(seed: TasteSeed) {
+    const key = `${seed.mediaType}:${seed.movieId}`;
+    if (used.has(key)) return;
+    if (seed.mediaType === MEDIA_TV) {
+      if (tv.length >= MAX_TV_SEEDS) return;
+      tv.push(seed);
+    } else {
+      if (movies.length >= MAX_MOVIE_SEEDS) return;
+      movies.push(seed);
+    }
+    used.add(key);
+  }
+
+  for (const row of ratedRows) {
     if (row.rating == null) continue;
-    const seed: TasteSeed = {
+    tryPush({
       movieId: row.movieId,
       title: row.title,
       mediaType: row.mediaType === MEDIA_TV ? MEDIA_TV : MEDIA_MOVIE,
       rating: row.rating,
-    };
-    if (seed.mediaType === MEDIA_TV) {
-      if (tv.length < MAX_TV_SEEDS) tv.push(seed);
-    } else if (movies.length < MAX_MOVIE_SEEDS) {
-      movies.push(seed);
+      reason: "rated",
+    });
+    if (movies.length >= MAX_MOVIE_SEEDS && tv.length >= MAX_TV_SEEDS) {
+      return [...movies, ...tv];
     }
+  }
+
+  for (const row of watchedRows) {
+    tryPush({
+      movieId: row.movieId,
+      title: row.title,
+      mediaType: row.mediaType === MEDIA_TV ? MEDIA_TV : MEDIA_MOVIE,
+      rating: MIN_RATING,
+      reason: "watched",
+    });
     if (movies.length >= MAX_MOVIE_SEEDS && tv.length >= MAX_TV_SEEDS) break;
   }
 
@@ -111,17 +164,27 @@ function filterPool(
   return out;
 }
 
+/** Drop known/watched ids from a movie list (home discovery). */
+export function excludeTitleIds<T extends { id: number }>(
+  items: T[],
+  excluded: Iterable<number>,
+): T[] {
+  const set = excluded instanceof Set ? excluded : new Set(excluded);
+  if (set.size === 0) return items;
+  return items.filter((item) => !set.has(item.id));
+}
+
 /**
  * Home taste rows for the signed-in user.
- * Empty when signed out, unrated, or TMDB yields thin pools.
+ * Seeds from high ratings first, then recent watched.
  */
 export const getTasteRows = cache(async (): Promise<TasteRow[]> => {
   const seeds = await getTasteSeeds();
   if (seeds.length === 0) return [];
 
   const [movieExcluded, tvExcluded] = await Promise.all([
-    getExcludedIds(MEDIA_MOVIE),
-    getExcludedIds(MEDIA_TV),
+    getUserKnownTitleIds(MEDIA_MOVIE),
+    getUserKnownTitleIds(MEDIA_TV),
   ]);
 
   const pools = await Promise.all(
@@ -151,9 +214,16 @@ export const getTasteRows = cache(async (): Promise<TasteRow[]> => {
       seedId: seed.movieId,
       seedTitle: seed.title,
       mediaType: seed.mediaType,
+      reason: seed.reason,
       movies,
     });
   }
 
   return rows;
+});
+
+/** First taste row for search idle / empty states (movies preferred). */
+export const getSearchTasteRow = cache(async (): Promise<TasteRow | null> => {
+  const rows = await getTasteRows();
+  return rows.find((row) => row.mediaType === MEDIA_MOVIE) ?? rows[0] ?? null;
 });

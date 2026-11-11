@@ -1,5 +1,6 @@
 import { SearchExperience } from "@/components/search-experience";
 import { parsePageParam } from "@/components/pagination-nav";
+import { getSearchTasteRow } from "@/lib/taste-recommendations";
 import {
   getMovieGenres,
   getTrendingMovies,
@@ -34,7 +35,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const query = q.trim();
   const page = parsePageParam(pageRaw);
 
-  const [initialData, trending, allGenres] = await Promise.all([
+  const [initialData, trending, allGenres, tasteRow] = await Promise.all([
     query
       ? searchMulti(query, page).catch((err) => {
           console.warn(`Search for "${query}" failed:`, err);
@@ -48,12 +49,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       : Promise.resolve(null),
     getTrendingMovies("day").catch(() => []),
     getMovieGenres().catch(() => []),
+    getSearchTasteRow(),
   ]);
 
   const genreById = new Map(allGenres.map((g) => [g.id, g]));
   const genres = FEATURED_GENRE_IDS.map((id) => genreById.get(id)).filter(
     (g): g is NonNullable<typeof g> => Boolean(g),
   );
+
+  const taste = tasteRow
+    ? {
+        seedTitle: tasteRow.seedTitle,
+        reason: tasteRow.reason,
+        mediaType: tasteRow.mediaType,
+        movies: tasteRow.movies.slice(0, 12),
+      }
+    : null;
 
   return (
     <SearchExperience
@@ -62,6 +73,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       initialData={initialData}
       trending={trending.slice(0, 18)}
       genres={genres}
+      taste={taste}
     />
   );
 }

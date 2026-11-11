@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MovieRow } from "@/components/movie-row";
 import { MovieRowSkeleton } from "@/components/skeletons";
 import type { TmdbMovie } from "@/lib/tmdb";
@@ -22,6 +22,7 @@ const ROWS_PER_WAVE = 4;
 
 type DeferredGenreRowsProps = {
   favoriteIds?: number[];
+  excludeIds?: number[];
 };
 
 /**
@@ -29,7 +30,12 @@ type DeferredGenreRowsProps = {
  */
 export function DeferredGenreRows({
   favoriteIds = [],
+  excludeIds = [],
 }: DeferredGenreRowsProps) {
+  const excludeSet = useMemo(
+    () => (excludeIds.length > 0 ? new Set(excludeIds) : null),
+    [excludeIds],
+  );
   const [waves, setWaves] = useState<WaveState[]>(() =>
     Array.from({ length: TOTAL_WAVES }, () => ({
       rows: [],
@@ -84,6 +90,7 @@ export function DeferredGenreRows({
             wave={wave}
             canArm={previousSettled}
             favoriteIds={favoriteIds}
+            excludeSet={excludeSet}
             onArm={() => void loadWave(index)}
             onRetry={() => retryWave(index)}
           />
@@ -98,6 +105,7 @@ function GenreWave({
   wave,
   canArm,
   favoriteIds,
+  excludeSet,
   onArm,
   onRetry,
 }: {
@@ -105,6 +113,7 @@ function GenreWave({
   wave: WaveState;
   canArm: boolean;
   favoriteIds: number[];
+  excludeSet: Set<number> | null;
   onArm: () => void;
   onRetry: () => void;
 }) {
@@ -188,7 +197,11 @@ function GenreWave({
               key={genre.id}
               id={genre.slug}
               title={genre.title}
-              movies={genre.movies}
+              movies={
+                excludeSet
+                  ? genre.movies.filter((movie) => !excludeSet.has(movie.id))
+                  : genre.movies
+              }
               href={`/genres/${genre.id}`}
               favoriteIds={favoriteIds}
             />

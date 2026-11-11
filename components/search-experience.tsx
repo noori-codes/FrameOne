@@ -25,12 +25,20 @@ import { cn } from "@/lib/utils";
 
 const DEBOUNCE_MS = 350;
 
+type SearchTasteProps = {
+  seedTitle: string;
+  reason: "rated" | "watched";
+  mediaType: "movie" | "tv";
+  movies: TmdbMovie[];
+};
+
 type SearchExperienceProps = {
   initialQuery?: string;
   initialPage?: number;
   initialData?: PaginatedSearch | null;
   trending?: TmdbMovie[];
   genres?: TmdbGenre[];
+  taste?: SearchTasteProps | null;
 };
 
 function syncUrl(query: string) {
@@ -55,6 +63,7 @@ export function SearchExperience({
   initialData = null,
   trending = [],
   genres = [],
+  taste = null,
 }: SearchExperienceProps) {
   const [input, setInput] = useState(initialQuery);
   const [query, setQuery] = useState(initialQuery.trim());
@@ -398,54 +407,90 @@ export function SearchExperience({
           </p>
         ) : null}
 
-        {/* Idle — trending posters fill the page */}
+        {/* Idle — taste first (when signed in), then trending */}
         {!query ? (
-          <section aria-labelledby="trending-heading">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
-                  Today
-                </p>
-                <h2
-                  id="trending-heading"
-                  className="mt-1 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl"
-                >
-                  Trending now
-                </h2>
-              </div>
-              {trending[0] ? (
-                <button
-                  type="button"
-                  onClick={() => applySuggestion(trending[0]!.title)}
-                  className="text-sm text-cream/45 transition-colors hover:text-amber"
-                >
-                  Search “{trending[0].title}”
-                </button>
-              ) : null}
-            </div>
+          <div className="flex flex-col gap-14 sm:gap-16">
+            {taste && taste.movies.length > 0 ? (
+              <section aria-labelledby="taste-heading">
+                <div>
+                  <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
+                    For you
+                  </p>
+                  <h2
+                    id="taste-heading"
+                    className="mt-1 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl"
+                  >
+                    {taste.reason === "rated"
+                      ? `Because you rated ${taste.seedTitle}`
+                      : `Because you watched ${taste.seedTitle}`}
+                  </h2>
+                </div>
+                <ul className={cn("mt-7", gridClass)}>
+                  {taste.movies.map((movie, i) => (
+                    <li key={`taste-${movie.id}`}>
+                      <MovieCard
+                        id={movie.id}
+                        title={movie.title}
+                        posterPath={movie.poster_path}
+                        voteAverage={movie.vote_average}
+                        mediaType={taste.mediaType}
+                        priority={i < 6}
+                        showTitle
+                        sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, (max-width: 1280px) 16vw, 12vw"
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
 
-            {trending.length > 0 ? (
-              <ul className={cn("mt-7", gridClass)}>
-                {trending.map((movie, i) => (
-                  <li key={movie.id}>
-                    <MovieCard
-                      id={movie.id}
-                      title={movie.title}
-                      posterPath={movie.poster_path}
-                      voteAverage={movie.vote_average}
-                      priority={i < 6}
-                      showTitle
-                      sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, (max-width: 1280px) 16vw, 12vw"
-                    />
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-8 text-sm text-cream/45">
-                Start typing to find movies and series.
-              </p>
-            )}
-          </section>
+            <section aria-labelledby="trending-heading">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
+                    Today
+                  </p>
+                  <h2
+                    id="trending-heading"
+                    className="mt-1 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl"
+                  >
+                    Trending now
+                  </h2>
+                </div>
+                {trending[0] ? (
+                  <button
+                    type="button"
+                    onClick={() => applySuggestion(trending[0]!.title)}
+                    className="text-sm text-cream/45 transition-colors hover:text-amber"
+                  >
+                    Search “{trending[0].title}”
+                  </button>
+                ) : null}
+              </div>
+
+              {trending.length > 0 ? (
+                <ul className={cn("mt-7", gridClass)}>
+                  {trending.map((movie, i) => (
+                    <li key={movie.id}>
+                      <MovieCard
+                        id={movie.id}
+                        title={movie.title}
+                        posterPath={movie.poster_path}
+                        voteAverage={movie.vote_average}
+                        priority={i < 6 && !(taste && taste.movies.length > 0)}
+                        showTitle
+                        sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, (max-width: 1280px) 16vw, 12vw"
+                      />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-8 text-sm text-cream/45">
+                  Start typing to find movies and series.
+                </p>
+              )}
+            </section>
+          </div>
         ) : searching && results.length === 0 ? (
           <div className="flex min-h-[40vh] items-center justify-center gap-2 text-sm text-cream/45">
             <Loader2 className="size-4 animate-spin text-amber/80" aria-hidden />
@@ -470,7 +515,33 @@ export function SearchExperience({
               </button>
             </div>
 
-            {trending.length > 0 ? (
+            {taste && taste.movies.length > 0 ? (
+              <div className="mt-14">
+                <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
+                  Instead
+                </p>
+                <h2 className="mt-1 font-display text-2xl tracking-wide text-cream uppercase sm:text-3xl">
+                  {taste.reason === "rated"
+                    ? `Because you rated ${taste.seedTitle}`
+                    : `Because you watched ${taste.seedTitle}`}
+                </h2>
+                <ul className={cn("mt-6", gridClass)}>
+                  {taste.movies.map((movie) => (
+                    <li key={`empty-taste-${movie.id}`}>
+                      <MovieCard
+                        id={movie.id}
+                        title={movie.title}
+                        posterPath={movie.poster_path}
+                        voteAverage={movie.vote_average}
+                        mediaType={taste.mediaType}
+                        showTitle
+                        sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, (max-width: 1280px) 16vw, 12vw"
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : trending.length > 0 ? (
               <div className="mt-14">
                 <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
                   Instead

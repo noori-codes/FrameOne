@@ -11,6 +11,8 @@ type InfiniteMovieGridProps = {
   /** Hide the “Showing X of Y” line (home feed). Default true. */
   showCount?: boolean;
   favoriteIds?: number[];
+  /** Drop these TMDB ids (e.g. already watched) from every page. */
+  excludeIds?: number[];
 };
 
 function useGridColumns() {
@@ -61,6 +63,7 @@ export function InfiniteMovieGrid({
   initial,
   showCount = true,
   favoriteIds,
+  excludeIds,
 }: InfiniteMovieGridProps) {
   const [movies, setMovies] = useState(initial.results);
   const [page, setPage] = useState(initial.page);
@@ -77,6 +80,11 @@ export function InfiniteMovieGrid({
     () =>
       favoriteIds && favoriteIds.length > 0 ? new Set(favoriteIds) : null,
     [favoriteIds],
+  );
+  const excludeSet = useMemo(
+    () =>
+      excludeIds && excludeIds.length > 0 ? new Set(excludeIds) : null,
+    [excludeIds],
   );
 
   const visibleMovies = useMemo(() => {
@@ -112,6 +120,7 @@ export function InfiniteMovieGrid({
         const merged = [...prev];
         for (const movie of data.results) {
           if (seen.has(movie.id)) continue;
+          if (excludeSet?.has(movie.id)) continue;
           seen.add(movie.id);
           merged.push(movie);
         }
@@ -129,7 +138,7 @@ export function InfiniteMovieGrid({
         setLoading(false);
       }
     }
-  }, [endpoint, hasMore, page, sort]);
+  }, [endpoint, excludeSet, hasMore, page, sort]);
 
   useEffect(() => {
     return () => {

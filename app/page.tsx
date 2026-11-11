@@ -14,7 +14,12 @@ import {
   getHomeMovieFavoriteIds,
   getHomeTvFavoriteIds,
 } from "@/lib/home-favorites";
-import { getTasteRows } from "@/lib/taste-recommendations";
+import {
+  excludeTitleIds,
+  getTasteRows,
+  getUserWatchedIds,
+} from "@/lib/taste-recommendations";
+import { MEDIA_MOVIE, MEDIA_TV } from "@/lib/lists";
 import { tmdbImageUrl } from "@/lib/tmdb-image-loader";
 import {
   backdropUrl,
@@ -133,8 +138,13 @@ async function HomeHero() {
 }
 
 async function HomeGenreRows() {
-  const favoriteIds = await getHomeMovieFavoriteIds();
-  return <DeferredGenreRows favoriteIds={favoriteIds} />;
+  const [favoriteIds, watchedIds] = await Promise.all([
+    getHomeMovieFavoriteIds(),
+    getUserWatchedIds(MEDIA_MOVIE),
+  ]);
+  return (
+    <DeferredGenreRows favoriteIds={favoriteIds} excludeIds={watchedIds} />
+  );
 }
 
 async function TasteRows() {
@@ -152,8 +162,16 @@ async function TasteRows() {
         <MovieRow
           key={row.id}
           id={row.id}
-          title={`Because you rated ${row.seedTitle}`}
-          subtitle="Based on your rating"
+          title={
+            row.reason === "rated"
+              ? `Because you rated ${row.seedTitle}`
+              : `Because you watched ${row.seedTitle}`
+          }
+          subtitle={
+            row.reason === "rated"
+              ? "Based on your rating"
+              : "Based on your diary"
+          }
           movies={row.movies}
           mediaType={row.mediaType}
           favoriteIds={
@@ -166,16 +184,19 @@ async function TasteRows() {
 }
 
 async function DiscoveryRows() {
-  const [pools, favoriteIds, tvFavoriteIds] = await Promise.all([
-    Promise.allSettled([
-      getHomeTrendingPage(),
-      getPopularMoviesPage(1),
-      getHomeTopRatedPage(),
-      getTrendingTvPage("day", 1),
-    ]),
-    getHomeMovieFavoriteIds(),
-    getHomeTvFavoriteIds(),
-  ]);
+  const [pools, favoriteIds, tvFavoriteIds, watchedMovieIds, watchedTvIds] =
+    await Promise.all([
+      Promise.allSettled([
+        getHomeTrendingPage(),
+        getPopularMoviesPage(1),
+        getHomeTopRatedPage(),
+        getTrendingTvPage("day", 1),
+      ]),
+      getHomeMovieFavoriteIds(),
+      getHomeTvFavoriteIds(),
+      getUserWatchedIds(MEDIA_MOVIE),
+      getUserWatchedIds(MEDIA_TV),
+    ]);
 
   const [
     trendingResult,
@@ -225,7 +246,7 @@ async function DiscoveryRows() {
       <MovieRow
         id="trending"
         title="Trending now"
-        movies={trendingPage.results}
+        movies={excludeTitleIds(trendingPage.results, watchedMovieIds)}
         href="/browse/trending"
         favoriteIds={favoriteIds}
       />
@@ -233,21 +254,24 @@ async function DiscoveryRows() {
         id="trending-series"
         title="Trending series"
         subtitle="TV shows rising on TMDB today"
-        movies={trendingTvPage.results.map(tvShowAsMovie)}
+        movies={excludeTitleIds(
+          trendingTvPage.results.map(tvShowAsMovie),
+          watchedTvIds,
+        )}
         mediaType="tv"
         favoriteIds={tvFavoriteIds}
       />
       <MovieRow
         id="popular"
         title="Popular now"
-        movies={popularPage.results}
+        movies={excludeTitleIds(popularPage.results, watchedMovieIds)}
         href="/browse/popular"
         favoriteIds={favoriteIds}
       />
       <MovieRow
         id="top-rated"
         title="Top rated"
-        movies={topRatedPage.results}
+        movies={excludeTitleIds(topRatedPage.results, watchedMovieIds)}
         href="/browse/top-rated"
         favoriteIds={favoriteIds}
       />
@@ -275,7 +299,7 @@ export default function Home() {
       {/*
         Home scroll story:
         1) Hero
-        2) Taste rows (signed-in, high ratings only)
+        2) Taste rows (signed-in: high ratings, then watched)
         3) 4 curated discovery rows (trending / series / popular / top rated)
         4) Genre wave A (4 rows) → Genre wave B (4 rows), deferred on scroll
         5) Endless popular grid
