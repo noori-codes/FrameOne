@@ -2,7 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { Check, Heart, ListVideo, Lock, LogOut } from "lucide-react";
+import {
+  ChartColumn,
+  Check,
+  Heart,
+  ListVideo,
+  Lock,
+  LogOut,
+} from "lucide-react";
 import { auth, signOut } from "@/auth";
 import {
   AvatarForm,
@@ -290,6 +297,18 @@ export default async function ProfilePage() {
                     {ratedCount}
                   </dd>
                 </div>
+                <Link
+                  href="/stats"
+                  className="group min-w-[6.5rem] rounded-2xl border border-cream/10 bg-black/30 px-4 py-3 text-left backdrop-blur-md transition-[border-color,background-color] hover:border-amber/35 hover:bg-amber/5"
+                >
+                  <dt className="inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.16em] text-cream/40 uppercase">
+                    <ChartColumn className="size-3 text-amber/80" aria-hidden />
+                    Stats
+                  </dt>
+                  <dd className="mt-1 font-display text-2xl tracking-wide text-cream transition-colors group-hover:text-amber sm:text-3xl">
+                    Year
+                  </dd>
+                </Link>
               </dl>
             </div>
           </div>

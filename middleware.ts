@@ -15,6 +15,7 @@ export default auth((req) => {
     pathname.startsWith("/favorites") ||
     pathname.startsWith("/watchlist") ||
     pathname.startsWith("/watched") ||
+    pathname.startsWith("/stats") ||
     pathname.startsWith("/profile");
   const isAuthPage =
     pathname === "/signin" ||
@@ -42,6 +43,8 @@ export const config = {
     "/favorites/:path*",
     "/watchlist/:path*",
     "/watched/:path*",
+    "/stats",
+    "/stats/:path*",
     "/profile/:path*",
     "/signin",
     "/signup",
