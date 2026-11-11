@@ -295,7 +295,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
                 FrameOne <span className="px-1 text-cream/35">/</span> Film
               </p>
 
-              <h1 className="hero-line hero-line-2 max-w-4xl font-display text-4xl leading-[0.9] text-balance wrap-break-word text-cream uppercase drop-shadow-[0_10px_40px_rgba(0,0,0,0.45)] sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-8xl">
+              <h1 className="hero-line hero-line-2 max-w-4xl font-marquee text-4xl leading-[0.9] text-balance wrap-break-word text-cream uppercase drop-shadow-[0_10px_40px_rgba(0,0,0,0.45)] sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-8xl">
                 {movie.title}
               </h1>
 
@@ -401,7 +401,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
             </p>
             <h2
               id="overview-heading"
-              className="mt-2 font-display text-4xl text-cream uppercase sm:text-5xl"
+              className="mt-2 font-display text-4xl text-cream sm:text-5xl"
             >
               Overview
             </h2>
@@ -457,7 +457,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
                   </p>
                   <h2
                     id="cast-heading"
-                    className="mt-2 font-display text-4xl text-cream uppercase sm:text-5xl"
+                    className="mt-2 font-display text-4xl text-cream sm:text-5xl"
                   >
                     Cast
                   </h2>
@@ -507,7 +507,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
 
               {keyCrew.length > 0 ? (
                 <div className="mt-10 border-t border-cream/10 pt-8">
-                  <h3 className="font-display text-2xl tracking-wide text-cream uppercase sm:text-3xl">
+                  <h3 className="font-display text-2xl tracking-tight text-cream sm:text-3xl">
                     Key crew
                   </h3>
                   <ul className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -543,7 +543,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
               </p>
               <h2
                 id="keywords-heading"
-                className="mt-2 font-display text-3xl text-cream uppercase sm:text-4xl"
+                className="mt-2 font-display text-3xl text-cream sm:text-4xl"
               >
                 Keywords
               </h2>
@@ -569,7 +569,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
               </p>
               <h2
                 id="your-shelf-heading"
-                className="mt-2 font-display text-4xl text-cream uppercase sm:text-5xl"
+                className="mt-2 font-display text-4xl text-cream sm:text-5xl"
               >
                 Personal
               </h2>
@@ -641,7 +641,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
             </p>
             <h2
               id="details-heading"
-              className="mt-2 font-display text-4xl text-cream uppercase"
+              className="mt-2 font-display text-4xl text-cream "
             >
               Details
             </h2>

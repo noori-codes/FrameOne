@@ -57,7 +57,7 @@ export async function AuthShell({
           </Link>
 
           <div className="max-w-md pb-16 xl:pb-20">
-            <p className="auth-panel-line auth-panel-line-2 font-display text-6xl leading-[0.92] tracking-[0.08em] text-amber uppercase xl:text-7xl">
+            <p className="auth-panel-line auth-panel-line-2 font-marquee text-6xl leading-[0.92] tracking-[0.08em] text-amber uppercase xl:text-7xl">
               FrameOne
             </p>
             <p className="auth-panel-line auth-panel-line-3 mt-5 max-w-sm text-base leading-relaxed text-cream/70 xl:text-lg">
@@ -91,7 +91,7 @@ export async function AuthShell({
                 {eyebrow}
               </p>
             </div>
-            <h1 className="auth-form-line auth-form-line-2 mt-2 font-display text-4xl leading-none tracking-wide text-cream sm:text-5xl">
+            <h1 className="auth-form-line auth-form-line-2 mt-2 font-display text-4xl leading-none tracking-tight text-cream sm:text-5xl">
               {title}
             </h1>
             <p className="auth-form-line auth-form-line-3 mt-3 max-w-sm text-sm leading-relaxed text-cream/55 sm:text-[15px]">

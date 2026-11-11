@@ -25,7 +25,7 @@ export function ErrorView({
         className="pointer-events-none absolute inset-x-0 top-1/4 -z-10 h-64 bg-[radial-gradient(ellipse_at_30%_40%,color-mix(in_srgb,var(--amber)_12%,transparent),transparent_60%)]"
       />
       <BrandLogo size="md" className="mb-6" />
-      <h1 className="font-display text-4xl tracking-wide text-cream uppercase sm:text-5xl">
+      <h1 className="font-display text-4xl tracking-tight text-cream sm:text-5xl">
         {title}
       </h1>
       <p className="mt-3 max-w-md text-cream/60">{message}</p>

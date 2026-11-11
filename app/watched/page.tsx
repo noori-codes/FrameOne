@@ -80,7 +80,7 @@ export default async function WatchedPage({ searchParams }: WatchedPageProps) {
               <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase">
                 Diary
               </p>
-              <h1 className="mt-2 font-display text-5xl leading-[0.9] tracking-wide text-cream uppercase sm:text-6xl lg:text-7xl">
+              <h1 className="mt-2 font-display text-5xl leading-[0.9] tracking-tight text-cream sm:text-6xl lg:text-7xl">
                 Watched
               </h1>
               {allItems.length > 0 ? (
@@ -153,7 +153,7 @@ export default async function WatchedPage({ searchParams }: WatchedPageProps) {
                 <Check className="size-7" aria-hidden />
               </div>
             </div>
-            <h2 className="mt-8 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl">
+            <h2 className="mt-8 font-display text-3xl tracking-tight text-cream sm:text-4xl">
               Nothing logged yet
             </h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-cream/50">
@@ -177,7 +177,7 @@ export default async function WatchedPage({ searchParams }: WatchedPageProps) {
           </section>
         ) : emptyBecauseFilter ? (
           <section className="flex min-h-[40vh] flex-col items-start justify-center">
-            <h2 className="font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl">
+            <h2 className="font-display text-3xl tracking-tight text-cream sm:text-4xl">
               Nothing in this range
             </h2>
             <p className="mt-3 max-w-md text-sm leading-relaxed text-cream/50">

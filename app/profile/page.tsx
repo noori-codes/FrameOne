@@ -44,7 +44,7 @@ function SettingsPanel({
           <p className="text-[10px] font-semibold tracking-[0.22em] text-amber uppercase">
             {eyebrow}
           </p>
-          <h2 className="mt-1 font-display text-2xl tracking-wide text-cream uppercase sm:text-3xl">
+          <h2 className="mt-1 font-display text-2xl tracking-tight text-cream sm:text-3xl">
             {title}
           </h2>
           {description ? (
@@ -239,7 +239,7 @@ export default async function ProfilePage() {
                   <dt className="text-[10px] font-semibold tracking-[0.16em] text-cream/40 uppercase">
                     Favorites
                   </dt>
-                  <dd className="mt-1 font-display text-3xl tracking-wide text-cream tabular-nums transition-colors group-hover:text-amber">
+                  <dd className="mt-1 font-display text-3xl tracking-tight text-cream tabular-nums transition-colors group-hover:text-amber">
                     {favoriteCount}
                   </dd>
                 </Link>
@@ -250,7 +250,7 @@ export default async function ProfilePage() {
                   <dt className="text-[10px] font-semibold tracking-[0.16em] text-cream/40 uppercase">
                     Watchlist
                   </dt>
-                  <dd className="mt-1 font-display text-3xl tracking-wide text-cream tabular-nums transition-colors group-hover:text-amber">
+                  <dd className="mt-1 font-display text-3xl tracking-tight text-cream tabular-nums transition-colors group-hover:text-amber">
                     {watchlistCount}
                   </dd>
                 </Link>
@@ -261,7 +261,7 @@ export default async function ProfilePage() {
                   <dt className="text-[10px] font-semibold tracking-[0.16em] text-cream/40 uppercase">
                     Watched
                   </dt>
-                  <dd className="mt-1 font-display text-3xl tracking-wide text-cream tabular-nums transition-colors group-hover:text-amber">
+                  <dd className="mt-1 font-display text-3xl tracking-tight text-cream tabular-nums transition-colors group-hover:text-amber">
                     {watchedCount}
                   </dd>
                 </Link>
@@ -269,7 +269,7 @@ export default async function ProfilePage() {
                   <dt className="text-[10px] font-semibold tracking-[0.16em] text-cream/40 uppercase">
                     Rated
                   </dt>
-                  <dd className="mt-1 font-display text-3xl tracking-wide text-cream tabular-nums">
+                  <dd className="mt-1 font-display text-3xl tracking-tight text-cream tabular-nums">
                     {ratedCount}
                   </dd>
                 </div>
@@ -281,7 +281,7 @@ export default async function ProfilePage() {
                     <ChartColumn className="size-3 text-amber/80" aria-hidden />
                     Stats
                   </dt>
-                  <dd className="mt-1 font-display text-2xl tracking-wide text-cream transition-colors group-hover:text-amber sm:text-3xl">
+                  <dd className="mt-1 font-display text-2xl tracking-tight text-cream transition-colors group-hover:text-amber sm:text-3xl">
                     Year
                   </dd>
                 </Link>

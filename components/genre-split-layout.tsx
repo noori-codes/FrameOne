@@ -70,7 +70,7 @@ export function GenreSplitLayout({
             <ArrowLeft className="size-4" aria-hidden />
             All genres
           </Link>
-          <h1 className="mt-4 font-display text-5xl leading-[0.9] tracking-wide text-cream uppercase drop-shadow-[0_8px_28px_rgba(0,0,0,0.55)] sm:text-6xl">
+          <h1 className="mt-4 font-display text-5xl leading-[0.9] tracking-tight text-cream drop-shadow-[0_8px_28px_rgba(0,0,0,0.55)] sm:text-6xl">
             {title}
           </h1>
           <p className="mt-3 max-w-lg text-sm leading-relaxed text-cream/70">
@@ -142,7 +142,7 @@ export function GenreSplitLayout({
                 All genres
               </Link>
 
-              <h1 className="mt-8 font-display text-5xl leading-[0.88] tracking-wide wrap-break-word text-cream uppercase drop-shadow-[0_10px_32px_rgba(0,0,0,0.65)] xl:text-6xl">
+              <h1 className="mt-8 font-display text-5xl leading-[0.88] tracking-tight wrap-break-word text-cream drop-shadow-[0_10px_32px_rgba(0,0,0,0.65)] xl:text-6xl">
                 {title}
               </h1>
               <p className="mt-4 text-sm leading-relaxed text-cream/75 drop-shadow-[0_4px_16px_rgba(0,0,0,0.55)]">

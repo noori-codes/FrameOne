@@ -80,7 +80,7 @@ export function CollectionPageLayout({
               {backLabel}
             </Link>
 
-            <h1 className="mt-6 max-w-4xl font-display text-6xl leading-[0.88] tracking-wide wrap-break-word text-cream uppercase drop-shadow-[0_8px_30px_rgba(0,0,0,0.55)] sm:mt-8 sm:text-8xl md:text-9xl">
+            <h1 className="mt-6 max-w-4xl font-display text-6xl leading-[0.88] tracking-tight wrap-break-word text-cream drop-shadow-[0_8px_30px_rgba(0,0,0,0.55)] sm:mt-8 sm:text-8xl md:text-9xl">
               {title}
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-cream/65 sm:mt-5 sm:text-base">

@@ -54,7 +54,7 @@ export function ProfileActivityFeed({ items }: ProfileActivityFeedProps) {
         </p>
         <h2
           id="activity-heading"
-          className="mt-2 font-display text-2xl tracking-wide text-cream uppercase sm:text-3xl"
+          className="mt-2 font-display text-2xl tracking-tight text-cream sm:text-3xl"
         >
           Activity
         </h2>
@@ -75,7 +75,7 @@ export function ProfileActivityFeed({ items }: ProfileActivityFeedProps) {
           </p>
           <h2
             id="activity-heading"
-            className="mt-2 font-display text-2xl tracking-wide text-cream uppercase sm:text-3xl"
+            className="mt-2 font-display text-2xl tracking-tight text-cream sm:text-3xl"
           >
             Activity
           </h2>

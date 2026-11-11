@@ -71,7 +71,7 @@ export default async function WatchlistPage({
               <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase">
                 Up next
               </p>
-              <h1 className="mt-2 font-display text-5xl leading-[0.9] tracking-wide text-cream uppercase sm:text-6xl lg:text-7xl">
+              <h1 className="mt-2 font-display text-5xl leading-[0.9] tracking-tight text-cream sm:text-6xl lg:text-7xl">
                 Watchlist
               </h1>
               {items.length > 0 ? (
@@ -131,7 +131,7 @@ export default async function WatchlistPage({
                 <Clapperboard className="size-7" aria-hidden />
               </div>
             </div>
-            <h2 className="mt-8 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl">
+            <h2 className="mt-8 font-display text-3xl tracking-tight text-cream sm:text-4xl">
               Queue is empty
             </h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-cream/50">
@@ -196,7 +196,7 @@ export default async function WatchlistPage({
                       <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
                         Up next
                       </p>
-                      <p className="mt-2 font-display text-3xl leading-none tracking-wide text-cream uppercase sm:text-4xl lg:text-5xl">
+                      <p className="mt-2 font-display text-3xl leading-none tracking-tight text-cream sm:text-4xl lg:text-5xl">
                         {upNext.title}
                       </p>
                       <p className="mt-3 text-sm text-cream/55">

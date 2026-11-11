@@ -99,7 +99,7 @@ export function FavoriteCard({ favorite, priority = false }: FavoriteCardProps) 
                   </p>
                   <h2
                     id={titleId}
-                    className="mt-1.5 font-display text-2xl leading-none tracking-wide text-cream uppercase"
+                    className="mt-1.5 font-display text-2xl leading-none tracking-tight text-cream "
                   >
                     {favorite.title}
                   </h2>

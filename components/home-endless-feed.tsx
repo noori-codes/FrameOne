@@ -49,7 +49,7 @@ export async function HomeEndlessFeed() {
             </p>
             <h2
               id="endless-feed-heading"
-              className="mt-2 font-display text-4xl text-cream uppercase sm:text-5xl"
+              className="mt-2 font-display text-4xl text-cream sm:text-5xl"
             >
               Discover more
             </h2>

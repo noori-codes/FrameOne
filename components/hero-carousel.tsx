@@ -212,7 +212,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           className="absolute -top-20 left-1/4 size-[28rem] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--amber)_22%,transparent),transparent_68%)] blur-3xl"
         />
         <div className="relative z-10 flex w-full flex-col px-5 pb-10 pt-16 sm:px-6 sm:pb-12 lg:px-8">
-          <h1 className="max-w-xl font-display text-5xl leading-none tracking-wide text-cream uppercase sm:text-7xl">
+          <h1 className="max-w-xl font-marquee text-5xl leading-none tracking-wide text-cream uppercase sm:text-7xl">
             Movies, lit for the night
           </h1>
           <p className="mt-4 max-w-md text-base leading-relaxed text-cream/65">
@@ -280,7 +280,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
             <h1
               aria-label={slide.title}
-              className="hero-line hero-line-3 line-clamp-2 min-h-[1.7em] max-w-6xl font-display text-6xl leading-[0.86] tracking-wide wrap-break-word text-cream uppercase drop-shadow-[0_12px_48px_rgba(0,0,0,0.65)] sm:text-8xl md:text-9xl lg:text-[7.5rem] xl:text-[8.5rem]"
+              className="hero-line hero-line-3 line-clamp-2 min-h-[1.7em] max-w-6xl font-marquee text-6xl leading-[0.86] tracking-wide wrap-break-word text-cream uppercase drop-shadow-[0_12px_48px_rgba(0,0,0,0.65)] sm:text-8xl md:text-9xl lg:text-[7.5rem] xl:text-[8.5rem]"
             >
               {titleLines.map((line, lineIndex) =>
                 line ? (
@@ -382,7 +382,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
         {count > 1 ? (
           <div className="mt-8 flex w-full items-center gap-3 border-t border-cream/12 pt-5 sm:mt-10 sm:gap-5 sm:pt-6 lg:mt-12">
-            <div className="flex shrink-0 items-baseline gap-1.5 font-display tracking-wide">
+            <div className="flex shrink-0 items-baseline gap-1.5 font-marquee tracking-wide">
               <span className="text-xl leading-none text-amber sm:text-2xl">
                 {String(index + 1).padStart(2, "0")}
               </span>

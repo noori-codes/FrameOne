@@ -100,7 +100,7 @@ export function WhereToWatch({ offer, title, className }: WhereToWatchProps) {
           </p>
           <h2
             id="where-to-watch-heading"
-            className="mt-2 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl"
+            className="mt-2 font-display text-3xl tracking-tight text-cream sm:text-4xl"
           >
             Where to watch
           </h2>

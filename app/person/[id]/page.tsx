@@ -260,7 +260,7 @@ export default async function PersonPage({ params }: PersonPageProps) {
 
               <h1
                 aria-label={person.name}
-                className="max-w-4xl font-display leading-[0.9] text-balance wrap-break-word text-cream uppercase"
+                className="max-w-4xl font-display leading-[0.9] text-balance wrap-break-word text-cream "
               >
                 <span className="block text-3xl text-cream/75 sm:text-4xl md:text-5xl">
                   {firstNames}
@@ -354,7 +354,7 @@ export default async function PersonPage({ params }: PersonPageProps) {
                     </p>
                     <h2
                       id="bio-heading"
-                      className="mt-2 font-display text-4xl text-cream uppercase sm:text-5xl"
+                      className="mt-2 font-display text-4xl text-cream sm:text-5xl"
                     >
                       Biography
                     </h2>
@@ -402,7 +402,7 @@ export default async function PersonPage({ params }: PersonPageProps) {
                   <p className="text-[10px] font-semibold tracking-[0.22em] text-amber uppercase">
                     Profile
                   </p>
-                  <p className="mt-1 font-display text-2xl uppercase tracking-wide text-cream">
+                  <p className="mt-1 font-display text-2xl tracking-tight text-cream">
                     Details
                   </p>
                 </div>
@@ -470,7 +470,7 @@ function KnownForSection({
           </p>
           <h2
             id={id}
-            className="mt-2 font-display text-4xl text-cream uppercase sm:text-5xl"
+            className="mt-2 font-display text-4xl text-cream sm:text-5xl"
           >
             {title}
           </h2>

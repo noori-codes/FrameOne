@@ -109,7 +109,7 @@ function BigStat({
         {label}
       </p>
       <div>
-        <p className="font-display text-[2.75rem] leading-none tracking-wide text-cream tabular-nums sm:text-5xl">
+        <p className="font-display text-[2.75rem] leading-none tracking-tight text-cream tabular-nums sm:text-5xl">
           {value}
         </p>
         {hint ? (
@@ -135,7 +135,7 @@ function SectionTitle({
         <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase">
           {eyebrow}
         </p>
-        <h2 className="mt-1.5 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl">
+        <h2 className="mt-1.5 font-display text-3xl tracking-tight text-cream sm:text-4xl">
           {title}
         </h2>
       </div>
@@ -210,7 +210,7 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
               <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase">
                 Your watching · {year}
               </p>
-              <h1 className="mt-2 font-display text-5xl leading-[0.9] tracking-wide text-cream uppercase sm:text-6xl lg:text-7xl">
+              <h1 className="mt-2 font-display text-5xl leading-[0.9] tracking-tight text-cream sm:text-6xl lg:text-7xl">
                 Stats
               </h1>
               {!empty ? (
@@ -285,7 +285,7 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
             <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase">
               Empty year
             </p>
-            <h2 className="mt-2 font-display text-4xl tracking-wide text-cream uppercase sm:text-5xl">
+            <h2 className="mt-2 font-display text-4xl tracking-tight text-cream sm:text-5xl">
               Start logging
             </h2>
             <p className="mt-4 max-w-md text-sm leading-relaxed text-cream/55">
@@ -619,7 +619,7 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
                               <span className="font-display text-sm text-cream/30 tabular-nums">
                                 {String(index + 1).padStart(2, "0")}
                               </span>
-                              <span className="truncate font-display text-xl tracking-wide text-cream uppercase transition-colors group-hover:text-amber sm:text-2xl">
+                              <span className="truncate font-display text-xl tracking-tight text-cream transition-colors group-hover:text-amber sm:text-2xl">
                                 {genre.name}
                               </span>
                             </span>

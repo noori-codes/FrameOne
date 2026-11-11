@@ -92,7 +92,7 @@ export function MovieRow({
     >
       <div className="flex items-end justify-between gap-3 px-5 sm:gap-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="min-w-0">
-          <h2 className="font-display text-2xl tracking-[0.04em] text-cream uppercase sm:text-3xl md:text-4xl">
+          <h2 className="font-display text-2xl tracking-tight text-cream sm:text-3xl md:text-4xl">
             {href ? (
               <Link
                 href={href}

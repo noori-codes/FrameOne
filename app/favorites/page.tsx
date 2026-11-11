@@ -87,7 +87,7 @@ export default async function FavoritesPage({
               <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase">
                 Your shelf
               </p>
-              <h1 className="mt-2 font-display text-5xl leading-[0.9] tracking-wide text-cream uppercase sm:text-6xl lg:text-7xl">
+              <h1 className="mt-2 font-display text-5xl leading-[0.9] tracking-tight text-cream sm:text-6xl lg:text-7xl">
                 Favorites
               </h1>
               {favorites.length > 0 ? (
@@ -166,7 +166,7 @@ export default async function FavoritesPage({
                 <Heart className="size-7" aria-hidden />
               </div>
             </div>
-            <h2 className="mt-8 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl">
+            <h2 className="mt-8 font-display text-3xl tracking-tight text-cream sm:text-4xl">
               Start your shelf
             </h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-cream/50">
@@ -231,7 +231,7 @@ export default async function FavoritesPage({
                       <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
                         {featured.rating != null ? "Top rated" : "Latest save"}
                       </p>
-                      <p className="mt-2 font-display text-3xl leading-none tracking-wide text-cream uppercase sm:text-4xl lg:text-5xl">
+                      <p className="mt-2 font-display text-3xl leading-none tracking-tight text-cream sm:text-4xl lg:text-5xl">
                         {featured.title}
                       </p>
                       <div className="mt-3">

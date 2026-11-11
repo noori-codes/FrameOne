@@ -34,7 +34,7 @@ export function ProfileShelfStrip({
     <section className="min-w-0">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl tracking-wide text-cream uppercase sm:text-3xl">
+          <h2 className="font-display text-2xl tracking-tight text-cream sm:text-3xl">
             {title}
           </h2>
           <p className="mt-1 text-sm text-cream/45">

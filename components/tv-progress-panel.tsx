@@ -270,7 +270,7 @@ export function TvProgressPanel({
       </p>
       <h2
         id="tv-progress-heading"
-        className="mt-2 font-display text-4xl text-cream uppercase sm:text-5xl"
+        className="mt-2 font-display text-4xl text-cream sm:text-5xl"
       >
         Progress
       </h2>
@@ -308,7 +308,7 @@ export function TvProgressPanel({
           <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
             Up next
           </p>
-          <p className="mt-2 font-display text-2xl tracking-wide text-cream uppercase sm:text-3xl">
+          <p className="mt-2 font-display text-2xl tracking-tight text-cream sm:text-3xl">
             S{upNext.seasonNumber}E
             {String(upNext.episodeNumber).padStart(2, "0")}
           </p>

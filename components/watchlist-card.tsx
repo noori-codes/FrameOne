@@ -76,7 +76,7 @@ export function WatchlistCard({
         <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/35 to-transparent px-2.5 pt-12 pb-2.5 transition-opacity duration-300 group-hover:opacity-0">
           <div className="flex items-center justify-between gap-2">
             {queueIndex != null ? (
-              <span className="font-display text-lg leading-none tracking-wide text-cream/70">
+              <span className="font-display text-lg leading-none tracking-tight text-cream/70">
                 {String(queueIndex).padStart(2, "0")}
               </span>
             ) : (

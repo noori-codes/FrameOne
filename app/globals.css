@@ -19,7 +19,10 @@
   --color-amber: var(--amber);
   --color-stage: var(--stage);
   --font-sans: var(--font-body);
+  /* Quiet editorial serif for section / page headlines */
   --font-display: var(--font-display);
+  /* Bebas marquee — brand + hero titles only */
+  --font-marquee: var(--font-marquee);
 }
 
 body {

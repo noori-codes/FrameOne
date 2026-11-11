@@ -64,7 +64,7 @@ export default async function GenresPage() {
           <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">
             Catalog
           </p>
-          <h1 className="mt-3 max-w-4xl font-display text-5xl leading-none tracking-[0.06em] text-cream uppercase sm:text-7xl md:text-8xl lg:text-9xl">
+          <h1 className="mt-3 max-w-4xl font-display text-5xl leading-none tracking-tight text-cream sm:text-7xl md:text-8xl lg:text-9xl">
             Genres
           </h1>
           <p className="mt-5 max-w-lg text-sm leading-relaxed text-cream/50 sm:text-base">
@@ -105,7 +105,7 @@ export default async function GenresPage() {
                     aria-hidden
                     className="mb-2 block h-0.5 w-7 origin-left scale-x-75 rounded-full bg-amber/70 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-x-100"
                   />
-                  <h2 className="font-display text-2xl leading-none tracking-[0.08em] text-cream uppercase transition-colors duration-500 group-hover:text-amber sm:text-3xl lg:text-[2rem]">
+                  <h2 className="font-display text-2xl leading-none tracking-tight text-cream transition-colors duration-500 group-hover:text-amber sm:text-3xl lg:text-[2rem]">
                     {genre.name}
                   </h2>
                 </div>

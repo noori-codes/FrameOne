@@ -41,8 +41,8 @@ export function BrandLogo({
         <span
           className={cn(
             // Same height as the mark so both share one vertical center
-            "inline-flex items-center font-display leading-none tracking-[0.2em] text-amber uppercase",
-            // Bebas sits a hair high in the em-box — nudge to match the mark
+            "inline-flex items-center font-marquee leading-none tracking-[0.2em] text-amber uppercase",
+            // Marquee face sits a hair high in the em-box — nudge to match the mark
             "translate-y-[0.06em]",
             // Drop the wordmark on very narrow phones so the header doesn’t overflow
             "max-[380px]:hidden",

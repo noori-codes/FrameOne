@@ -46,7 +46,7 @@ export function UpdateNameForm({ defaultName }: { defaultName: string }) {
   if (!editing) {
     return (
       <div className="flex flex-wrap items-end justify-center gap-x-3 gap-y-2 lg:justify-start">
-        <h2 className="max-w-full font-display text-4xl leading-[0.9] tracking-wide text-cream uppercase wrap-break-word sm:text-5xl lg:text-6xl">
+        <h2 className="max-w-full font-display text-4xl leading-[0.9] tracking-tight text-cream wrap-break-word sm:text-5xl lg:text-6xl">
           {defaultName.trim() || (
             <span className="font-display text-cream/35">No display name</span>
           )}

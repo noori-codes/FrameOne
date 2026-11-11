@@ -111,7 +111,7 @@ export function WatchedCard({ item, priority = false }: WatchedCardProps) {
                   </p>
                   <h2
                     id={titleId}
-                    className="mt-1 truncate font-display text-2xl tracking-wide text-cream uppercase"
+                    className="mt-1 truncate font-display text-2xl tracking-tight text-cream "
                   >
                     {item.title}
                   </h2>

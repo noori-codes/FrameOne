@@ -49,7 +49,7 @@ export function TitleMedia({
       </p>
       <h2
         id="media-heading"
-        className="mt-2 font-display text-4xl tracking-wide text-cream uppercase sm:text-5xl"
+        className="mt-2 font-display text-4xl tracking-tight text-cream sm:text-5xl"
       >
         Videos & stills
       </h2>

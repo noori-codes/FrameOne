@@ -192,7 +192,7 @@ export function SiteNav({ user }: SiteNavProps) {
               <div className="flex h-14 items-center justify-between gap-3 sm:h-16">
                 <p
                   id={titleId}
-                  className="font-display text-lg tracking-[0.2em] text-cream uppercase"
+                  className="font-display text-lg tracking-tight text-cream "
                 >
                   Menu
                 </p>

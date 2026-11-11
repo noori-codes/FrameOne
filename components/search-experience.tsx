@@ -307,7 +307,7 @@ export function SearchExperience({
           <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase">
             Discover
           </p>
-          <h1 className="mt-2 font-display text-5xl leading-[0.9] tracking-wide text-cream uppercase sm:text-6xl lg:text-7xl">
+          <h1 className="mt-2 font-display text-5xl leading-[0.9] tracking-tight text-cream sm:text-6xl lg:text-7xl">
             Search
           </h1>
 
@@ -482,7 +482,7 @@ export function SearchExperience({
                         </p>
                         <h2
                           id="search-spotlight-heading"
-                          className="mt-2 font-display text-4xl leading-none tracking-wide text-cream uppercase sm:text-5xl"
+                          className="mt-2 font-display text-4xl leading-none tracking-tight text-cream sm:text-5xl"
                         >
                           <Link
                             href={spotlightHref}
@@ -528,7 +528,7 @@ export function SearchExperience({
                   </p>
                   <h2
                     id="taste-heading"
-                    className="mt-1 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl"
+                    className="mt-1 font-display text-3xl tracking-tight text-cream sm:text-4xl"
                   >
                     {taste.reason === "rated"
                       ? `Because you rated ${taste.seedTitle}`
@@ -565,7 +565,7 @@ export function SearchExperience({
                   </p>
                   <h2
                     id="trending-heading"
-                    className="mt-1 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl"
+                    className="mt-1 font-display text-3xl tracking-tight text-cream sm:text-4xl"
                   >
                     Trending now
                   </h2>
@@ -602,7 +602,7 @@ export function SearchExperience({
         ) : !searching && results.length === 0 ? (
           <section>
             <div className="max-w-xl">
-              <p className="font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl">
+              <p className="font-display text-3xl tracking-tight text-cream sm:text-4xl">
                 No matches
               </p>
               <p className="mt-3 text-sm leading-relaxed text-cream/50">
@@ -623,7 +623,7 @@ export function SearchExperience({
                 <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
                   Instead
                 </p>
-                <h2 className="mt-1 font-display text-2xl tracking-wide text-cream uppercase sm:text-3xl">
+                <h2 className="mt-1 font-display text-2xl tracking-tight text-cream sm:text-3xl">
                   {taste.reason === "rated"
                     ? `Because you rated ${taste.seedTitle}`
                     : `Because you watched ${taste.seedTitle}`}
@@ -649,7 +649,7 @@ export function SearchExperience({
                 <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
                   Instead
                 </p>
-                <h2 className="mt-1 font-display text-2xl tracking-wide text-cream uppercase sm:text-3xl">
+                <h2 className="mt-1 font-display text-2xl tracking-tight text-cream sm:text-3xl">
                   Trending now
                 </h2>
                 <ul className={cn("mt-6", gridClass)}>
@@ -702,7 +702,7 @@ export function SearchExperience({
                     <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
                       Top match
                     </p>
-                    <p className="mt-1.5 font-display text-3xl leading-none tracking-wide text-cream uppercase sm:text-4xl lg:text-5xl">
+                    <p className="mt-1.5 font-display text-3xl leading-none tracking-tight text-cream sm:text-4xl lg:text-5xl">
                       {featured.title}
                     </p>
                     {featured.overview ? (
