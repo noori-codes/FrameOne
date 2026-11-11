@@ -304,7 +304,7 @@ export default function Home() {
         4) Genre wave A (4 rows) → Genre wave B (4 rows), deferred on scroll
         5) Endless popular grid
       */}
-      <div className="relative z-10 flex w-full flex-col gap-14 border-t border-cream/8 pt-12 pb-12 sm:gap-24 sm:pt-20 sm:pb-20">
+      <div className="relative z-10 flex min-h-[70vh] w-full flex-col gap-14 border-t border-cream/8 pt-12 pb-12 sm:gap-24 sm:pt-20 sm:pb-20">
         <Suspense fallback={<RowsSkeleton count={2} />}>
           <TasteRows />
         </Suspense>
@@ -319,6 +319,7 @@ export default function Home() {
         </Suspense>
       </div>
 
+      {/* Footer only after hero-height content so mobile never flashes end-credits first. */}
       <SiteFooter />
     </main>
   );

@@ -41,6 +41,8 @@ export function MovieRow({
     containScroll: "trimSnaps",
     dragFree: false,
     duration: 18,
+    // Leave a peek of the next poster so the row feels scrollable.
+    slidesToScroll: "auto",
   });
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
@@ -83,7 +85,11 @@ export function MovieRow({
     "inline-flex size-9 items-center justify-center rounded-full border border-cream/15 bg-cream/[0.03] text-cream/80 shadow-[0_8px_24px_-16px_rgba(0,0,0,0.8)] backdrop-blur-md transition-[border-color,color,background-color,box-shadow,transform] hover:border-amber/45 hover:bg-amber/10 hover:text-amber hover:shadow-[0_10px_28px_-14px_color-mix(in_srgb,var(--amber)_45%,transparent)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-25 disabled:hover:border-cream/15 disabled:hover:bg-cream/[0.03] disabled:hover:text-cream/80 disabled:hover:shadow-none";
 
   return (
-    <section id={id} aria-label={title} className="space-y-5 sm:space-y-6">
+    <section
+      id={id}
+      aria-label={title}
+      className="row-reveal space-y-5 sm:space-y-6"
+    >
       <div className="flex items-end justify-between gap-3 px-5 sm:gap-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="min-w-0">
           <h2 className="font-display text-2xl tracking-[0.04em] text-cream uppercase sm:text-3xl md:text-4xl">
@@ -140,12 +146,12 @@ export function MovieRow({
         className="overflow-hidden px-5 pt-2 pb-5 sm:px-8 lg:px-12 xl:px-16"
         ref={emblaRef}
       >
-        <ul className="flex gap-4 sm:gap-5 lg:gap-6">
+        <ul className="flex gap-3 sm:gap-3.5 lg:gap-4">
           {row.map((movie) => (
             <li
               key={movie.id}
               className={cn(
-                "min-w-0 shrink-0 grow-0 basis-36 sm:basis-44 md:basis-52 lg:basis-56",
+                "min-w-0 shrink-0 grow-0 basis-[9.75rem] sm:basis-48 md:basis-56 lg:basis-[15.5rem] xl:basis-[17rem]",
               )}
             >
               <MovieCard
@@ -155,10 +161,12 @@ export function MovieRow({
                 voteAverage={movie.vote_average}
                 mediaType={mediaType}
                 initialFavorite={favoriteSet?.has(movie.id) ?? false}
-                sizes="(max-width: 640px) 144px, (max-width: 768px) 176px, (max-width: 1024px) 208px, 224px"
+                sizes="(max-width: 640px) 156px, (max-width: 768px) 192px, (max-width: 1024px) 224px, (max-width: 1280px) 248px, 272px"
               />
             </li>
           ))}
+          {/* Trailing spacer so the last card can peek past the gutter. */}
+          <li aria-hidden className="w-3 shrink-0 grow-0 basis-3 sm:w-5 sm:basis-5" />
         </ul>
       </div>
     </section>

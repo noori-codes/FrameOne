@@ -11,6 +11,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { DetailBackLink } from "@/components/detail-back-link";
 import { FavoriteMetaForm } from "@/components/favorite-meta-form";
+import { DetailActionRail } from "@/components/detail-action-rail";
 import { MovieHeroActions } from "@/components/movie-hero-actions";
 import { WatchedDiaryForm } from "@/components/watched-diary-form";
 import { MovieRow } from "@/components/movie-row";
@@ -348,17 +349,19 @@ export default async function MoviePage({ params }: MoviePageProps) {
               ) : null}
 
               <div className="hero-line hero-line-5 mt-5 sm:mt-6">
-                <MovieHeroActions
-                  movieId={movie.id}
-                  title={movie.title}
-                  posterPath={movie.poster_path}
-                  trailerKey={trailerKey}
-                  watchOffer={watchOffer}
-                  initialFavorite={Boolean(favorite)}
-                  initialWatchlist={Boolean(watchlistItem)}
-                  initialWatched={Boolean(watchedItem)}
-                  signedIn={signedIn}
-                />
+                <DetailActionRail label={`${movie.title} actions`}>
+                  <MovieHeroActions
+                    movieId={movie.id}
+                    title={movie.title}
+                    posterPath={movie.poster_path}
+                    trailerKey={trailerKey}
+                    watchOffer={watchOffer}
+                    initialFavorite={Boolean(favorite)}
+                    initialWatchlist={Boolean(watchlistItem)}
+                    initialWatched={Boolean(watchedItem)}
+                    signedIn={signedIn}
+                  />
+                </DetailActionRail>
               </div>
             </div>
 

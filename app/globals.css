@@ -164,7 +164,7 @@ button:disabled {
 @keyframes heroLineIn {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(22px);
   }
   to {
     opacity: 1;
@@ -174,23 +174,67 @@ button:disabled {
 
 .hero-line {
   opacity: 0;
-  animation: heroLineIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: heroLineIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .hero-line-1 {
   animation-delay: 40ms;
 }
 .hero-line-2 {
-  animation-delay: 100ms;
+  animation-delay: 120ms;
 }
 .hero-line-3 {
-  animation-delay: 160ms;
+  animation-delay: 200ms;
 }
 .hero-line-4 {
-  animation-delay: 220ms;
+  animation-delay: 280ms;
 }
 .hero-line-5 {
-  animation-delay: 280ms;
+  animation-delay: 360ms;
+}
+
+@keyframes rowReveal {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.row-reveal {
+  animation: rowReveal 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes saveConfirmPop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.save-confirm-pop {
+  animation: saveConfirmPop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes routeEnter {
+  from {
+    opacity: 0.72;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.route-enter {
+  animation: routeEnter 280ms ease-out both;
 }
 
 @keyframes authLineIn {
@@ -397,7 +441,10 @@ button:disabled {
 
   .hero-line,
   .auth-panel-line,
-  .auth-form-line {
+  .auth-form-line,
+  .row-reveal,
+  .save-confirm-pop,
+  .route-enter {
     opacity: 1;
     animation: none;
     transform: none;

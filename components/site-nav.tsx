@@ -25,14 +25,19 @@ type SiteNavProps = {
   user: SiteNavUser | null;
 };
 
-const links = [
+const browseLinks = [
   { href: "/", label: "Home" },
   { href: "/genres", label: "Genres" },
+] as const;
+
+const shelfLinks = [
   { href: "/favorites", label: "Favorites", auth: true },
   { href: "/watchlist", label: "Watchlist", auth: true },
   { href: "/watched", label: "Watched", auth: true },
   { href: "/stats", label: "Stats", auth: true },
 ] as const;
+
+const links = [...browseLinks, ...shelfLinks] as const;
 
 const AUTH_PATHS = new Set([
   "/signin",
@@ -45,7 +50,7 @@ const AUTH_PATHS = new Set([
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
-function useScrolled(threshold = 16) {
+function useScrolled(threshold = 8) {
   return useSyncExternalStore(
     (onStoreChange) => {
       const onScroll = () => onStoreChange();
@@ -260,8 +265,8 @@ export function SiteNav({ user }: SiteNavProps) {
           "site-header z-30 transition-[background-color,box-shadow,border-color,backdrop-filter] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
           onHome ? "fixed inset-x-0 top-0" : "sticky top-0",
           scrolled || !onHome
-            ? "border-b border-cream/8 bg-background/80 shadow-[0_18px_48px_-28px_rgba(0,0,0,0.9)] backdrop-blur-2xl"
-            : "border-b border-transparent bg-linear-to-b from-background/55 via-background/20 to-transparent backdrop-blur-md",
+            ? "border-b border-cream/8 bg-background/88 shadow-[0_18px_48px_-28px_rgba(0,0,0,0.9)] backdrop-blur-2xl"
+            : "border-b border-transparent bg-linear-to-b from-background/80 via-background/45 to-transparent backdrop-blur-md",
         )}
       >
         <div
@@ -288,27 +293,48 @@ export function SiteNav({ user }: SiteNavProps) {
             />
           </Link>
 
-          {/* Desktop */}
-          <div className="ml-auto hidden items-center gap-3 md:flex lg:gap-4">
+          {/* Desktop — browse pill stays primary; shelves sit quieter beside it */}
+          <div className="ml-auto hidden items-center gap-2.5 md:flex lg:gap-3">
             <nav
               aria-label="Main navigation"
-              className="flex items-center gap-0.5 rounded-full border border-cream/10 bg-cream/[0.035] p-1 shadow-[inset_0_1px_0_color-mix(in_srgb,white_6%,transparent)] backdrop-blur-xl"
+              className="flex items-center gap-1"
             >
-              {visibleLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  aria-current={isActive(link.href) ? "page" : undefined}
-                  className={cn(
-                    "relative rounded-full px-3.5 py-1.5 text-[13px] font-medium tracking-wide transition-[color,background-color,box-shadow] duration-300",
-                    isActive(link.href)
-                      ? "bg-amber/15 text-amber shadow-[0_8px_24px_-14px_color-mix(in_srgb,var(--amber)_55%,transparent)]"
-                      : "text-cream/65 hover:bg-cream/[0.05] hover:text-cream",
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              <div className="flex items-center gap-0.5 rounded-full border border-cream/12 bg-black/35 p-1 shadow-[inset_0_1px_0_color-mix(in_srgb,white_8%,transparent)] backdrop-blur-xl">
+                {browseLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    aria-current={isActive(link.href) ? "page" : undefined}
+                    className={cn(
+                      "relative rounded-full px-3.5 py-1.5 text-[13px] font-medium tracking-wide text-shadow-sm transition-[color,background-color,box-shadow] duration-300",
+                      isActive(link.href)
+                        ? "bg-amber/18 text-amber shadow-[0_8px_24px_-14px_color-mix(in_srgb,var(--amber)_55%,transparent)]"
+                        : "text-cream/85 hover:bg-cream/[0.08] hover:text-cream",
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+              {user ? (
+                <div className="ml-0.5 flex items-center gap-0.5">
+                  {shelfLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      aria-current={isActive(link.href) ? "page" : undefined}
+                      className={cn(
+                        "rounded-full px-2 py-1.5 text-[12px] font-medium tracking-wide transition-colors duration-300 lg:px-2.5",
+                        isActive(link.href)
+                          ? "text-amber"
+                          : "text-cream/70 hover:text-cream",
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
             </nav>
 
             <Link
@@ -316,13 +342,13 @@ export function SiteNav({ user }: SiteNavProps) {
               aria-label="Search movies"
               aria-current={pathname === "/search" ? "page" : undefined}
               className={cn(
-                "group inline-flex h-9 items-center gap-2 rounded-full border border-cream/10 bg-cream/[0.03] px-3 text-cream/65 transition-[border-color,background-color,color,box-shadow] duration-300 hover:border-cream/20 hover:bg-cream/[0.06] hover:text-cream",
+                "group inline-flex size-9 items-center justify-center rounded-full border border-cream/12 bg-black/35 text-cream/80 transition-[border-color,background-color,color,box-shadow] duration-300 hover:border-cream/25 hover:bg-cream/[0.08] hover:text-cream xl:h-9 xl:w-auto xl:gap-2 xl:px-3",
                 pathname === "/search" &&
                   "border-amber/25 bg-amber/10 text-amber shadow-[0_0_24px_-10px_color-mix(in_srgb,var(--amber)_50%,transparent)]",
               )}
             >
               <Search className="size-4 shrink-0" strokeWidth={1.75} />
-              <span className="hidden text-[13px] font-medium tracking-wide lg:inline">
+              <span className="hidden text-[13px] font-medium tracking-wide xl:inline">
                 Search
               </span>
             </Link>

@@ -59,11 +59,12 @@ export function MovieHeroActions({
           target="_blank"
           rel="noreferrer"
           className={cn(
-            "cta-shine group relative inline-flex min-h-10 items-center gap-2 overflow-hidden rounded-full bg-amber px-5 text-sm font-semibold text-[color:var(--on-amber)] shadow-[0_14px_36px_-16px_color-mix(in_srgb,var(--amber)_55%,transparent)] transition-[background-color,box-shadow,transform] hover:bg-(--amber-dim) hover:text-cream active:scale-[0.98] sm:min-h-12 sm:px-6",
+            "cta-shine group relative inline-flex min-h-10 items-center gap-2 overflow-hidden rounded-md bg-amber px-5 text-sm font-semibold text-[color:var(--on-amber)] shadow-[0_14px_36px_-16px_color-mix(in_srgb,var(--amber)_55%,transparent)] transition-[background-color,box-shadow,transform] hover:bg-(--amber-dim) hover:text-cream active:scale-[0.98] sm:min-h-12 sm:px-6",
           )}
         >
-          <ExternalLink className="size-4" aria-hidden />
-          <span>
+          <span className="cta-shine-beam pointer-events-none absolute inset-0" />
+          <ExternalLink className="relative size-4" aria-hidden />
+          <span className="relative">
             {watch.kind} on {watch.name}
           </span>
         </a>

@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { DetailBackLink } from "@/components/detail-back-link";
 import { FavoriteMetaForm } from "@/components/favorite-meta-form";
+import { DetailActionRail } from "@/components/detail-action-rail";
 import { MovieHeroActions } from "@/components/movie-hero-actions";
 import { MovieRow } from "@/components/movie-row";
 import { TitleMedia } from "@/components/title-media";
@@ -364,18 +365,20 @@ export default async function TvPage({ params }: TvPageProps) {
               ) : null}
 
               <div className="hero-line hero-line-5 mt-5 sm:mt-6">
-                <MovieHeroActions
-                  movieId={show.id}
-                  title={show.name}
-                  posterPath={show.poster_path}
-                  trailerKey={trailerKey}
-                  watchOffer={watchOffer}
-                  mediaType={MEDIA_TV}
-                  initialFavorite={Boolean(favorite)}
-                  initialWatchlist={Boolean(watchlistItem)}
-                  initialWatched={Boolean(watchedItem)}
-                  signedIn={signedIn}
-                />
+                <DetailActionRail label={`${show.name} actions`}>
+                  <MovieHeroActions
+                    movieId={show.id}
+                    title={show.name}
+                    posterPath={show.poster_path}
+                    trailerKey={trailerKey}
+                    watchOffer={watchOffer}
+                    mediaType={MEDIA_TV}
+                    initialFavorite={Boolean(favorite)}
+                    initialWatchlist={Boolean(watchlistItem)}
+                    initialWatched={Boolean(watchedItem)}
+                    signedIn={signedIn}
+                  />
+                </DetailActionRail>
               </div>
             </div>
 

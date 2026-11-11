@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Check, Heart, RotateCcw } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useActionState, useOptimistic } from "react";
+import { useActionState, useOptimistic, useState } from "react";
 import {
   logRewatch,
   toggleList,
@@ -58,12 +58,15 @@ function ListToggle({
   } satisfies ToggleListState);
   const saved = state.saved ?? initialSaved;
   const [optimisticSaved, setOptimisticSaved] = useOptimistic(saved);
+  const [pop, setPop] = useState(false);
 
   const buttonLabel = optimisticSaved ? activeLabel : idleLabel;
 
   function action(formData: FormData) {
     if (pending) return;
-    setOptimisticSaved(!optimisticSaved);
+    const next = !optimisticSaved;
+    setOptimisticSaved(next);
+    if (next) setPop(true);
     dispatch(formData);
   }
 
@@ -79,6 +82,7 @@ function ListToggle({
         aria-busy={pending}
         aria-label={buttonLabel}
         aria-pressed={optimisticSaved}
+        onAnimationEnd={() => setPop(false)}
         className={cn(
           "backdrop-blur-md transition-[border-color,background-color,color,box-shadow,transform] active:scale-95",
           iconOnly
@@ -89,6 +93,7 @@ function ListToggle({
               ? "border border-red-500/45 bg-red-500/15 text-red-500 shadow-[0_10px_28px_-14px_rgba(239,68,68,0.55)] hover:border-red-400 hover:bg-red-500/20"
               : "border border-amber/50 bg-amber/15 text-amber shadow-[0_10px_28px_-14px_color-mix(in_srgb,var(--amber)_45%,transparent)] hover:border-amber hover:bg-amber/20"
             : "border border-cream/20 bg-black/30 text-cream hover:border-cream/40 hover:bg-black/45 hover:text-cream",
+          pop && "save-confirm-pop",
         )}
       >
         {iconOnly ? (
@@ -134,11 +139,14 @@ function WatchedToggle({
   );
   const saved = state.saved ?? initialSaved;
   const [optimisticSaved, setOptimisticSaved] = useOptimistic(saved);
+  const [pop, setPop] = useState(false);
   const buttonLabel = optimisticSaved ? "Watched" : "Mark watched";
 
   function action(formData: FormData) {
     if (pending) return;
-    setOptimisticSaved(!optimisticSaved);
+    const next = !optimisticSaved;
+    setOptimisticSaved(next);
+    if (next) setPop(true);
     dispatch(formData);
   }
 
@@ -154,11 +162,13 @@ function WatchedToggle({
           aria-busy={pending}
           aria-label={buttonLabel}
           aria-pressed={optimisticSaved}
+          onAnimationEnd={() => setPop(false)}
           className={cn(
             "inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 py-2 text-xs font-medium backdrop-blur-md transition-[border-color,background-color,color,box-shadow,transform] active:scale-95 sm:min-h-11 sm:px-4 sm:text-sm",
             optimisticSaved
               ? "border border-amber/50 bg-amber/15 text-amber shadow-[0_10px_28px_-14px_color-mix(in_srgb,var(--amber)_45%,transparent)] hover:border-amber hover:bg-amber/20"
               : "border border-cream/20 bg-black/30 text-cream hover:border-cream/40 hover:bg-black/45 hover:text-cream",
+            pop && "save-confirm-pop",
           )}
         >
           <Check
