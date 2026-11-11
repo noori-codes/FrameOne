@@ -150,14 +150,22 @@ const getTasteSeeds = cache(async (): Promise<TasteSeed[]> => {
   return [...movies, ...tv];
 });
 
+function normalizeTitle(title: string) {
+  return title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
 function filterPool(
   pool: TmdbMovie[],
   excluded: Set<number>,
   usedAcrossRows: Set<number>,
+  seedTitle?: string,
 ): TmdbMovie[] {
+  const seedKey = seedTitle ? normalizeTitle(seedTitle) : "";
   const out: TmdbMovie[] = [];
   for (const item of pool) {
     if (excluded.has(item.id) || usedAcrossRows.has(item.id)) continue;
+    // Hard-skip the seed itself even if TMDB/similar leaks it back.
+    if (seedKey && normalizeTitle(item.title) === seedKey) continue;
     out.push(item);
     if (out.length >= ROW_LIMIT) break;
   }
@@ -204,9 +212,12 @@ export const getTasteRows = cache(async (): Promise<TasteRow[]> => {
 
   for (const { seed, pool } of pools) {
     const used = seed.mediaType === MEDIA_TV ? usedTv : usedMovies;
-    const excluded =
-      seed.mediaType === MEDIA_TV ? tvExcluded : movieExcluded;
-    const movies = filterPool(pool, excluded, used);
+    const excluded = new Set(
+      seed.mediaType === MEDIA_TV ? tvExcluded : movieExcluded,
+    );
+    // Always drop the seed id even if it somehow missed known-title lookup.
+    excluded.add(seed.movieId);
+    const movies = filterPool(pool, excluded, used, seed.title);
     if (movies.length < MIN_RESULTS) continue;
     for (const movie of movies) used.add(movie.id);
     rows.push({

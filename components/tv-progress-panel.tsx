@@ -236,10 +236,19 @@ export function TvProgressPanel({
     [watchedKeys],
   );
 
-  const trackable = seasons.filter(
-    (season) =>
-      season.episode_count > 0 || season.episodes.length > 0,
-  );
+  // Specials (season 0) last in the list; Up next prefers regular seasons.
+  const trackable = seasons
+    .filter(
+      (season) =>
+        season.episode_count > 0 || season.episodes.length > 0,
+    )
+    .slice()
+    .sort((a, b) => {
+      const aSpecial = a.season_number === 0 ? 1 : 0;
+      const bSpecial = b.season_number === 0 ? 1 : 0;
+      if (aSpecial !== bSpecial) return aSpecial - bSpecial;
+      return a.season_number - b.season_number;
+    });
 
   const totalEps = trackable.reduce(
     (sum, season) =>
@@ -321,7 +330,10 @@ function findUpNext(
   seasons: TvProgressSeasonData[],
   watched: Set<string>,
 ) {
-  for (const season of seasons) {
+  const regular = seasons.filter((season) => season.season_number > 0);
+  const specials = seasons.filter((season) => season.season_number === 0);
+  // Prefer S1+; only fall back to Specials once every regular ep is logged.
+  for (const season of [...regular, ...specials]) {
     for (const episode of season.episodes) {
       if (!watched.has(keyOf(season.season_number, episode.episode_number))) {
         return {

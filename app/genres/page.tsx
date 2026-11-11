@@ -46,7 +46,6 @@ export default async function GenresPage() {
     return {
       genre,
       poster: posterUrl(lead?.poster_path ?? null, "w500"),
-      titleCount: page.totalResults,
     };
   });
 
@@ -77,7 +76,7 @@ export default async function GenresPage() {
 
       <div className="w-full flex-1 px-5 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10 xl:px-16">
         <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 2xl:gap-3.5">
-          {cards.map(({ genre, poster, titleCount }, index) => (
+          {cards.map(({ genre, poster }, index) => (
             <li key={genre.id}>
               <Link
                 href={`/genres/${genre.id}`}
@@ -109,11 +108,6 @@ export default async function GenresPage() {
                   <h2 className="font-display text-2xl leading-none tracking-[0.08em] text-cream uppercase transition-colors duration-500 group-hover:text-amber sm:text-3xl lg:text-[2rem]">
                     {genre.name}
                   </h2>
-                  {titleCount > 0 ? (
-                    <p className="mt-1.5 text-[11px] tracking-wide text-cream/40 tabular-nums sm:text-xs">
-                      {titleCount.toLocaleString()} titles
-                    </p>
-                  ) : null}
                 </div>
               </Link>
             </li>
