@@ -149,61 +149,36 @@ async function HomeGenreRows() {
   );
 }
 
-async function TasteRows() {
-  const [rows, movieFavoriteIds, tvFavoriteIds, session] = await Promise.all([
+/**
+ * Taste + discovery share one Suspense boundary so slower taste rows never
+ * stream in *above* discovery that already painted (layout jump / wrong order).
+ * Data still fetches in parallel.
+ */
+async function PrimaryRows() {
+  const [
+    rows,
+    movieFavoriteIds,
+    tvFavoriteIds,
+    session,
+    pools,
+    watchedMovieIds,
+    watchedTvIds,
+  ] = await Promise.all([
     getTasteRows(),
     getHomeMovieFavoriteIds(),
     getHomeTvFavoriteIds(),
     auth(),
+    Promise.allSettled([
+      getHomeTrendingPage(),
+      getPopularMoviesPage(1),
+      getHomeTopRatedPage(),
+      getTrendingTvPage("day", 1),
+    ]),
+    getUserWatchedIds(MEDIA_MOVIE),
+    getUserWatchedIds(MEDIA_TV),
   ]);
 
   const showCoach = Boolean(session?.user?.id) && rows.length === 0;
-
-  if (rows.length === 0) {
-    return showCoach ? <TasteCoachmark show /> : null;
-  }
-
-  return (
-    <>
-      {rows.map((row) => (
-        <MovieRow
-          key={row.id}
-          id={row.id}
-          title={
-            row.reason === "rated"
-              ? `Because you rated ${row.seedTitle}`
-              : `Because you watched ${row.seedTitle}`
-          }
-          subtitle={
-            row.reason === "rated"
-              ? "Based on your rating"
-              : "Based on your diary"
-          }
-          movies={row.movies}
-          mediaType={row.mediaType}
-          favoriteIds={
-            row.mediaType === "tv" ? tvFavoriteIds : movieFavoriteIds
-          }
-        />
-      ))}
-    </>
-  );
-}
-
-async function DiscoveryRows() {
-  const [pools, favoriteIds, tvFavoriteIds, watchedMovieIds, watchedTvIds] =
-    await Promise.all([
-      Promise.allSettled([
-        getHomeTrendingPage(),
-        getPopularMoviesPage(1),
-        getHomeTopRatedPage(),
-        getTrendingTvPage("day", 1),
-      ]),
-      getHomeMovieFavoriteIds(),
-      getHomeTvFavoriteIds(),
-      getUserWatchedIds(MEDIA_MOVIE),
-      getUserWatchedIds(MEDIA_TV),
-    ]);
 
   const [
     trendingResult,
@@ -275,19 +250,39 @@ async function DiscoveryRows() {
 
   const trendingMovies = takeMovies(trendingPage.results);
   const trendingSeries = takeTv(trendingTvPage.results.map(tvShowAsMovie));
-  // Skip a redundant “Popular” dump when it mostly overlaps trending —
-  // keep top-rated as the editorial counterweight.
   const topRatedMovies = takeMovies(topRatedPage.results);
   const popularFresh = takeMovies(popularPage.results, 12);
 
   return (
     <>
+      {showCoach ? <TasteCoachmark show /> : null}
+      {rows.map((row) => (
+        <MovieRow
+          key={row.id}
+          id={row.id}
+          title={
+            row.reason === "rated"
+              ? `Because you rated ${row.seedTitle}`
+              : `Because you watched ${row.seedTitle}`
+          }
+          subtitle={
+            row.reason === "rated"
+              ? "Based on your rating"
+              : "Based on your diary"
+          }
+          movies={row.movies}
+          mediaType={row.mediaType}
+          favoriteIds={
+            row.mediaType === "tv" ? tvFavoriteIds : movieFavoriteIds
+          }
+        />
+      ))}
       <MovieRow
         id="trending"
         title="Trending now"
         movies={trendingMovies}
         href="/browse/trending"
-        favoriteIds={favoriteIds}
+        favoriteIds={movieFavoriteIds}
       />
       <MovieRow
         id="trending-series"
@@ -304,7 +299,7 @@ async function DiscoveryRows() {
           subtitle="Fresh popular picks you haven’t logged"
           movies={popularFresh}
           href="/browse/popular"
-          favoriteIds={favoriteIds}
+          favoriteIds={movieFavoriteIds}
         />
       ) : null}
       <MovieRow
@@ -312,7 +307,7 @@ async function DiscoveryRows() {
         title="Top rated"
         movies={topRatedMovies}
         href="/browse/top-rated"
-        favoriteIds={favoriteIds}
+        favoriteIds={movieFavoriteIds}
       />
     </>
   );
@@ -338,17 +333,13 @@ export default function Home() {
       {/*
         Home scroll story:
         1) Hero
-        2) Taste rows (signed-in: high ratings, then watched)
-        3) 4 curated discovery rows (trending / series / popular / top rated)
-        4) Genre wave A (4 rows) → Genre wave B (4 rows), deferred on scroll
-        5) Endless popular grid
+        2) Primary rows (taste + discovery, one Suspense — paint in order)
+        3) Genre wave A/B, deferred on scroll
+        4) Endless popular grid
       */}
       <div className="relative z-10 flex min-h-[70vh] w-full flex-col gap-14 border-t border-cream/8 pt-12 pb-12 sm:gap-24 sm:pt-20 sm:pb-20">
-        <Suspense fallback={<RowsSkeleton count={2} />}>
-          <TasteRows />
-        </Suspense>
-        <Suspense fallback={<RowsSkeleton count={4} />}>
-          <DiscoveryRows />
+        <Suspense fallback={<RowsSkeleton count={6} />}>
+          <PrimaryRows />
         </Suspense>
         <Suspense fallback={<RowsSkeleton count={4} />}>
           <HomeGenreRows />

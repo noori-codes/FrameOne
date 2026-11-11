@@ -24,6 +24,8 @@ export type TmdbMovie = {
   poster_path: string | null;
   backdrop_path: string | null;
   vote_average: number;
+  /** Present on list/discover/related results — quality floor for recs. */
+  vote_count?: number;
   release_date: string;
   /** Present on list/discover results — used to pick a home-row genre. */
   genre_ids?: number[];
@@ -1158,6 +1160,8 @@ export type TmdbTvShow = {
   poster_path: string | null;
   backdrop_path: string | null;
   vote_average: number;
+  /** Present on list/discover/related results — quality floor for recs. */
+  vote_count?: number;
   first_air_date: string;
   genre_ids?: number[];
 };
