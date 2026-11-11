@@ -90,10 +90,31 @@ export function ProfileActivityFeed({ items }: ProfileActivityFeedProps) {
           const poster = posterUrl(item.posterPath, "w185");
           const href = mediaHref(item.mediaType, item.movieId);
 
+          const mediaLabel = item.mediaType === "tv" ? "Series" : "Film";
+          const when = formatActivityWhen(item.at);
+          const detailBits = [
+            mediaLabel,
+            item.kind === "rated" && item.rating != null
+              ? `${item.rating} out of 10`
+              : null,
+            item.kind === "watched" && (item.rewatchCount ?? 0) > 0
+              ? `${item.rewatchCount} rewatches`
+              : null,
+          ].filter(Boolean);
+          const ariaName = [
+            meta.label,
+            item.title,
+            detailBits.join(", "),
+            when,
+          ]
+            .filter(Boolean)
+            .join(". ");
+
           return (
-            <li key={item.id}>
+            <li key={item.id} className="border-l-2 border-transparent pl-0 transition-[border-color] hover:border-amber/40">
               <Link
                 href={href}
+                aria-label={ariaName}
                 className="group flex items-center gap-3.5 py-3.5 transition-colors hover:bg-cream/[0.02] sm:gap-4 sm:py-4"
               >
                 <div className="relative aspect-2/3 w-11 shrink-0 overflow-hidden rounded-lg bg-stage ring-1 ring-cream/10 sm:w-12">
@@ -112,7 +133,7 @@ export function ProfileActivityFeed({ items }: ProfileActivityFeedProps) {
                   )}
                 </div>
 
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1" aria-hidden="true">
                   <div className="flex flex-wrap items-center gap-2">
                     <span
                       className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-[0.14em] uppercase ${meta.className}`}
@@ -124,14 +145,14 @@ export function ProfileActivityFeed({ items }: ProfileActivityFeedProps) {
                       dateTime={item.at.toISOString()}
                       className="text-xs text-cream/40"
                     >
-                      {formatActivityWhen(item.at)}
+                      {when}
                     </time>
                   </div>
                   <p className="mt-1.5 truncate text-sm font-medium text-cream/90 transition-colors group-hover:text-amber">
                     {item.title}
                   </p>
                   <p className="mt-0.5 text-xs text-cream/40">
-                    {item.mediaType === "tv" ? "Series" : "Film"}
+                    {mediaLabel}
                     {item.kind === "rated" && item.rating != null
                       ? ` · ${item.rating}/10`
                       : null}

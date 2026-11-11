@@ -289,15 +289,6 @@ export function TvProgressPanel({
               " episodes logged"
             )}
           </p>
-          {upNext ? (
-            <p className="mt-1 text-sm text-amber/90">
-              Up next · S{upNext.seasonNumber}E
-              {String(upNext.episodeNumber).padStart(2, "0")}
-              {upNext.name ? ` — ${upNext.name}` : ""}
-            </p>
-          ) : watchedCount > 0 && totalEps > 0 && watchedCount >= totalEps ? (
-            <p className="mt-1 text-sm text-cream/45">You’re caught up.</p>
-          ) : null}
         </div>
         {totalEps > 0 ? (
           <p className="text-xs tracking-wide text-cream/40 uppercase">
@@ -310,6 +301,26 @@ export function TvProgressPanel({
         <div className="mt-3 max-w-xl">
           <ProgressBar value={watchedCount} max={totalEps} />
         </div>
+      ) : null}
+
+      {upNext ? (
+        <div className="mt-6 max-w-xl overflow-hidden rounded-2xl border border-amber/25 bg-linear-to-br from-amber/12 via-cream/[0.03] to-transparent p-4 sm:p-5">
+          <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
+            Up next
+          </p>
+          <p className="mt-2 font-display text-2xl tracking-wide text-cream uppercase sm:text-3xl">
+            S{upNext.seasonNumber}E
+            {String(upNext.episodeNumber).padStart(2, "0")}
+          </p>
+          {upNext.name ? (
+            <p className="mt-1 text-sm text-cream/70">{upNext.name}</p>
+          ) : null}
+          <p className="mt-3 text-xs text-cream/40">
+            Expand the season below to mark it watched.
+          </p>
+        </div>
+      ) : watchedCount > 0 && totalEps > 0 && watchedCount >= totalEps ? (
+        <p className="mt-5 text-sm text-cream/45">You’re caught up.</p>
       ) : null}
 
       <ul className="mt-6 flex max-w-2xl flex-col gap-3">

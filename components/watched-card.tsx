@@ -165,33 +165,24 @@ export function WatchedCard({ item, priority = false }: WatchedCardProps) {
           </span>
         )}
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/35 to-transparent px-2.5 pt-12 pb-2.5 transition-opacity duration-300 group-hover:opacity-0">
-          <p className="text-[11px] font-medium text-cream/75">
-            {formatWatchedDate(item.watchedAt)}
-          </p>
-          {rewatchCount > 0 ? (
-            <p className="mt-0.5 text-[10px] text-amber/80">
-              {rewatchCount}× rewatch
-            </p>
-          ) : null}
-        </div>
-
-        <div className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-linear-to-t from-black via-black/70 to-black/10 p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
+        {/* Always visible title + date (touch-friendly); hover only for chrome. */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/95 via-black/55 to-transparent px-2.5 pt-14 pb-2.5">
           <p className="line-clamp-2 text-[13px] font-medium leading-snug text-cream">
             {item.title}
           </p>
-          <p className="mt-1.5 text-[11px] text-cream/55">
+          <p className="mt-1 text-[11px] text-cream/65">
             {formatWatchedDate(item.watchedAt)}
             {rewatchCount > 0 ? ` · ${rewatchCount}×` : ""}
+            <span className="text-cream/35">
+              {" "}
+              · {mediaType === "tv" ? "Series" : "Film"}
+            </span>
           </p>
           {item.note ? (
-            <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-cream/45">
+            <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-cream/45">
               {item.note}
             </p>
           ) : null}
-          <p className="mt-1 text-[11px] tracking-wide text-cream/40 uppercase">
-            {mediaType === "tv" ? "Series" : "Film"}
-          </p>
         </div>
       </Link>
 

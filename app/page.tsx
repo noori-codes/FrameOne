@@ -241,12 +241,44 @@ async function DiscoveryRows() {
       ? trendingTvResult.value
       : emptyTvPage;
 
+  // Cross-row dedupe so home feels curated, not the same posters on repeat.
+  const usedMovies = new Set<number>(watchedMovieIds);
+  function takeMovies(pool: TmdbMovie[], limit = 18) {
+    const out: TmdbMovie[] = [];
+    for (const movie of pool) {
+      if (usedMovies.has(movie.id)) continue;
+      usedMovies.add(movie.id);
+      out.push(movie);
+      if (out.length >= limit) break;
+    }
+    return out;
+  }
+
+  const usedTv = new Set<number>(watchedTvIds);
+  function takeTv(pool: TmdbMovie[], limit = 18) {
+    const out: TmdbMovie[] = [];
+    for (const show of pool) {
+      if (usedTv.has(show.id)) continue;
+      usedTv.add(show.id);
+      out.push(show);
+      if (out.length >= limit) break;
+    }
+    return out;
+  }
+
+  const trendingMovies = takeMovies(trendingPage.results);
+  const trendingSeries = takeTv(trendingTvPage.results.map(tvShowAsMovie));
+  // Skip a redundant “Popular” dump when it mostly overlaps trending —
+  // keep top-rated as the editorial counterweight.
+  const topRatedMovies = takeMovies(topRatedPage.results);
+  const popularFresh = takeMovies(popularPage.results, 12);
+
   return (
     <>
       <MovieRow
         id="trending"
         title="Trending now"
-        movies={excludeTitleIds(trendingPage.results, watchedMovieIds)}
+        movies={trendingMovies}
         href="/browse/trending"
         favoriteIds={favoriteIds}
       />
@@ -254,24 +286,24 @@ async function DiscoveryRows() {
         id="trending-series"
         title="Trending series"
         subtitle="TV shows rising on TMDB today"
-        movies={excludeTitleIds(
-          trendingTvPage.results.map(tvShowAsMovie),
-          watchedTvIds,
-        )}
+        movies={trendingSeries}
         mediaType="tv"
         favoriteIds={tvFavoriteIds}
       />
-      <MovieRow
-        id="popular"
-        title="Popular now"
-        movies={excludeTitleIds(popularPage.results, watchedMovieIds)}
-        href="/browse/popular"
-        favoriteIds={favoriteIds}
-      />
+      {popularFresh.length >= 6 ? (
+        <MovieRow
+          id="popular"
+          title="Worth a look"
+          subtitle="Fresh popular picks you haven’t logged"
+          movies={popularFresh}
+          href="/browse/popular"
+          favoriteIds={favoriteIds}
+        />
+      ) : null}
       <MovieRow
         id="top-rated"
         title="Top rated"
-        movies={excludeTitleIds(topRatedPage.results, watchedMovieIds)}
+        movies={topRatedMovies}
         href="/browse/top-rated"
         favoriteIds={favoriteIds}
       />

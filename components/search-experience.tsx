@@ -359,11 +359,18 @@ export function SearchExperience({
               aria-label="Browse genres"
               className="mt-5 flex flex-wrap justify-center gap-2 sm:mt-6"
             >
-              {genres.map((genre) => (
+              {genres.map((genre, i) => (
                 <Link
                   key={genre.id}
                   href={`/genres/${genre.id}`}
-                  className="rounded-full border border-cream/12 bg-black/30 px-3.5 py-1.5 text-[12px] font-medium tracking-wide text-cream/70 backdrop-blur-md transition-[border-color,background-color,color] duration-300 hover:border-amber/40 hover:bg-amber/10 hover:text-amber"
+                  className={cn(
+                    "rounded-md border px-3.5 py-1.5 text-[12px] font-medium tracking-wide backdrop-blur-md transition-[border-color,background-color,color,transform] duration-300 hover:-translate-y-0.5",
+                    i % 3 === 0
+                      ? "border-amber/25 bg-amber/10 text-amber/90 hover:border-amber/45 hover:bg-amber/15"
+                      : i % 3 === 1
+                        ? "border-cream/18 bg-cream/[0.06] text-cream/80 hover:border-cream/35 hover:text-cream"
+                        : "border-cream/12 bg-black/40 text-cream/70 hover:border-amber/35 hover:text-amber",
+                  )}
                 >
                   {genre.name}
                 </Link>
@@ -407,10 +414,113 @@ export function SearchExperience({
           </p>
         ) : null}
 
-        {/* Idle — taste first (when signed in), then trending */}
+        {/* Idle — one spotlight + horizontal rails (not twin poster dumps) */}
         {!query ? (
-          <div className="flex flex-col gap-14 sm:gap-16">
-            {taste && taste.movies.length > 0 ? (
+          <div className="flex flex-col gap-12 sm:gap-14">
+            {(() => {
+              const spotlight =
+                taste?.movies[0] ?? trending[0] ?? null;
+              const spotlightKind = taste?.movies[0]
+                ? "taste"
+                : spotlight
+                  ? "trending"
+                  : null;
+              if (!spotlight) {
+                return (
+                  <p className="text-sm text-cream/45">
+                    Start typing to find movies and series.
+                  </p>
+                );
+              }
+              const spotlightHref = mediaPath(
+                spotlightKind === "taste" && taste?.mediaType === "tv"
+                  ? "tv"
+                  : "movie",
+                spotlight.id,
+              );
+              const spotlightPoster = posterUrl(spotlight.poster_path, "w500");
+              const spotlightBackdrop = backdropUrl(spotlight.backdrop_path);
+              return (
+                <section
+                  aria-labelledby="search-spotlight-heading"
+                  className="relative overflow-hidden rounded-2xl border border-cream/10 bg-stage"
+                >
+                  <div className="relative min-h-[16rem] sm:min-h-[18rem]">
+                    {spotlightBackdrop ? (
+                      <Image
+                        src={spotlightBackdrop}
+                        alt=""
+                        fill
+                        priority
+                        sizes="100vw"
+                        className="object-cover object-center opacity-55"
+                      />
+                    ) : null}
+                    <div
+                      aria-hidden
+                      className="absolute inset-0 bg-linear-to-r from-background via-background/75 to-background/20"
+                    />
+                    <div className="relative flex flex-col gap-5 p-5 sm:flex-row sm:items-end sm:gap-8 sm:p-8">
+                      {spotlightPoster ? (
+                        <Link
+                          href={spotlightHref}
+                          className="relative aspect-2/3 w-28 shrink-0 overflow-hidden rounded-lg ring-1 ring-cream/20 sm:w-36"
+                        >
+                          <Image
+                            src={spotlightPoster}
+                            alt=""
+                            fill
+                            sizes="144px"
+                            className="object-cover"
+                            priority
+                          />
+                        </Link>
+                      ) : null}
+                      <div className="min-w-0 pb-1">
+                        <p className="text-[10px] font-semibold tracking-[0.22em] text-amber uppercase">
+                          {spotlightKind === "taste" ? "For you" : "Spotlight"}
+                        </p>
+                        <h2
+                          id="search-spotlight-heading"
+                          className="mt-2 font-display text-4xl leading-none tracking-wide text-cream uppercase sm:text-5xl"
+                        >
+                          <Link
+                            href={spotlightHref}
+                            className="transition-colors hover:text-amber"
+                          >
+                            {spotlight.title}
+                          </Link>
+                        </h2>
+                        <p className="mt-3 max-w-lg text-sm text-cream/55">
+                          {spotlightKind === "taste" && taste
+                            ? taste.reason === "rated"
+                              ? `Because you rated ${taste.seedTitle}`
+                              : `Because you watched ${taste.seedTitle}`
+                            : "Trending on TMDB today — tap search or open the title."}
+                        </p>
+                        <div className="mt-5 flex flex-wrap gap-2.5">
+                          <Link
+                            href={spotlightHref}
+                            className="inline-flex min-h-10 items-center rounded-md bg-amber px-4 text-sm font-semibold text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim) hover:text-cream"
+                          >
+                            Open title
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => applySuggestion(spotlight.title)}
+                            className="inline-flex min-h-10 items-center rounded-md border border-cream/20 bg-black/35 px-4 text-sm text-cream/80 transition-colors hover:border-cream/40 hover:text-cream"
+                          >
+                            Search “{spotlight.title}”
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              );
+            })()}
+
+            {taste && taste.movies.length > 1 ? (
               <section aria-labelledby="taste-heading">
                 <div>
                   <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
@@ -425,18 +535,21 @@ export function SearchExperience({
                       : `Because you watched ${taste.seedTitle}`}
                   </h2>
                 </div>
-                <ul className={cn("mt-7", gridClass)}>
-                  {taste.movies.map((movie, i) => (
-                    <li key={`taste-${movie.id}`}>
+                <ul className="mt-6 flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-3.5 [&::-webkit-scrollbar]:hidden">
+                  {taste.movies.slice(1, 13).map((movie, i) => (
+                    <li
+                      key={`taste-${movie.id}`}
+                      className="w-[9.5rem] shrink-0 sm:w-44"
+                    >
                       <MovieCard
                         id={movie.id}
                         title={movie.title}
                         posterPath={movie.poster_path}
                         voteAverage={movie.vote_average}
                         mediaType={taste.mediaType}
-                        priority={i < 6}
+                        priority={i < 4}
                         showTitle
-                        sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, (max-width: 1280px) 16vw, 12vw"
+                        sizes="176px"
                       />
                     </li>
                   ))}
@@ -457,38 +570,28 @@ export function SearchExperience({
                     Trending now
                   </h2>
                 </div>
-                {trending[0] ? (
-                  <button
-                    type="button"
-                    onClick={() => applySuggestion(trending[0]!.title)}
-                    className="text-sm text-cream/45 transition-colors hover:text-amber"
-                  >
-                    Search “{trending[0].title}”
-                  </button>
-                ) : null}
               </div>
 
               {trending.length > 0 ? (
-                <ul className={cn("mt-7", gridClass)}>
-                  {trending.map((movie, i) => (
-                    <li key={movie.id}>
+                <ul className="mt-6 flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-3.5 [&::-webkit-scrollbar]:hidden">
+                  {trending.slice(0, 14).map((movie, i) => (
+                    <li
+                      key={movie.id}
+                      className="w-[9.5rem] shrink-0 sm:w-44"
+                    >
                       <MovieCard
                         id={movie.id}
                         title={movie.title}
                         posterPath={movie.poster_path}
                         voteAverage={movie.vote_average}
-                        priority={i < 6 && !(taste && taste.movies.length > 0)}
+                        priority={i < 4 && !(taste && taste.movies.length > 0)}
                         showTitle
-                        sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, (max-width: 1280px) 16vw, 12vw"
+                        sizes="176px"
                       />
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="mt-8 text-sm text-cream/45">
-                  Start typing to find movies and series.
-                </p>
-              )}
+              ) : null}
             </section>
           </div>
         ) : searching && results.length === 0 ? (

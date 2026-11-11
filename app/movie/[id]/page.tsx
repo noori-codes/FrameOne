@@ -715,7 +715,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
           <MovieRow
             id="similar"
             title="More like this"
-            subtitle="Similar titles"
+            subtitle="Recommended from this title"
             movies={similar}
           />
         </section>

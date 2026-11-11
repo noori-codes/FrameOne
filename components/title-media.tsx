@@ -17,8 +17,11 @@ type TitleMediaProps = {
   className?: string;
 };
 
+const PRIMARY_CLIPS = 4;
+
 /**
  * Horizontal videos + stills strip for a title page.
+ * Shows a curated primary set; the rest sit behind “More videos.”
  */
 export function TitleMedia({
   title,
@@ -27,8 +30,14 @@ export function TitleMedia({
   className,
 }: TitleMediaProps) {
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [showAllClips, setShowAllClips] = useState(false);
 
   if (clips.length === 0 && stills.length === 0) return null;
+
+  const visibleClips = showAllClips
+    ? clips
+    : clips.slice(0, PRIMARY_CLIPS);
+  const hiddenCount = Math.max(0, clips.length - PRIMARY_CLIPS);
 
   return (
     <section
@@ -46,40 +55,53 @@ export function TitleMedia({
       </h2>
 
       {clips.length > 0 ? (
-        <ul className="mt-6 flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden">
-          {clips.map((clip) => (
-            <li key={clip.key} className="w-[16rem] shrink-0 sm:w-[18rem]">
-              <div className="relative aspect-video overflow-hidden rounded-xl bg-stage ring-1 ring-cream/10">
-                <Image
-                  src={`https://i.ytimg.com/vi/${clip.key}/hqdefault.jpg`}
-                  alt=""
-                  fill
-                  sizes="288px"
-                  className="object-cover"
-                />
-                <div
-                  aria-hidden
-                  className="absolute inset-0 bg-black/35"
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <TrailerButton
-                    youtubeKey={clip.key}
-                    title={`${title} — ${clip.name}`}
-                    label={clip.type === "Trailer" ? "Play trailer" : "Play"}
-                    variant="ghost"
-                    className="!min-h-10 !border-cream/25 !bg-black/55 !px-4 !text-cream backdrop-blur-md hover:!border-amber/45 hover:!text-amber"
+        <div className="mt-6">
+          <ul className="flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden">
+            {visibleClips.map((clip) => (
+              <li key={clip.key} className="w-[16rem] shrink-0 sm:w-[18rem]">
+                <div className="relative aspect-video overflow-hidden rounded-xl bg-stage ring-1 ring-cream/10">
+                  <Image
+                    src={`https://i.ytimg.com/vi/${clip.key}/hqdefault.jpg`}
+                    alt=""
+                    fill
+                    sizes="288px"
+                    className="object-cover"
                   />
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 bg-black/35"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <TrailerButton
+                      youtubeKey={clip.key}
+                      title={`${title} — ${clip.name}`}
+                      label={clip.type === "Trailer" ? "Play trailer" : "Play"}
+                      variant="ghost"
+                      className="!min-h-10 !border-cream/25 !bg-black/55 !px-4 !text-cream backdrop-blur-md hover:!border-amber/45 hover:!text-amber"
+                    />
+                  </div>
                 </div>
-              </div>
-              <p className="mt-2 line-clamp-1 text-sm font-medium text-cream/80">
-                {clip.name}
-              </p>
-              <p className="text-[11px] tracking-wide text-cream/40 uppercase">
-                {clip.type}
-              </p>
-            </li>
-          ))}
-        </ul>
+                <p className="mt-2 line-clamp-1 text-sm font-medium text-cream/80">
+                  {clip.name}
+                </p>
+                <p className="text-[11px] tracking-wide text-cream/40 uppercase">
+                  {clip.type}
+                </p>
+              </li>
+            ))}
+          </ul>
+          {hiddenCount > 0 ? (
+            <button
+              type="button"
+              onClick={() => setShowAllClips((v) => !v)}
+              className="mt-3 text-sm font-medium text-cream/55 transition-colors hover:text-amber"
+            >
+              {showAllClips
+                ? "Show fewer videos"
+                : `More videos (${hiddenCount})`}
+            </button>
+          ) : null}
+        </div>
       ) : null}
 
       {stills.length > 0 ? (

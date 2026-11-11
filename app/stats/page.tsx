@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Star } from "lucide-react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { ShareYearCard } from "@/components/share-year-card";
 import { PAGE_GUTTER } from "@/lib/layout";
 import { mediaHref } from "@/lib/lists";
 import {
@@ -247,6 +248,17 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
                   stats fill in here.
                 </p>
               )}
+              {!empty ? (
+                <div className="mt-5">
+                  <ShareYearCard
+                    year={year}
+                    watchedCount={stats.watchedCount}
+                    avgRating={stats.avgRating}
+                    peakMonth={stats.mostWatchedMonth}
+                    topTitle={stats.topRated[0]?.title ?? stats.watchedShelf[0]?.title}
+                  />
+                </div>
+              ) : null}
             </div>
 
             <nav
@@ -330,28 +342,28 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
                   value={stats.watchedCount}
                   hint={`${plural(stats.movieCount, "film", "films")} · ${plural(stats.tvCount, "series", "series")}`}
                 />
-                <BigStat
-                  label="Hours"
-                  value={stats.estimatedHours ?? "—"}
-                  hint={
-                    stats.avgMinutesPerTitle != null
-                      ? `~${stats.avgMinutesPerTitle} min average`
-                      : "From title runtimes"
-                  }
-                />
-                <BigStat
-                  label="Avg score"
-                  value={hasRatings ? (stats.avgRating ?? "—") : "—"}
-                  hint={
-                    hasRatings
-                      ? `${plural(stats.ratedCount, "rating", "ratings")}${
-                          stats.unratedWatchedCount > 0
-                            ? ` · ${stats.unratedWatchedCount} open`
-                            : ""
-                        }`
-                      : "Favorite a title to rate"
-                  }
-                />
+                {stats.estimatedHours != null ? (
+                  <BigStat
+                    label="Hours"
+                    value={stats.estimatedHours}
+                    hint={
+                      stats.avgMinutesPerTitle != null
+                        ? `~${stats.avgMinutesPerTitle} min average`
+                        : "From title runtimes"
+                    }
+                  />
+                ) : null}
+                {hasRatings && stats.avgRating != null ? (
+                  <BigStat
+                    label="Avg score"
+                    value={stats.avgRating}
+                    hint={`${plural(stats.ratedCount, "rating", "ratings")}${
+                      stats.unratedWatchedCount > 0
+                        ? ` · ${stats.unratedWatchedCount} open`
+                        : ""
+                    }`}
+                  />
+                ) : null}
                 <BigStat
                   label="Active days"
                   value={stats.activeDays}
@@ -361,25 +373,31 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
                       : "Days with a watch logged"
                   }
                 />
-                <BigStat
-                  label="Peak month"
-                  value={stats.mostWatchedMonth ?? "—"}
-                  hint={
-                    stats.mostWatchedMonthCount > 0
-                      ? plural(stats.mostWatchedMonthCount, "title", "titles")
-                      : undefined
-                  }
-                />
-                <BigStat
-                  label="Pace"
-                  value={stats.avgPerActiveMonth || "—"}
-                  hint={`Per active month · ${plural(stats.monthsActive, "month active", "months active")}`}
-                />
-                <BigStat
-                  label="Busiest day"
-                  value={stats.busiestWeekday ?? "—"}
-                  hint="Most titles logged"
-                />
+                {stats.mostWatchedMonth ? (
+                  <BigStat
+                    label="Peak month"
+                    value={stats.mostWatchedMonth}
+                    hint={
+                      stats.mostWatchedMonthCount > 0
+                        ? plural(stats.mostWatchedMonthCount, "title", "titles")
+                        : undefined
+                    }
+                  />
+                ) : null}
+                {stats.avgPerActiveMonth ? (
+                  <BigStat
+                    label="Pace"
+                    value={stats.avgPerActiveMonth}
+                    hint={`Per active month · ${plural(stats.monthsActive, "month active", "months active")}`}
+                  />
+                ) : null}
+                {stats.busiestWeekday ? (
+                  <BigStat
+                    label="Busiest day"
+                    value={stats.busiestWeekday}
+                    hint="Most titles logged"
+                  />
+                ) : null}
                 <BigStat
                   label="Film share"
                   value={`${stats.movieShare}%`}
@@ -388,8 +406,8 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
               </div>
               {!hasRatings ? (
                 <p className="mt-4 text-sm text-cream/45">
-                  Tip: open a title, favorite it, then leave a score — ratings
-                  unlock average and top-rated here.{" "}
+                  Tip: favorite a title and leave a score to unlock average and
+                  top-rated.{" "}
                   <Link href="/favorites" className="text-amber hover:underline">
                     Favorites
                   </Link>
@@ -433,38 +451,40 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
               <div>
                 <SectionTitle eyebrow="Rhythm" title="By weekday" />
                 <ul className="mt-5 space-y-2.5">
-                  {stats.weekdayCounts.map((count, index) => (
-                    <li
-                      key={WEEKDAY_SHORT[index]}
-                      className="flex items-center gap-3"
-                    >
-                      <span className="w-9 shrink-0 text-xs tracking-wide text-cream/45 uppercase">
-                        {WEEKDAY_SHORT[index]}
-                      </span>
-                      <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-cream/[0.06]">
-                        <div
-                          className={cn(
-                            "h-full rounded-full",
-                            count > 0 ? "bg-amber/80" : "bg-transparent",
-                          )}
-                          style={{
-                            width:
-                              count > 0
-                                ? `${Math.max(6, (count / maxWeekday) * 100)}%`
-                                : "0%",
-                          }}
-                        />
-                      </div>
-                      <span
-                        className={cn(
-                          "w-5 shrink-0 text-right text-xs tabular-nums",
-                          count > 0 ? "text-cream/70" : "text-cream/25",
-                        )}
+                  {stats.weekdayCounts.map((count, index) =>
+                    count > 0 || maxWeekday <= 1 ? (
+                      <li
+                        key={WEEKDAY_SHORT[index]}
+                        className="flex items-center gap-3"
                       >
-                        {count}
-                      </span>
-                    </li>
-                  ))}
+                        <span className="w-9 shrink-0 text-xs tracking-wide text-cream/45 uppercase">
+                          {WEEKDAY_SHORT[index]}
+                        </span>
+                        <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-cream/[0.06]">
+                          <div
+                            className={cn(
+                              "h-full rounded-full",
+                              count > 0 ? "bg-amber/80" : "bg-transparent",
+                            )}
+                            style={{
+                              width:
+                                count > 0
+                                  ? `${Math.max(6, (count / maxWeekday) * 100)}%`
+                                  : "0%",
+                            }}
+                          />
+                        </div>
+                        <span
+                          className={cn(
+                            "w-5 shrink-0 text-right text-xs tabular-nums",
+                            count > 0 ? "text-cream/70" : "text-cream/25",
+                          )}
+                        >
+                          {count}
+                        </span>
+                      </li>
+                    ) : null,
+                  )}
                 </ul>
               </div>
             </section>
@@ -486,34 +506,8 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
                 }
               />
 
-              <div className="mt-6 grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-12">
-                {stats.monthlyCounts.map((count, index) => (
-                  <div
-                    key={MONTH_SHORT[index]}
-                    className={cn(
-                      "rounded-xl border px-2 py-3 text-center",
-                      count > 0
-                        ? "border-amber/25 bg-amber/10"
-                        : "border-cream/8 bg-cream/[0.02] opacity-45",
-                    )}
-                  >
-                    <p className="text-[10px] tracking-[0.14em] text-cream/50 uppercase">
-                      {MONTH_SHORT[index]}
-                    </p>
-                    <p
-                      className={cn(
-                        "mt-1 font-display text-2xl tabular-nums",
-                        count > 0 ? "text-cream" : "text-cream/30",
-                      )}
-                    >
-                      {count}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {activeMonths.length > 0 && activeMonths.length < 12 ? (
-                <ul className="mt-6 max-w-xl space-y-2">
+              {activeMonths.length > 0 && activeMonths.length <= 6 ? (
+                <ul className="mt-6 max-w-xl space-y-2.5">
                   {activeMonths.map((month) => (
                     <li
                       key={month.label}
@@ -536,7 +530,33 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
                     </li>
                   ))}
                 </ul>
-              ) : null}
+              ) : (
+                <div className="mt-6 grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-12">
+                  {stats.monthlyCounts.map((count, index) => (
+                    <div
+                      key={MONTH_SHORT[index]}
+                      className={cn(
+                        "rounded-xl border px-2 py-3 text-center",
+                        count > 0
+                          ? "border-amber/25 bg-amber/10"
+                          : "border-cream/8 bg-cream/[0.02] opacity-30",
+                      )}
+                    >
+                      <p className="text-[10px] tracking-[0.14em] text-cream/50 uppercase">
+                        {MONTH_SHORT[index]}
+                      </p>
+                      <p
+                        className={cn(
+                          "mt-1 font-display text-2xl tabular-nums",
+                          count > 0 ? "text-cream" : "text-cream/25",
+                        )}
+                      >
+                        {count}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
 
             {hasRatingSpread ? (

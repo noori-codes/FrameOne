@@ -2,14 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import {
-  ChartColumn,
-  Check,
-  Heart,
-  ListVideo,
-  Lock,
-  LogOut,
-} from "lucide-react";
+import { ChartColumn, Lock, LogOut } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import {
   AvatarForm,
@@ -324,9 +317,8 @@ export default async function ProfilePage() {
         </div>
       </header>
 
-      {/* Activity + shelves */}
+      {/* Shelves first, activity as the emotional closer */}
       <div className="relative w-full space-y-12 px-5 py-10 sm:space-y-14 sm:px-8 sm:py-12 lg:px-12 xl:px-16">
-        <ProfileActivityFeed items={activity} />
         <ProfileShelfStrip
           title="Favorites"
           href="/favorites"
@@ -348,75 +340,60 @@ export default async function ProfilePage() {
           emptyLabel="Nothing logged yet"
           items={toShelf(watched)}
         />
+        <ProfileActivityFeed items={activity} />
       </div>
 
-      {/* Settings */}
-      <div className="relative w-full border-t border-cream/8 px-5 py-10 sm:px-8 sm:py-12 lg:px-12 xl:px-16">
-        <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase">
-          Settings
-        </p>
-        <h2 className="mt-2 font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl">
-          Account
-        </h2>
-
-        <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
-          <SettingsPanel
-            eyebrow="Security"
-            title="Password"
-            description="Keep your seat locked. Minimum 6 characters."
-            icon={<Lock className="size-4" aria-hidden />}
-          >
-            <ChangePasswordForm />
-          </SettingsPanel>
-
-          <SettingsPanel
-            eyebrow="Session"
-            title="Sign out"
-            description="End this session on this device. Your lists stay saved."
-            icon={<LogOut className="size-4" aria-hidden />}
-          >
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  href="/favorites"
-                  className="inline-flex items-center gap-2 rounded-full border border-cream/12 bg-black/25 px-3.5 py-2 text-xs text-cream/60 transition-colors hover:border-amber/35 hover:text-amber"
-                >
-                  <Heart className="size-3.5" aria-hidden />
-                  Favorites
-                </Link>
-                <Link
-                  href="/watchlist"
-                  className="inline-flex items-center gap-2 rounded-full border border-cream/12 bg-black/25 px-3.5 py-2 text-xs text-cream/60 transition-colors hover:border-amber/35 hover:text-amber"
-                >
-                  <ListVideo className="size-3.5" aria-hidden />
-                  Watchlist
-                </Link>
-                <Link
-                  href="/watched"
-                  className="inline-flex items-center gap-2 rounded-full border border-cream/12 bg-black/25 px-3.5 py-2 text-xs text-cream/60 transition-colors hover:border-amber/35 hover:text-amber"
-                >
-                  <Check className="size-3.5" aria-hidden />
-                  Watched
-                </Link>
-              </div>
-
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/" });
-                }}
-              >
-                <button
-                  type="submit"
-                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-cream/15 bg-black/30 px-5 text-sm text-cream/75 transition-colors hover:border-red-400/45 hover:bg-red-500/10 hover:text-red-300 sm:w-fit"
-                >
-                  <LogOut className="size-4" aria-hidden />
-                  Sign out of FrameOne
-                </button>
-              </form>
+      {/* Quiet account chrome — collapsed so identity/activity stay the closer */}
+      <div className="relative w-full border-t border-cream/8 px-5 py-8 sm:px-8 sm:py-10 lg:px-12 xl:px-16">
+        <details className="group rounded-2xl border border-cream/10 bg-black/20 open:bg-black/30">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 sm:px-6 [&::-webkit-details-marker]:hidden">
+            <div>
+              <p className="text-[10px] font-semibold tracking-[0.24em] text-cream/40 uppercase">
+                Account
+              </p>
+              <p className="mt-1 text-sm text-cream/65">
+                Password & sign out
+              </p>
             </div>
-          </SettingsPanel>
-        </div>
+            <span className="text-xs tracking-wide text-cream/35 uppercase transition-colors group-open:text-amber">
+              Settings
+            </span>
+          </summary>
+          <div className="border-t border-cream/8 px-5 py-5 sm:px-6 sm:py-6">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
+              <SettingsPanel
+                eyebrow="Security"
+                title="Password"
+                description="Keep your seat locked. Minimum 6 characters."
+                icon={<Lock className="size-4" aria-hidden />}
+              >
+                <ChangePasswordForm />
+              </SettingsPanel>
+
+              <SettingsPanel
+                eyebrow="Session"
+                title="Sign out"
+                description="End this session on this device. Your lists stay saved."
+                icon={<LogOut className="size-4" aria-hidden />}
+              >
+                <form
+                  action={async () => {
+                    "use server";
+                    await signOut({ redirectTo: "/" });
+                  }}
+                >
+                  <button
+                    type="submit"
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-cream/15 bg-black/30 px-5 text-sm text-cream/75 transition-colors hover:border-red-400/45 hover:bg-red-500/10 hover:text-red-300 sm:w-fit"
+                  >
+                    <LogOut className="size-4" aria-hidden />
+                    Sign out of FrameOne
+                  </button>
+                </form>
+              </SettingsPanel>
+            </div>
+          </div>
+        </details>
       </div>
 
       <SiteFooter />

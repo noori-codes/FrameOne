@@ -154,13 +154,8 @@ export function FavoriteCard({ favorite, priority = false }: FavoriteCardProps) 
           </span>
         )}
 
-        {/* Idle bottom grade + stars */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/35 to-transparent px-2.5 pt-12 pb-2.5 transition-opacity duration-300 group-hover:opacity-0">
-          <RatingStars value={favorite.rating} size="sm" />
-        </div>
-
-        {/* Hover reveal */}
-        <div className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-linear-to-t from-black via-black/70 to-black/10 p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
+        {/* Always-visible rating + title; note peeks when present */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/95 via-black/55 to-transparent px-2.5 pt-14 pb-2.5">
           <p className="line-clamp-2 text-[13px] font-medium leading-snug text-cream">
             {favorite.title}
           </p>
@@ -168,7 +163,7 @@ export function FavoriteCard({ favorite, priority = false }: FavoriteCardProps) 
             <RatingStars value={favorite.rating} size="sm" showValue />
           </div>
           {favorite.note ? (
-            <p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-cream/55">
+            <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-cream/50">
               {favorite.note}
             </p>
           ) : null}

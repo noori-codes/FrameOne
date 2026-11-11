@@ -746,7 +746,7 @@ export default async function TvPage({ params }: TvPageProps) {
           <MovieRow
             id="similar"
             title="More like this"
-            subtitle="Similar titles"
+            subtitle="Recommended from this series"
             movies={similar.map(tvShowAsMovie)}
             mediaType="tv"
           />

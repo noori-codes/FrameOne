@@ -715,12 +715,23 @@ export function getMovieVideoClips(
   limit = 8,
 ): TmdbVideo[] {
   if (!videos?.length) return [];
-  const youtube = videos.filter((v) => v.site === "YouTube" && v.key);
+  // Drop TV spots / blooper dumps from the primary strip — they dominate TMDB.
+  const skipTypes = new Set(["Teaser Trailer", "TV Spot", "Blooper"]);
+  const youtube = videos.filter(
+    (v) =>
+      v.site === "YouTube" &&
+      v.key &&
+      !skipTypes.has(v.type) &&
+      !/tv\s*spot/i.test(v.name),
+  );
   const order = ["Trailer", "Teaser", "Clip", "Featurette", "Behind the Scenes"];
   const ranked = [...youtube].sort((a, b) => {
     const ai = order.indexOf(a.type);
     const bi = order.indexOf(b.type);
-    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    const byType = (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    if (byType !== 0) return byType;
+    // Prefer official cuts when TMDB marks them.
+    return Number(Boolean(b.official)) - Number(Boolean(a.official));
   });
   const seen = new Set<string>();
   const out: TmdbVideo[] = [];
@@ -964,10 +975,22 @@ export function providerLogoUrl(logoPath: string | null) {
   return `${getImageBase()}/w92${logoPath}`;
 }
 
+const RELATED_MIN_VOTES = 80;
+const RELATED_MIN_SCORE = 5.8;
+
+function qualityRelatedMovies(pool: TmdbMovie[], seedId: number): TmdbMovie[] {
+  return pool.filter(
+    (m) =>
+      m.id !== seedId &&
+      (m.vote_count ?? 0) >= RELATED_MIN_VOTES &&
+      (m.vote_average ?? 0) >= RELATED_MIN_SCORE,
+  );
+}
+
 /**
- * Movies similar to a title (TMDB “similar”).
- * Falls back to recommendations when similar is empty.
- * TMDB: GET /movie/{id}/similar · GET /movie/{id}/recommendations
+ * “More like this” for movie detail — prefer TMDB recommendations (editorial
+ * quality), then similar. Soft-filter by vote count/score so noise drops out.
+ * TMDB: GET /movie/{id}/recommendations · GET /movie/{id}/similar
  */
 export async function getSimilarMovies(
   id: string | number,
@@ -975,7 +998,7 @@ export async function getSimilarMovies(
 ): Promise<TmdbMovie[]> {
   const movieId = Number(id);
 
-  async function fetchList(path: "similar" | "recommendations") {
+  async function fetchList(path: "recommendations" | "similar") {
     const url = new URL(`${getBaseUrl()}/movie/${id}/${path}`);
     url.searchParams.set("api_key", getApiKey());
     url.searchParams.set("page", "1");
@@ -990,11 +1013,21 @@ export async function getSimilarMovies(
   }
 
   try {
-    const similar = await fetchList("similar");
-    if (similar.length > 0) return similar.slice(0, limit);
-
     const recommended = await fetchList("recommendations");
-    return recommended.slice(0, limit);
+    const qualityRecs = qualityRelatedMovies(recommended, movieId);
+    if (qualityRecs.length >= Math.min(6, limit)) {
+      return qualityRecs.slice(0, limit);
+    }
+    if (recommended.length > 0) {
+      return recommended.slice(0, limit);
+    }
+
+    const similar = await fetchList("similar");
+    const qualitySimilar = qualityRelatedMovies(similar, movieId);
+    return (qualitySimilar.length >= 4 ? qualitySimilar : similar).slice(
+      0,
+      limit,
+    );
   } catch (err) {
     warnTmdb(`Failed to load similar movies for ${id}:`, err);
     return [];
@@ -1402,9 +1435,19 @@ export async function getTvTrailerKey(
   }
 }
 
+function qualityRelatedTv(pool: TmdbTvShow[], seedId: number): TmdbTvShow[] {
+  return pool.filter(
+    (show) =>
+      show.id !== seedId &&
+      (show.vote_count ?? 0) >= RELATED_MIN_VOTES &&
+      (show.vote_average ?? 0) >= RELATED_MIN_SCORE,
+  );
+}
+
 /**
- * Similar TV shows (falls back to recommendations).
- * TMDB: GET /tv/{id}/similar · GET /tv/{id}/recommendations
+ * “More like this” for TV detail — prefer recommendations, then similar,
+ * with a soft vote/score floor.
+ * TMDB: GET /tv/{id}/recommendations · GET /tv/{id}/similar
  */
 export async function getSimilarTv(
   id: string | number,
@@ -1412,7 +1455,7 @@ export async function getSimilarTv(
 ): Promise<TmdbTvShow[]> {
   const showId = Number(id);
 
-  async function fetchList(path: "similar" | "recommendations") {
+  async function fetchList(path: "recommendations" | "similar") {
     const url = new URL(`${getBaseUrl()}/tv/${id}/${path}`);
     url.searchParams.set("api_key", getApiKey());
     url.searchParams.set("page", "1");
@@ -1427,11 +1470,21 @@ export async function getSimilarTv(
   }
 
   try {
-    const similar = await fetchList("similar");
-    if (similar.length > 0) return similar.slice(0, limit);
-
     const recommended = await fetchList("recommendations");
-    return recommended.slice(0, limit);
+    const qualityRecs = qualityRelatedTv(recommended, showId);
+    if (qualityRecs.length >= Math.min(6, limit)) {
+      return qualityRecs.slice(0, limit);
+    }
+    if (recommended.length > 0) {
+      return recommended.slice(0, limit);
+    }
+
+    const similar = await fetchList("similar");
+    const qualitySimilar = qualityRelatedTv(similar, showId);
+    return (qualitySimilar.length >= 4 ? qualitySimilar : similar).slice(
+      0,
+      limit,
+    );
   } catch (err) {
     warnTmdb(`Failed to load similar TV for ${id}:`, err);
     return [];
