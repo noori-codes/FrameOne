@@ -12,6 +12,7 @@ import { auth } from "@/auth";
 import { DetailBackLink } from "@/components/detail-back-link";
 import { FavoriteMetaForm } from "@/components/favorite-meta-form";
 import { MovieHeroActions } from "@/components/movie-hero-actions";
+import { WatchedDiaryForm } from "@/components/watched-diary-form";
 import { MovieRow } from "@/components/movie-row";
 import { TitleMedia } from "@/components/title-media";
 import { WhereToWatch } from "@/components/where-to-watch";
@@ -568,11 +569,33 @@ export default async function MoviePage({ params }: MoviePageProps) {
                 Personal
               </h2>
 
-              {watchedDate ? (
-                <p className="mt-4 text-sm text-cream/60">
-                  Watched{" "}
-                  <span className="text-cream/85">{watchedDate}</span>
-                </p>
+              {watchedItem ? (
+                <div className="mt-5 max-w-xl rounded-2xl border border-cream/12 bg-cream/[0.02] px-5 py-5">
+                  <p className="text-[10px] font-semibold tracking-[0.18em] text-cream/45 uppercase">
+                    Diary
+                  </p>
+                  {watchedDate ? (
+                    <p className="mt-2 text-sm text-cream/60">
+                      Last watched{" "}
+                      <span className="text-cream/85">{watchedDate}</span>
+                      {(watchedItem.rewatchCount ?? 0) > 0 ? (
+                        <span className="text-cream/40">
+                          {" "}
+                          · {watchedItem.rewatchCount} rewatch
+                          {watchedItem.rewatchCount === 1 ? "" : "es"}
+                        </span>
+                      ) : null}
+                    </p>
+                  ) : null}
+                  <WatchedDiaryForm
+                    key={`${watchedItem.id}-${watchedItem.watchedAt}-${watchedItem.note}-${watchedItem.rewatchCount}`}
+                    movieId={movie.id}
+                    initialWatchedAt={watchedItem.watchedAt}
+                    initialNote={watchedItem.note}
+                    rewatchCount={watchedItem.rewatchCount}
+                    className="mt-4"
+                  />
+                </div>
               ) : null}
 
               {favorite ? (

@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Heart } from "lucide-react";
+import { Check, Heart, RotateCcw } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useActionState, useOptimistic } from "react";
 import {
+  logRewatch,
   toggleList,
   toggleWatched,
   type ToggleListState,
+  type WatchedDateState,
 } from "@/app/actions/favorites";
 import {
   LIST_FAVORITE,
@@ -126,6 +128,10 @@ function WatchedToggle({
     saved: initialSaved,
     listType: "watched",
   } satisfies ToggleListState);
+  const [rewatchState, rewatchDispatch, rewatchPending] = useActionState(
+    logRewatch,
+    {} satisfies WatchedDateState,
+  );
   const saved = state.saved ?? initialSaved;
   const [optimisticSaved, setOptimisticSaved] = useOptimistic(saved);
   const buttonLabel = optimisticSaved ? "Watched" : "Mark watched";
@@ -137,36 +143,56 @@ function WatchedToggle({
   }
 
   return (
-    <form action={action}>
-      <input type="hidden" name="movieId" value={movieId} />
-      <input type="hidden" name="title" value={title} />
-      <input type="hidden" name="posterPath" value={posterPath ?? ""} />
-      <input type="hidden" name="mediaType" value={mediaType} />
-      <button
-        type="submit"
-        aria-busy={pending}
-        aria-label={buttonLabel}
-        aria-pressed={optimisticSaved}
-        className={cn(
-          "inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 py-2 text-xs font-medium backdrop-blur-md transition-[border-color,background-color,color,box-shadow,transform] active:scale-95 sm:min-h-11 sm:px-4 sm:text-sm",
-          optimisticSaved
-            ? "border border-amber/50 bg-amber/15 text-amber shadow-[0_10px_28px_-14px_color-mix(in_srgb,var(--amber)_45%,transparent)] hover:border-amber hover:bg-amber/20"
-            : "border border-cream/20 bg-black/30 text-cream hover:border-cream/40 hover:bg-black/45 hover:text-cream",
-        )}
-      >
-        <Check
-          aria-hidden
-          className="size-4"
-          strokeWidth={optimisticSaved ? 2.75 : 2}
-        />
-        {buttonLabel}
-      </button>
-      {state.error ? (
-        <p className="mt-2 text-sm text-red-400" role="alert">
-          {state.error}
+    <div className="flex flex-wrap items-center gap-2">
+      <form action={action}>
+        <input type="hidden" name="movieId" value={movieId} />
+        <input type="hidden" name="title" value={title} />
+        <input type="hidden" name="posterPath" value={posterPath ?? ""} />
+        <input type="hidden" name="mediaType" value={mediaType} />
+        <button
+          type="submit"
+          aria-busy={pending}
+          aria-label={buttonLabel}
+          aria-pressed={optimisticSaved}
+          className={cn(
+            "inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 py-2 text-xs font-medium backdrop-blur-md transition-[border-color,background-color,color,box-shadow,transform] active:scale-95 sm:min-h-11 sm:px-4 sm:text-sm",
+            optimisticSaved
+              ? "border border-amber/50 bg-amber/15 text-amber shadow-[0_10px_28px_-14px_color-mix(in_srgb,var(--amber)_45%,transparent)] hover:border-amber hover:bg-amber/20"
+              : "border border-cream/20 bg-black/30 text-cream hover:border-cream/40 hover:bg-black/45 hover:text-cream",
+          )}
+        >
+          <Check
+            aria-hidden
+            className="size-4"
+            strokeWidth={optimisticSaved ? 2.75 : 2}
+          />
+          {buttonLabel}
+        </button>
+      </form>
+
+      {optimisticSaved ? (
+        <form action={rewatchDispatch}>
+          <input type="hidden" name="movieId" value={movieId} />
+          <input type="hidden" name="mediaType" value={mediaType} />
+          <button
+            type="submit"
+            disabled={rewatchPending}
+            aria-busy={rewatchPending}
+            aria-label="Log rewatch"
+            className="inline-flex min-h-10 items-center gap-2 rounded-full border border-cream/20 bg-black/30 px-3.5 py-2 text-xs font-medium text-cream backdrop-blur-md transition-[border-color,background-color,color,transform] hover:border-amber/40 hover:bg-amber/10 hover:text-amber active:scale-95 disabled:opacity-60 sm:min-h-11 sm:px-4 sm:text-sm"
+          >
+            <RotateCcw aria-hidden className="size-3.5" />
+            {rewatchPending ? "Logging…" : "Rewatch"}
+          </button>
+        </form>
+      ) : null}
+
+      {state.error || rewatchState.error ? (
+        <p className="basis-full text-sm text-red-400" role="alert">
+          {state.error ?? rewatchState.error}
         </p>
       ) : null}
-    </form>
+    </div>
   );
 }
 

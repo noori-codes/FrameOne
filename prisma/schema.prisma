@@ -53,10 +53,12 @@ model Favorite {
   listType   String   @default("favorite")
   /// Personal score 1–10 (favorites only). Null = not rated yet.
   rating     Int?
-  /// Short note (favorites only).
+  /// Short note — favorites (why you like it) or watched diary log.
   note       String?
   /// When the user watched this title (watched list only).
   watchedAt  DateTime?
+  /// Extra plays after the first log (watched list only). 0 = first watch.
+  rewatchCount Int @default(0)
   createdAt  DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

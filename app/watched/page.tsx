@@ -6,6 +6,11 @@ import { auth } from "@/auth";
 import { ListPageNav } from "@/components/list-page-nav";
 import { WatchedCard } from "@/components/watched-card";
 import {
+  parseWatchedRange,
+  WatchedRangeNav,
+  watchedRangeStart,
+} from "@/components/watched-range-nav";
+import {
   parseWatchedSort,
   WatchedSortNav,
 } from "@/components/watched-sort-nav";
@@ -14,23 +19,35 @@ import { prisma } from "@/lib/prisma";
 import { posterUrl } from "@/lib/tmdb";
 
 type WatchedPageProps = {
-  searchParams: Promise<{ sort?: string }>;
+  searchParams: Promise<{ sort?: string; range?: string }>;
 };
+
+function activityDate(watchedAt: Date | null, createdAt: Date) {
+  return watchedAt ?? createdAt;
+}
 
 export default async function WatchedPage({ searchParams }: WatchedPageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin");
 
-  const { sort: sortRaw } = await searchParams;
+  const { sort: sortRaw, range: rangeRaw } = await searchParams;
   const sort = parseWatchedSort(sortRaw);
+  const range = parseWatchedRange(rangeRaw);
+  const rangeStart = watchedRangeStart(range);
 
-  const items = await prisma.favorite.findMany({
+  const allItems = await prisma.favorite.findMany({
     where: { userId: session.user.id, listType: LIST_WATCHED },
     orderBy:
       sort === "title"
         ? { title: "asc" }
         : [{ watchedAt: "desc" }, { createdAt: "desc" }],
   });
+
+  const items = rangeStart
+    ? allItems.filter(
+        (item) => activityDate(item.watchedAt, item.createdAt) >= rangeStart,
+      )
+    : allItems;
 
   const mosaic = items
     .filter((item) => item.posterPath)
@@ -40,6 +57,11 @@ export default async function WatchedPage({ searchParams }: WatchedPageProps) {
 
   const filmCount = items.filter((item) => item.mediaType !== "tv").length;
   const seriesCount = items.length - filmCount;
+  const rewatchTotal = items.reduce(
+    (sum, item) => sum + (item.rewatchCount ?? 0),
+    0,
+  );
+  const emptyBecauseFilter = allItems.length > 0 && items.length === 0;
 
   return (
     <main className="relative flex min-h-dvh w-full flex-1 flex-col bg-background">
@@ -87,7 +109,7 @@ export default async function WatchedPage({ searchParams }: WatchedPageProps) {
               <h1 className="mt-2 font-display text-5xl leading-[0.9] tracking-wide text-cream uppercase sm:text-6xl lg:text-7xl">
                 Watched
               </h1>
-              {items.length > 0 ? (
+              {allItems.length > 0 ? (
                 <dl className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-cream/55">
                   <div className="flex items-baseline gap-1.5">
                     <dt className="sr-only">Logged</dt>
@@ -95,7 +117,11 @@ export default async function WatchedPage({ searchParams }: WatchedPageProps) {
                       <span className="font-medium text-cream/85">
                         {items.length}
                       </span>{" "}
-                      logged
+                      {range === "all"
+                        ? "logged"
+                        : range === "week"
+                          ? "this week"
+                          : "this month"}
                     </dd>
                   </div>
                   {filmCount > 0 ? (
@@ -109,8 +135,14 @@ export default async function WatchedPage({ searchParams }: WatchedPageProps) {
                   {seriesCount > 0 ? (
                     <div>
                       <dt className="sr-only">Series</dt>
+                      <dd>{seriesCount} series</dd>
+                    </div>
+                  ) : null}
+                  {rewatchTotal > 0 ? (
+                    <div>
+                      <dt className="sr-only">Rewatches</dt>
                       <dd>
-                        {seriesCount} series
+                        {rewatchTotal} rewatch{rewatchTotal === 1 ? "" : "es"}
                       </dd>
                     </div>
                   ) : null}
@@ -124,14 +156,19 @@ export default async function WatchedPage({ searchParams }: WatchedPageProps) {
 
             <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center lg:flex-col lg:items-end">
               <ListPageNav active="watched" />
-              {items.length > 0 ? <WatchedSortNav active={sort} /> : null}
+              {allItems.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <WatchedRangeNav active={range} sort={sort} />
+                  <WatchedSortNav active={sort} range={range} />
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
       </header>
 
       <div className="relative w-full flex-1 px-5 py-8 sm:px-8 sm:py-10 lg:px-12 xl:px-16">
-        {items.length === 0 ? (
+        {allItems.length === 0 ? (
           <section className="flex min-h-[50vh] flex-col items-center justify-center text-center">
             <div className="relative">
               <div
@@ -147,7 +184,7 @@ export default async function WatchedPage({ searchParams }: WatchedPageProps) {
             </h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-cream/50">
               Open a title and tap Mark watched. Finished queue items will land
-              here too.
+              here too — then add a short diary note or log a rewatch.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
@@ -164,6 +201,23 @@ export default async function WatchedPage({ searchParams }: WatchedPageProps) {
               </Link>
             </div>
           </section>
+        ) : emptyBecauseFilter ? (
+          <section className="flex min-h-[40vh] flex-col items-start justify-center">
+            <h2 className="font-display text-3xl tracking-wide text-cream uppercase sm:text-4xl">
+              Nothing in this range
+            </h2>
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-cream/50">
+              No titles logged{" "}
+              {range === "week" ? "in the last 7 days" : "this calendar month"}
+              . Try All, or mark something watched today.
+            </p>
+            <Link
+              href="/watched"
+              className="mt-6 rounded-full border border-cream/15 px-5 py-2.5 text-sm text-cream/70 transition-colors hover:border-amber/40 hover:text-amber"
+            >
+              Show all watched
+            </Link>
+          </section>
         ) : (
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
             {items.map((item, i) => (
@@ -176,6 +230,8 @@ export default async function WatchedPage({ searchParams }: WatchedPageProps) {
                   title: item.title,
                   posterPath: item.posterPath,
                   watchedAt: item.watchedAt,
+                  note: item.note,
+                  rewatchCount: item.rewatchCount,
                   mediaType: item.mediaType === "tv" ? "tv" : "movie",
                 }}
               />

@@ -35,8 +35,19 @@ function revalidateLists(mediaType: MediaListType, movieId: number) {
   revalidatePath("/favorites");
   revalidatePath("/watchlist");
   revalidatePath("/watched");
+  revalidatePath("/stats");
   revalidatePath("/profile");
   revalidatePath("/");
+}
+
+function parseWatchedAt(raw: string) {
+  const trimmed = raw.trim();
+  if (!trimmed) return { error: "Pick a watch date." as const };
+  const watchedAt = new Date(`${trimmed}T12:00:00`);
+  if (Number.isNaN(watchedAt.getTime())) {
+    return { error: "Invalid watch date." as const };
+  }
+  return { watchedAt };
 }
 
 function parseTitlePayload(formData: FormData) {
@@ -205,9 +216,9 @@ export async function toggleWatched(
 }
 
 /**
- * Update the watch date on an existing watched entry.
+ * Update watch date and/or diary note on an existing watched entry.
  */
-export async function updateWatchedDate(
+export async function updateWatchedDiary(
   _prev: WatchedDateState,
   formData: FormData,
 ): Promise<WatchedDateState> {
@@ -227,13 +238,75 @@ export async function updateWatchedDate(
   }
   const mediaType = mediaTypeRaw;
 
-  const watchedAtRaw = String(formData.get("watchedAt") ?? "").trim();
-  if (!watchedAtRaw) {
-    return { error: "Pick a watch date." };
+  const parsedDate = parseWatchedAt(String(formData.get("watchedAt") ?? ""));
+  if ("error" in parsedDate) {
+    return { error: parsedDate.error };
   }
-  const watchedAt = new Date(`${watchedAtRaw}T12:00:00`);
-  if (Number.isNaN(watchedAt.getTime())) {
-    return { error: "Invalid watch date." };
+
+  const note = String(formData.get("note") ?? "").trim().slice(0, 280);
+
+  const existing = await prisma.favorite.findUnique({
+    where: {
+      userId_movieId_listType_mediaType: {
+        userId: session.user.id,
+        movieId,
+        listType: LIST_WATCHED,
+        mediaType,
+      },
+    },
+  });
+
+  if (!existing) {
+    return { error: "Mark this title watched first." };
+  }
+
+  await prisma.favorite.update({
+    where: { id: existing.id },
+    data: {
+      watchedAt: parsedDate.watchedAt,
+      note: note.length > 0 ? note : null,
+    },
+  });
+
+  revalidateLists(mediaType, movieId);
+  return { success: "Diary updated." };
+}
+
+/** @deprecated Prefer updateWatchedDiary */
+export const updateWatchedDate = updateWatchedDiary;
+
+/**
+ * Log another play of an already-watched title (bumps rewatch + date).
+ * Optional watchedAt (YYYY-MM-DD); defaults to today.
+ */
+export async function logRewatch(
+  _prev: WatchedDateState,
+  formData: FormData,
+): Promise<WatchedDateState> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Sign in to log a rewatch." };
+  }
+
+  const movieId = Number(formData.get("movieId"));
+  if (!Number.isFinite(movieId) || movieId <= 0) {
+    return { error: "Invalid title." };
+  }
+
+  const mediaTypeRaw = String(formData.get("mediaType") ?? MEDIA_MOVIE);
+  if (!isMediaListType(mediaTypeRaw)) {
+    return { error: "Invalid media type." };
+  }
+  const mediaType = mediaTypeRaw;
+
+  const watchedAtRaw = String(formData.get("watchedAt") ?? "").trim();
+  let watchedAt = new Date();
+  if (watchedAtRaw) {
+    const parsedDate = parseWatchedAt(watchedAtRaw);
+    if ("error" in parsedDate) {
+      return { error: parsedDate.error };
+    }
+    watchedAt = parsedDate.watchedAt;
   }
 
   const existing = await prisma.favorite.findUnique({
@@ -253,11 +326,14 @@ export async function updateWatchedDate(
 
   await prisma.favorite.update({
     where: { id: existing.id },
-    data: { watchedAt },
+    data: {
+      watchedAt,
+      rewatchCount: { increment: 1 },
+    },
   });
 
   revalidateLists(mediaType, movieId);
-  return { success: "Date updated." };
+  return { success: "Rewatch logged." };
 }
 
 /**

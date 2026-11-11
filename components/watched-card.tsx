@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Trash2, X } from "lucide-react";
+import { Pencil, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -13,10 +13,9 @@ import {
 import { createPortal } from "react-dom";
 import {
   toggleWatched,
-  updateWatchedDate,
   type ToggleListState,
-  type WatchedDateState,
 } from "@/app/actions/favorites";
+import { WatchedDiaryForm } from "@/components/watched-diary-form";
 import {
   MEDIA_MOVIE,
   mediaHref,
@@ -30,6 +29,8 @@ export type WatchedCardData = {
   title: string;
   posterPath: string | null;
   watchedAt: Date | string | null;
+  note?: string | null;
+  rewatchCount?: number;
   mediaType?: MediaListType;
 };
 
@@ -39,17 +40,6 @@ type WatchedCardProps = {
 };
 
 const removeInitial: ToggleListState = {};
-const dateInitial: WatchedDateState = {};
-
-function toDateInputValue(value: Date | string | null) {
-  if (!value) return "";
-  const date = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(date.getTime())) return "";
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
 
 function formatWatchedDate(value: Date | string | null) {
   if (!value) return "Date unknown";
@@ -63,7 +53,7 @@ function formatWatchedDate(value: Date | string | null) {
 }
 
 /**
- * Diary tile — poster-first with watch date; hover for edit date / unwatch.
+ * Diary tile — poster-first with watch date; hover for edit diary / unwatch.
  */
 export function WatchedCard({ item, priority = false }: WatchedCardProps) {
   const [editing, setEditing] = useState(false);
@@ -73,23 +63,16 @@ export function WatchedCard({ item, priority = false }: WatchedCardProps) {
     toggleWatched,
     removeInitial,
   );
-  const [dateState, dateAction, datePending] = useActionState(
-    updateWatchedDate,
-    dateInitial,
-  );
   const poster = posterUrl(item.posterPath, "w500");
   const mediaType = item.mediaType ?? MEDIA_MOVIE;
   const href = mediaHref(mediaType, item.movieId);
+  const rewatchCount = item.rewatchCount ?? 0;
 
   const closeEditor = useCallback(() => setEditing(false), []);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (dateState.success) closeEditor();
-  }, [dateState.success, closeEditor]);
 
   useEffect(() => {
     if (!editing) return;
@@ -120,11 +103,11 @@ export function WatchedCard({ item, priority = false }: WatchedCardProps) {
               if (e.target === e.currentTarget) closeEditor();
             }}
           >
-            <div className="w-full max-w-md overflow-hidden rounded-3xl border border-cream/10 bg-stage shadow-[0_32px_80px_-28px_rgba(0,0,0,0.95)]">
+            <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto overflow-hidden rounded-3xl border border-cream/10 bg-stage shadow-[0_32px_80px_-28px_rgba(0,0,0,0.95)]">
               <div className="flex items-start justify-between gap-3 border-b border-cream/8 px-5 py-4 sm:px-6">
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">
-                    Watch date
+                    Diary entry
                   </p>
                   <h2
                     id={titleId}
@@ -143,33 +126,18 @@ export function WatchedCard({ item, priority = false }: WatchedCardProps) {
                 </button>
               </div>
 
-              <form action={dateAction} className="flex flex-col gap-4 p-5 sm:p-6">
-                <input type="hidden" name="movieId" value={item.movieId} />
-                <input type="hidden" name="mediaType" value={mediaType} />
-                <label className="flex flex-col gap-2 text-[10px] font-semibold tracking-[0.18em] text-cream/45 uppercase">
-                  Watched on
-                  <input
-                    type="date"
-                    name="watchedAt"
-                    required
-                    defaultValue={toDateInputValue(item.watchedAt)}
-                    max={toDateInputValue(new Date())}
-                    className="rounded-xl border border-cream/12 bg-black/35 px-4 py-3 text-sm font-normal normal-case tracking-normal text-cream outline-none transition-[border-color,box-shadow] focus:border-amber/45 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--amber)_12%,transparent)]"
-                  />
-                </label>
-                {dateState.error ? (
-                  <p className="text-sm text-red-400" role="alert">
-                    {dateState.error}
-                  </p>
-                ) : null}
-                <button
-                  type="submit"
-                  disabled={datePending}
-                  className="cta-shine relative inline-flex w-fit overflow-hidden rounded-full bg-amber px-5 py-2.5 text-sm font-semibold text-[color:var(--on-amber)] transition-colors hover:bg-(--amber-dim) hover:text-cream disabled:opacity-60"
-                >
-                  {datePending ? "Saving…" : "Save date"}
-                </button>
-              </form>
+              <div className="p-5 sm:p-6">
+                <WatchedDiaryForm
+                  key={`${item.id}-${item.watchedAt}-${item.note}-${rewatchCount}`}
+                  movieId={item.movieId}
+                  mediaType={mediaType}
+                  initialWatchedAt={item.watchedAt}
+                  initialNote={item.note ?? null}
+                  rewatchCount={rewatchCount}
+                  compact
+                  onSuccess={closeEditor}
+                />
+              </div>
             </div>
           </div>,
           document.body,
@@ -201,6 +169,11 @@ export function WatchedCard({ item, priority = false }: WatchedCardProps) {
           <p className="text-[11px] font-medium text-cream/75">
             {formatWatchedDate(item.watchedAt)}
           </p>
+          {rewatchCount > 0 ? (
+            <p className="mt-0.5 text-[10px] text-amber/80">
+              {rewatchCount}× rewatch
+            </p>
+          ) : null}
         </div>
 
         <div className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-linear-to-t from-black via-black/70 to-black/10 p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
@@ -209,7 +182,13 @@ export function WatchedCard({ item, priority = false }: WatchedCardProps) {
           </p>
           <p className="mt-1.5 text-[11px] text-cream/55">
             {formatWatchedDate(item.watchedAt)}
+            {rewatchCount > 0 ? ` · ${rewatchCount}×` : ""}
           </p>
+          {item.note ? (
+            <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-cream/45">
+              {item.note}
+            </p>
+          ) : null}
           <p className="mt-1 text-[11px] tracking-wide text-cream/40 uppercase">
             {mediaType === "tv" ? "Series" : "Film"}
           </p>
@@ -220,10 +199,10 @@ export function WatchedCard({ item, priority = false }: WatchedCardProps) {
         <button
           type="button"
           onClick={() => setEditing(true)}
-          aria-label={`Edit watch date for ${item.title}`}
+          aria-label={`Edit diary for ${item.title}`}
           className="flex size-8 items-center justify-center rounded-full border border-cream/15 bg-black/65 text-cream/85 backdrop-blur-md transition-[border-color,background-color,color] hover:border-amber/45 hover:bg-amber/15 hover:text-amber"
         >
-          <Calendar className="size-3.5" />
+          <Pencil className="size-3.5" />
         </button>
         <form action={removeAction}>
           <input type="hidden" name="movieId" value={item.movieId} />
