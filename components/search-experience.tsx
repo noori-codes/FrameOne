@@ -11,6 +11,7 @@ import {
   useState,
   useTransition,
 } from "react";
+import { LinkPendingOverlay } from "@/components/link-pending-overlay";
 import { MovieCard } from "@/components/movie-card";
 import {
   backdropUrl,
@@ -697,6 +698,7 @@ export function SearchExperience({
                   aria-hidden
                   className="absolute inset-0 bg-linear-to-t from-background/90 via-transparent to-transparent"
                 />
+                <LinkPendingOverlay className="z-20" />
                 <div className="relative z-10 flex w-full flex-col justify-end gap-3 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-7 lg:p-8">
                   <div className="min-w-0 max-w-2xl">
                     <p className="text-[10px] font-semibold tracking-[0.2em] text-amber uppercase">

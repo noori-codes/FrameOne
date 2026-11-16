@@ -18,6 +18,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { LinkPendingOverlay } from "@/components/link-pending-overlay";
 import { TrailerButton } from "@/components/trailer-button";
 import { cn } from "@/lib/utils";
 
@@ -375,6 +376,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                   aria-hidden
                   className="movie-card-sheen pointer-events-none absolute inset-0"
                 />
+                <LinkPendingOverlay />
               </div>
             </Link>
           ) : null}

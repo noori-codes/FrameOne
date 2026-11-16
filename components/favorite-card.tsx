@@ -7,6 +7,7 @@ import { useActionState, useCallback, useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { toggleList, type ToggleListState } from "@/app/actions/favorites";
 import { FavoriteMetaForm } from "@/components/favorite-meta-form";
+import { LinkPendingOverlay } from "@/components/link-pending-overlay";
 import { RatingStars } from "@/components/rating-stars";
 import {
   LIST_FAVORITE,
@@ -137,7 +138,7 @@ export function FavoriteCard({ favorite, priority = false }: FavoriteCardProps) 
     <li className="group relative">
       <Link
         href={href}
-        className="relative block aspect-2/3 overflow-hidden rounded-xl bg-stage ring-1 ring-cream/10 transition-[transform,box-shadow,ring-color] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform group-hover:-translate-y-1 group-hover:shadow-[0_28px_48px_-18px_rgba(0,0,0,0.85),0_0_40px_-16px_color-mix(in_srgb,var(--amber)_30%,transparent)] group-hover:ring-amber/35"
+        className="relative block aspect-2/3 overflow-hidden rounded-xl bg-stage ring-1 ring-cream/10 transition-[transform,box-shadow,ring-color] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform group-hover:-translate-y-1 group-hover:shadow-[0_28px_48px_-18px_rgba(0,0,0,0.85),0_0_40px_-16px_color-mix(in_srgb,var(--amber)_30%,transparent)] group-hover:ring-amber/35 active:scale-[0.985] active:brightness-90"
       >
         {poster ? (
           <Image
@@ -153,6 +154,7 @@ export function FavoriteCard({ favorite, priority = false }: FavoriteCardProps) 
             {favorite.title}
           </span>
         )}
+        <LinkPendingOverlay />
 
         {/* Always-visible rating + title; note peeks when present */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/95 via-black/55 to-transparent px-2.5 pt-14 pb-2.5">

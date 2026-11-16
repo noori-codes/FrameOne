@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Clapperboard } from "lucide-react";
+import { LinkPendingOverlay } from "@/components/link-pending-overlay";
 import { PAGE_GUTTER } from "@/lib/layout";
 import { backdropUrl, posterUrl, type TmdbMovie } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
@@ -125,6 +126,7 @@ export function CollectionPageLayout({
                     {featuredMovie.title}
                   </p>
                 </div>
+                <LinkPendingOverlay />
               </div>
             </Link>
           ) : null}

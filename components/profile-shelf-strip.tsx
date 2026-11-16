@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { LinkPendingOverlay } from "@/components/link-pending-overlay";
 import { mediaHref, type MediaListType } from "@/lib/lists";
 import { posterUrl } from "@/lib/tmdb";
 
@@ -79,6 +80,7 @@ export function ProfileShelfStrip({
                       {item.title}
                     </span>
                   )}
+                  <LinkPendingOverlay />
                   <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 to-transparent px-2 pt-8 pb-2 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100">
                     <span className="line-clamp-2 text-[11px] font-medium leading-snug text-cream">
                       {item.title}

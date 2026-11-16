@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useOptimistic, useState } from "react";
 import { toggleList, type ToggleListState } from "@/app/actions/favorites";
+import { LinkPendingOverlay } from "@/components/link-pending-overlay";
 import { LIST_FAVORITE, type MediaListType } from "@/lib/lists";
 import { mediaPath, posterUrl, type MediaKind } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
@@ -121,8 +122,11 @@ export function MovieCard({
 
   return (
     <div className={cn("movie-card group relative block", className)}>
-      <Link href={mediaPath(mediaType, id)} className="block">
-        <div className="movie-card-frame relative aspect-2/3 overflow-hidden rounded-xl bg-stage shadow-[0_10px_28px_-14px_rgba(0,0,0,0.7)] ring-1 ring-cream/10 transition-[transform,box-shadow,ring-color] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform group-hover:-translate-y-1.5 group-hover:shadow-[0_28px_50px_-18px_rgba(0,0,0,0.9),0_0_36px_-18px_color-mix(in_srgb,var(--amber)_35%,transparent)] group-hover:ring-amber/30">
+      <Link
+        href={mediaPath(mediaType, id)}
+        className="block active:[&_.movie-card-frame]:scale-[0.985]"
+      >
+        <div className="movie-card-frame relative aspect-2/3 overflow-hidden rounded-xl bg-stage shadow-[0_10px_28px_-14px_rgba(0,0,0,0.7)] ring-1 ring-cream/10 transition-[transform,box-shadow,ring-color] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform group-hover:-translate-y-1.5 group-hover:shadow-[0_28px_50px_-18px_rgba(0,0,0,0.9),0_0_36px_-18px_color-mix(in_srgb,var(--amber)_35%,transparent)] group-hover:ring-amber/30 active:brightness-90">
           {showImage ? (
             <Image
               src={src!}
@@ -157,6 +161,7 @@ export function MovieCard({
             aria-hidden
             className="movie-card-sheen pointer-events-none absolute inset-0"
           />
+          <LinkPendingOverlay />
 
           {!showTitle ? (
             <div className="movie-card-caption pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/95 via-black/55 to-transparent px-2.5 pt-14 pb-2.5 opacity-100 translate-y-0 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">

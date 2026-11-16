@@ -227,6 +227,35 @@ button:disabled {
   animation: saveConfirmPop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+@keyframes navProgressSweep {
+  0% {
+    transform: scaleX(0.18);
+  }
+  35% {
+    transform: scaleX(0.62);
+  }
+  100% {
+    transform: scaleX(0.9);
+  }
+}
+
+.nav-progress-bar {
+  animation: navProgressSweep 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes linkPendingIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.link-pending-overlay {
+  animation: linkPendingIn 80ms ease-out both;
+}
+
 @keyframes routeEnter {
   from {
     opacity: 0.72;
@@ -447,7 +476,9 @@ button:disabled {
   .auth-form-line,
   .row-reveal,
   .save-confirm-pop,
-  .route-enter {
+  .route-enter,
+  .nav-progress-bar,
+  .link-pending-overlay {
     opacity: 1;
     animation: none;
     transform: none;
