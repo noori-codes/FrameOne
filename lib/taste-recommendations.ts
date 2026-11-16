@@ -1,14 +1,6 @@
 import { cache } from "react";
-import { auth } from "@/auth";
-import {
-  LIST_FAVORITE,
-  LIST_WATCHED,
-  LIST_WATCHLIST,
-  MEDIA_MOVIE,
-  MEDIA_TV,
-  type MediaListType,
-} from "@/lib/lists";
-import { prisma } from "@/lib/prisma";
+import { getHomePersonalization } from "@/lib/home-personalization";
+import { MEDIA_MOVIE, MEDIA_TV, type MediaListType } from "@/lib/lists";
 import {
   getMovieRecommendations,
   getTvRecommendations,
@@ -16,9 +8,6 @@ import {
   type TmdbMovie,
 } from "@/lib/tmdb";
 
-const MIN_RATING = 7;
-const MAX_MOVIE_SEEDS = 2;
-const MAX_TV_SEEDS = 1;
 const MIN_RESULTS = 6;
 const ROW_LIMIT = 20;
 
@@ -32,136 +21,20 @@ export type TasteRow = {
   movies: TmdbMovie[];
 };
 
-type TasteSeed = {
-  movieId: number;
-  title: string;
-  mediaType: MediaListType;
-  rating: number;
-  reason: "rated" | "watched";
-};
-
 /** Titles already on favorites / watchlist / watched — keep taste + discovery fresh. */
 export const getUserKnownTitleIds = cache(async (mediaType: MediaListType) => {
-  try {
-    const session = await auth();
-    const userId = session?.user?.id;
-    if (!userId) return new Set<number>();
-
-    const rows = await prisma.favorite.findMany({
-      where: {
-        userId,
-        mediaType,
-        listType: { in: [LIST_FAVORITE, LIST_WATCHLIST, LIST_WATCHED] },
-      },
-      select: { movieId: true },
-    });
-    return new Set(rows.map((row) => row.movieId));
-  } catch (err) {
-    console.warn("getUserKnownTitleIds failed:", err);
-    return new Set<number>();
-  }
+  const personal = await getHomePersonalization();
+  return new Set(
+    mediaType === MEDIA_TV ? personal.knownTvIds : personal.knownMovieIds,
+  );
 });
 
 /** Watched-only ids — hide from home discovery / endless feed. */
 export const getUserWatchedIds = cache(async (mediaType: MediaListType) => {
-  try {
-    const session = await auth();
-    const userId = session?.user?.id;
-    if (!userId) return [] as number[];
-
-    const rows = await prisma.favorite.findMany({
-      where: { userId, mediaType, listType: LIST_WATCHED },
-      select: { movieId: true },
-    });
-    return rows.map((row) => row.movieId);
-  } catch (err) {
-    console.warn("getUserWatchedIds failed:", err);
-    return [] as number[];
-  }
-});
-
-const getTasteSeeds = cache(async (): Promise<TasteSeed[]> => {
-  const session = await auth().catch(() => null);
-  const userId = session?.user?.id;
-  if (!userId) return [];
-
-  try {
-    // Sequential against a max:1 PgBouncer pool — parallel findMany fights for the only client.
-    const ratedRows = await prisma.favorite.findMany({
-      where: {
-        userId,
-        listType: LIST_FAVORITE,
-        rating: { gte: MIN_RATING },
-      },
-      select: {
-        movieId: true,
-        title: true,
-        mediaType: true,
-        rating: true,
-        createdAt: true,
-      },
-      orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
-    });
-    const watchedRows = await prisma.favorite.findMany({
-      where: { userId, listType: LIST_WATCHED },
-      select: {
-        movieId: true,
-        title: true,
-        mediaType: true,
-        watchedAt: true,
-        createdAt: true,
-      },
-      orderBy: [{ watchedAt: "desc" }, { createdAt: "desc" }],
-      take: 24,
-    });
-
-    const movies: TasteSeed[] = [];
-    const tv: TasteSeed[] = [];
-    const used = new Set<string>();
-
-    function tryPush(seed: TasteSeed) {
-      const key = `${seed.mediaType}:${seed.movieId}`;
-      if (used.has(key)) return;
-      if (seed.mediaType === MEDIA_TV) {
-        if (tv.length >= MAX_TV_SEEDS) return;
-        tv.push(seed);
-      } else {
-        if (movies.length >= MAX_MOVIE_SEEDS) return;
-        movies.push(seed);
-      }
-      used.add(key);
-    }
-
-    for (const row of ratedRows) {
-      if (row.rating == null) continue;
-      tryPush({
-        movieId: row.movieId,
-        title: row.title,
-        mediaType: row.mediaType === MEDIA_TV ? MEDIA_TV : MEDIA_MOVIE,
-        rating: row.rating,
-        reason: "rated",
-      });
-      if (movies.length >= MAX_MOVIE_SEEDS && tv.length >= MAX_TV_SEEDS) {
-        return [...movies, ...tv];
-      }
-    }
-
-    for (const row of watchedRows) {
-      tryPush({
-        movieId: row.movieId,
-        title: row.title,
-        mediaType: row.mediaType === MEDIA_TV ? MEDIA_TV : MEDIA_MOVIE,
-        rating: MIN_RATING,
-        reason: "watched",
-      });
-      if (movies.length >= MAX_MOVIE_SEEDS && tv.length >= MAX_TV_SEEDS) break;
-    }
-
-    return [...movies, ...tv];
-  } catch (err) {
-    console.warn("getTasteSeeds failed:", err);
-    return [];
-  }
+  const personal = await getHomePersonalization();
+  return mediaType === MEDIA_TV
+    ? personal.watchedTvIds
+    : personal.watchedMovieIds;
 });
 
 function normalizeTitle(title: string) {
@@ -198,16 +71,16 @@ export function excludeTitleIds<T extends { id: number }>(
 
 /**
  * Home taste rows for the signed-in user.
- * Seeds from high ratings first, then recent watched.
+ * Seeds from high ratings first, then recent watched — via one personalization load.
  */
 export const getTasteRows = cache(async (): Promise<TasteRow[]> => {
   try {
-    const seeds = await getTasteSeeds();
+    const personal = await getHomePersonalization();
+    const seeds = personal.tasteSeeds;
     if (seeds.length === 0) return [];
 
-    // Known-title lookups share the single pool connection — run one after the other.
-    const movieExcluded = await getUserKnownTitleIds(MEDIA_MOVIE);
-    const tvExcluded = await getUserKnownTitleIds(MEDIA_TV);
+    const movieExcluded = new Set(personal.knownMovieIds);
+    const tvExcluded = new Set(personal.knownTvIds);
 
     const pools = await Promise.all(
       seeds.map(async (seed) => {
@@ -229,7 +102,6 @@ export const getTasteRows = cache(async (): Promise<TasteRow[]> => {
       const excluded = new Set(
         seed.mediaType === MEDIA_TV ? tvExcluded : movieExcluded,
       );
-      // Always drop the seed id even if it somehow missed known-title lookup.
       excluded.add(seed.movieId);
       const movies = filterPool(pool, excluded, used, seed.title);
       if (movies.length < MIN_RESULTS) continue;

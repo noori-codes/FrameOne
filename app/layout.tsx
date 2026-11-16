@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { NavigationProgress } from "@/components/navigation-progress";
 import { SiteHeader } from "@/components/site-header";
+import { SiteNav } from "@/components/site-nav";
 import "./globals.css";
 
 /**
@@ -55,7 +56,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Suspense fallback={null}>
           <NavigationProgress />
         </Suspense>
-        <SiteHeader />
+        {/* Auth is JWT-only on the hot path, but still dynamic — don’t block page shell. */}
+        <Suspense fallback={<SiteNav user={null} />}>
+          <SiteHeader />
+        </Suspense>
         {children}
         <MobileTabBar />
       </body>

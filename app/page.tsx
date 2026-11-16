@@ -1,7 +1,6 @@
-import { cache, Suspense } from "react";
-import { auth } from "@/auth";
+import { Suspense } from "react";
 import { DeferredGenreRows } from "@/components/deferred-genre-rows";
-import { HeroCarousel, type HeroSlide } from "@/components/hero-carousel";
+import { HeroCarousel } from "@/components/hero-carousel";
 import { HomeEndlessFeed } from "@/components/home-endless-feed";
 import { MovieRow } from "@/components/movie-row";
 import { SiteFooter } from "@/components/site-footer";
@@ -11,125 +10,25 @@ import {
   HomeHeroSkeleton,
   MovieRowSkeleton,
 } from "@/components/skeletons";
-import { shuffleHeroPicks } from "@/lib/daily-hero";
-import {
-  getHomeMovieFavoriteIds,
-  getHomeTvFavoriteIds,
-} from "@/lib/home-favorites";
-import {
-  excludeTitleIds,
-  getTasteRows,
-  getUserWatchedIds,
-} from "@/lib/taste-recommendations";
-import { MEDIA_MOVIE, MEDIA_TV } from "@/lib/lists";
-import { tmdbImageUrl } from "@/lib/tmdb-image-loader";
-import {
-  backdropUrl,
-  getLatestMovies,
-  getMovieTrailerKey,
-  getPopularMoviesPage,
-  getTopRatedMoviesPage,
-  getTrendingMoviesPage,
-  getTrendingTvPage,
-  posterUrl,
-  tvShowAsMovie,
-  type TmdbMovie,
-  type TmdbTvShow,
-} from "@/lib/tmdb";
+import { getHomeDiscoveryPools } from "@/lib/home-discovery";
+import { getHomeHeroPayload } from "@/lib/home-hero";
+import { getHomePersonalization } from "@/lib/home-personalization";
+import { getTasteRows } from "@/lib/taste-recommendations";
+import { tvShowAsMovie, type TmdbMovie } from "@/lib/tmdb";
 
-/** Refresh at least hourly so a new UTC day picks a new hero set. */
+/** Public TMDB shells revalidate hourly; personalization stays request-scoped. */
 export const revalidate = 3600;
 
-const HERO_GROUP_SIZE = 3;
-
-const getHomeTrendingPage = cache(() => getTrendingMoviesPage("day", 1));
-const getHomeTopRatedPage = cache(() => getTopRatedMoviesPage(1));
-
 async function HomeHero() {
-  // Soft-fail each pool — one slow TMDB call (often discover/latest) must not blank the home page.
-  const [latestResult, topRatedResult, trendingResult] = await Promise.allSettled([
-    getLatestMovies(),
-    getHomeTopRatedPage().then((page) => page.results),
-    getHomeTrendingPage().then((page) => page.results),
-  ]);
-
-  const latestMovies =
-    latestResult.status === "fulfilled" ? latestResult.value : [];
-  const topRated =
-    topRatedResult.status === "fulfilled" ? topRatedResult.value : [];
-  const trending =
-    trendingResult.status === "fulfilled" ? trendingResult.value : [];
-
-  for (const result of [latestResult, topRatedResult, trendingResult]) {
-    if (result.status === "rejected") {
-      console.warn("Home hero pool failed:", result.reason);
-    }
-  }
-
-  const used = new Set<number>();
-  function pickGroup(movies: TmdbMovie[], categoryLabel: string) {
-    const picks: { movie: TmdbMovie; categoryLabel: string }[] = [];
-
-    for (const movie of movies) {
-      if (
-        used.has(movie.id) ||
-        !movie.backdrop_path ||
-        movie.genre_ids?.includes(16)
-      ) {
-        continue;
-      }
-      used.add(movie.id);
-      picks.push({ movie, categoryLabel });
-      if (picks.length === HERO_GROUP_SIZE) break;
-    }
-
-    return picks;
-  }
-
-  const picks = shuffleHeroPicks([
-    ...pickGroup(latestMovies, "Latest releases"),
-    ...pickGroup(topRated, "Top rated"),
-    ...pickGroup(trending, "Trending now"),
-  ]);
-
-  const trailerResults = await Promise.allSettled(
-    picks.map(({ movie }) => getMovieTrailerKey(movie.id)),
-  );
-
-  const slides: HeroSlide[] = picks.map(({ movie, categoryLabel }, i) => {
-    const trailerResult = trailerResults[i];
-    const trailerKey =
-      trailerResult?.status === "fulfilled" ? trailerResult.value : null;
-    return {
-      id: movie.id,
-      title: movie.title,
-      categoryLabel,
-      overview: movie.overview,
-      tagline: null,
-      backdropUrl: backdropUrl(movie.backdrop_path),
-      posterUrl: posterUrl(movie.poster_path, "w500"),
-      meta: movie.release_date?.slice(0, 4) ?? "",
-      rating: movie.vote_average,
-      trailerKey,
-    };
-  });
-
-  const firstBackdrop = slides[0]?.backdropUrl;
-  const heroPreload780 = firstBackdrop
-    ? tmdbImageUrl(firstBackdrop, 780)
-    : null;
-  const heroPreload1280 = firstBackdrop
-    ? tmdbImageUrl(firstBackdrop, 1280)
-    : null;
+  const { slides, preload780, preload1280 } = await getHomeHeroPayload();
 
   return (
     <>
-      {heroPreload780 && heroPreload1280 ? (
+      {preload780 && preload1280 ? (
         <link
           rel="preload"
           as="image"
-          // Responsive LCP candidate — matches hero Image sizes="100vw"
-          imageSrcSet={`${heroPreload780} 780w, ${heroPreload1280} 1280w`}
+          imageSrcSet={`${preload780} 780w, ${preload1280} 1280w`}
           imageSizes="100vw"
           fetchPriority="high"
         />
@@ -139,113 +38,19 @@ async function HomeHero() {
   );
 }
 
-async function HomeGenreRows() {
-  const [favoriteIds, watchedIds] = await Promise.all([
-    getHomeMovieFavoriteIds(),
-    getUserWatchedIds(MEDIA_MOVIE),
-  ]);
-  return (
-    <DeferredGenreRows favoriteIds={favoriteIds} excludeIds={watchedIds} />
-  );
-}
-
 /**
- * Taste + discovery share one Suspense boundary so slower taste rows never
- * stream in *above* discovery that already painted (layout jump / wrong order).
- * Data still fetches in parallel.
+ * Personalized “because you…” rows — own Suspense so discovery isn’t blocked
+ * on TMDB recommendation fan-out.
  */
-async function PrimaryRows() {
-  // TMDB discovery can run freely in parallel. DB-backed calls share a max:1
-  // PgBouncer client — sequence them so they don’t fight and tear the socket.
-  const poolsPromise = Promise.allSettled([
-    getHomeTrendingPage(),
-    getPopularMoviesPage(1),
-    getHomeTopRatedPage(),
-    getTrendingTvPage("day", 1),
+async function TasteRows() {
+  const [rows, personal] = await Promise.all([
+    getTasteRows(),
+    getHomePersonalization(),
   ]);
 
-  const session = await auth().catch(() => null);
-  const rows = await getTasteRows();
-  const movieFavoriteIds = await getHomeMovieFavoriteIds();
-  const tvFavoriteIds = await getHomeTvFavoriteIds();
-  const watchedMovieIds = await getUserWatchedIds(MEDIA_MOVIE);
-  const watchedTvIds = await getUserWatchedIds(MEDIA_TV);
-  const pools = await poolsPromise;
+  const showCoach = Boolean(personal.userId) && rows.length === 0;
 
-  const showCoach = Boolean(session?.user?.id) && rows.length === 0;
-
-  const [
-    trendingResult,
-    popularResult,
-    topRatedResult,
-    trendingTvResult,
-  ] = pools;
-
-  for (const result of pools) {
-    if (result.status === "rejected") {
-      console.warn("Home discovery pool failed:", result.reason);
-    }
-  }
-
-  const emptyMoviePage = {
-    results: [] as TmdbMovie[],
-    page: 1,
-    totalPages: 0,
-    totalResults: 0,
-  };
-  const emptyTvPage = {
-    results: [] as TmdbTvShow[],
-    page: 1,
-    totalPages: 0,
-    totalResults: 0,
-  };
-
-  const trendingPage =
-    trendingResult.status === "fulfilled"
-      ? trendingResult.value
-      : emptyMoviePage;
-  const popularPage =
-    popularResult.status === "fulfilled"
-      ? popularResult.value
-      : emptyMoviePage;
-  const topRatedPage =
-    topRatedResult.status === "fulfilled"
-      ? topRatedResult.value
-      : emptyMoviePage;
-  const trendingTvPage =
-    trendingTvResult.status === "fulfilled"
-      ? trendingTvResult.value
-      : emptyTvPage;
-
-  // Cross-row dedupe so home feels curated, not the same posters on repeat.
-  const usedMovies = new Set<number>(watchedMovieIds);
-  function takeMovies(pool: TmdbMovie[], limit = 18) {
-    const out: TmdbMovie[] = [];
-    for (const movie of pool) {
-      if (usedMovies.has(movie.id)) continue;
-      usedMovies.add(movie.id);
-      out.push(movie);
-      if (out.length >= limit) break;
-    }
-    return out;
-  }
-
-  const usedTv = new Set<number>(watchedTvIds);
-  function takeTv(pool: TmdbMovie[], limit = 18) {
-    const out: TmdbMovie[] = [];
-    for (const show of pool) {
-      if (usedTv.has(show.id)) continue;
-      usedTv.add(show.id);
-      out.push(show);
-      if (out.length >= limit) break;
-    }
-    return out;
-  }
-
-  const trendingMovies = takeMovies(trendingPage.results);
-  const trendingSeries = takeTv(trendingTvPage.results.map(tvShowAsMovie));
-  const topRatedMovies = takeMovies(topRatedPage.results);
-  const popularFresh = takeMovies(popularPage.results, 12);
+  if (!showCoach && rows.length === 0) return null;
 
   return (
     <>
@@ -267,16 +72,59 @@ async function PrimaryRows() {
           movies={row.movies}
           mediaType={row.mediaType}
           favoriteIds={
-            row.mediaType === "tv" ? tvFavoriteIds : movieFavoriteIds
+            row.mediaType === "tv"
+              ? personal.tvFavoriteIds
+              : personal.movieFavoriteIds
           }
         />
       ))}
+    </>
+  );
+}
+
+/** Cached TMDB discovery + one personalization read for hearts / watched filter. */
+async function DiscoveryRows() {
+  const poolsPromise = getHomeDiscoveryPools();
+  const personal = await getHomePersonalization();
+  const pools = await poolsPromise;
+
+  const usedMovies = new Set<number>(personal.watchedMovieIds);
+  function takeMovies(pool: TmdbMovie[], limit = 18) {
+    const out: TmdbMovie[] = [];
+    for (const movie of pool) {
+      if (usedMovies.has(movie.id)) continue;
+      usedMovies.add(movie.id);
+      out.push(movie);
+      if (out.length >= limit) break;
+    }
+    return out;
+  }
+
+  const usedTv = new Set<number>(personal.watchedTvIds);
+  function takeTv(pool: TmdbMovie[], limit = 18) {
+    const out: TmdbMovie[] = [];
+    for (const show of pool) {
+      if (usedTv.has(show.id)) continue;
+      usedTv.add(show.id);
+      out.push(show);
+      if (out.length >= limit) break;
+    }
+    return out;
+  }
+
+  const trendingMovies = takeMovies(pools.trending.results);
+  const trendingSeries = takeTv(pools.trendingTv.results.map(tvShowAsMovie));
+  const topRatedMovies = takeMovies(pools.topRated.results);
+  const popularFresh = takeMovies(pools.popular.results, 12);
+
+  return (
+    <>
       <MovieRow
         id="trending"
         title="Trending now"
         movies={trendingMovies}
         href="/browse/trending"
-        favoriteIds={movieFavoriteIds}
+        favoriteIds={personal.movieFavoriteIds}
       />
       <MovieRow
         id="trending-series"
@@ -284,7 +132,7 @@ async function PrimaryRows() {
         subtitle="TV shows rising on TMDB today"
         movies={trendingSeries}
         mediaType="tv"
-        favoriteIds={tvFavoriteIds}
+        favoriteIds={personal.tvFavoriteIds}
       />
       {popularFresh.length >= 6 ? (
         <MovieRow
@@ -293,7 +141,7 @@ async function PrimaryRows() {
           subtitle="Fresh popular picks you haven’t logged"
           movies={popularFresh}
           href="/browse/popular"
-          favoriteIds={movieFavoriteIds}
+          favoriteIds={personal.movieFavoriteIds}
         />
       ) : null}
       <MovieRow
@@ -301,9 +149,19 @@ async function PrimaryRows() {
         title="Top rated"
         movies={topRatedMovies}
         href="/browse/top-rated"
-        favoriteIds={movieFavoriteIds}
+        favoriteIds={personal.movieFavoriteIds}
       />
     </>
+  );
+}
+
+async function HomeGenreRows() {
+  const personal = await getHomePersonalization();
+  return (
+    <DeferredGenreRows
+      favoriteIds={personal.movieFavoriteIds}
+      excludeIds={personal.watchedMovieIds}
+    />
   );
 }
 
@@ -326,14 +184,17 @@ export default function Home() {
 
       {/*
         Home scroll story:
-        1) Hero
-        2) Primary rows (taste + discovery, one Suspense — paint in order)
+        1) Hero (cross-request cached, no trailer fan-out)
+        2) Taste + discovery in parallel Suspense (taste no longer blocks discovery)
         3) Genre wave A/B, deferred on scroll
         4) Endless popular grid
       */}
       <div className="relative z-10 flex min-h-[70vh] w-full flex-col gap-14 border-t border-cream/8 pt-12 pb-12 sm:gap-24 sm:pt-20 sm:pb-20">
-        <Suspense fallback={<RowsSkeleton count={6} />}>
-          <PrimaryRows />
+        <Suspense fallback={<RowsSkeleton count={2} />}>
+          <TasteRows />
+        </Suspense>
+        <Suspense fallback={<RowsSkeleton count={4} />}>
+          <DiscoveryRows />
         </Suspense>
         <Suspense fallback={<RowsSkeleton count={4} />}>
           <HomeGenreRows />
@@ -343,7 +204,6 @@ export default function Home() {
         </Suspense>
       </div>
 
-      {/* Footer only after hero-height content so mobile never flashes end-credits first. */}
       <SiteFooter />
     </main>
   );

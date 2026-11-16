@@ -1,14 +1,30 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { cache } from "react";
 import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
+
+/** Re-check deleted users at most once per day — not on every RSC `auth()` read. */
+const USER_VERIFY_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+function normalizeAvatar(
+  userId: string,
+  image: string | null | undefined,
+): string | null {
+  if (!image) return null;
+  if (image.startsWith("/api/avatars/")) return image;
+  return `/api/avatars/${userId}`;
+}
 
 /**
  * Auth.js (NextAuth v5) — Node runtime (API routes + Server Components).
  * Middleware uses `auth.config.ts` only so it stays Edge-safe.
+ *
+ * Session reads are JWT-only on the hot path. Prisma user lookups used to run
+ * on every `auth()` (layout + home helpers) and serialized behind max:1 pool.
  */
-export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
+const nextAuth = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
@@ -41,7 +57,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.name,
-          image: user.image,
+          image: normalizeAvatar(user.id, user.image),
         };
       },
     }),
@@ -53,26 +69,42 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
         token.sub = user.id;
         token.name = user.name;
         token.email = user.email;
-        token.picture = user.image ?? token.picture;
+        token.picture = normalizeAvatar(user.id, user.image) ?? token.picture;
+        token.lastVerified = Date.now();
       }
 
       // Profile updates (name / avatar) call unstable_update()
       if (trigger === "update" && session?.user) {
         if ("name" in session.user) token.name = session.user.name;
-        if ("image" in session.user) token.picture = session.user.image;
+        if ("image" in session.user) {
+          token.picture =
+            typeof session.user.image === "string" && token.sub
+              ? normalizeAvatar(token.sub, session.user.image)
+              : session.user.image;
+        }
         if ("email" in session.user && session.user.email) {
           token.email = session.user.email;
         }
+        token.lastVerified = Date.now();
       }
 
-      // DB wiped / user deleted — kill the JWT so ghost "signed in" goes away
-      if (token.sub) {
+      // Occasional existence check (ghost sessions after DB wipe) — not every request.
+      const lastVerified =
+        typeof token.lastVerified === "number" ? token.lastVerified : 0;
+      const dueForVerify =
+        Boolean(token.sub) &&
+        !user &&
+        trigger !== "update" &&
+        Date.now() - lastVerified > USER_VERIFY_INTERVAL_MS;
+
+      if (dueForVerify && token.sub) {
         try {
           const exists = await prisma.user.findUnique({
             where: { id: token.sub },
             select: { id: true },
           });
           if (!exists) return null;
+          token.lastVerified = Date.now();
         } catch {
           // Keep token if DB is briefly unreachable
         }
@@ -91,34 +123,13 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
         if (typeof token.email === "string") session.user.email = token.email;
         session.user.image =
           typeof token.picture === "string" ? token.picture : null;
-
-        try {
-          const dbUser = await prisma.user.findUnique({
-            where: { id: token.sub },
-            select: { name: true, email: true, image: true },
-          });
-          if (!dbUser) {
-            return { ...session, user: undefined as never };
-          }
-
-          session.user.name = dbUser.name;
-          session.user.email = dbUser.email;
-          let image = dbUser.image;
-          if (image && !image.startsWith("/api/avatars/")) {
-            image = `/api/avatars/${token.sub}`;
-            void prisma.user
-              .update({
-                where: { id: token.sub },
-                data: { image },
-              })
-              .catch(() => undefined);
-          }
-          session.user.image = image;
-        } catch {
-          // Keep JWT values if the database blips
-        }
       }
       return session;
     },
   },
 });
+
+export const { handlers, signIn, signOut, unstable_update } = nextAuth;
+
+/** One session decode per React request — callers still share the same promise. */
+export const auth = cache(nextAuth.auth);
