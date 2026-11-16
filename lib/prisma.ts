@@ -7,8 +7,12 @@ import { PrismaClient } from "@/lib/generated/prisma/client";
  *
  * Use the Supabase *transaction pooler* URI (port 6543, ?pgbouncer=true) for
  * DATABASE_URL in the app. Use DIRECT_URL (port 5432) for `prisma migrate`.
+ *
+ * Keep `max` tiny against PgBouncer transaction mode — a large client pool
+ * opens parallel server connections that get recycled mid-query
+ * (“Connection terminated unexpectedly”).
  */
-const PRISMA_SCHEMA_VERSION = 12;
+const PRISMA_SCHEMA_VERSION = 13;
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -32,10 +36,18 @@ function createPrismaClient() {
     new Pool({
       connectionString: databaseUrl(),
       ssl: { rejectUnauthorized: false },
+      // One client connection; PgBouncer multiplexes the rest.
+      max: 1,
+      idleTimeoutMillis: 20_000,
+      connectionTimeoutMillis: 15_000,
+      allowExitOnIdle: true,
     });
 
   if (!globalForPrisma.pgPool) {
     globalForPrisma.pgPool = pool;
+    pool.on("error", (err) => {
+      console.warn("pg pool error:", err.message);
+    });
   }
 
   const adapter = new PrismaPg(pool);

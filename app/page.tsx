@@ -155,28 +155,22 @@ async function HomeGenreRows() {
  * Data still fetches in parallel.
  */
 async function PrimaryRows() {
-  const [
-    rows,
-    movieFavoriteIds,
-    tvFavoriteIds,
-    session,
-    pools,
-    watchedMovieIds,
-    watchedTvIds,
-  ] = await Promise.all([
-    getTasteRows(),
-    getHomeMovieFavoriteIds(),
-    getHomeTvFavoriteIds(),
-    auth(),
-    Promise.allSettled([
-      getHomeTrendingPage(),
-      getPopularMoviesPage(1),
-      getHomeTopRatedPage(),
-      getTrendingTvPage("day", 1),
-    ]),
-    getUserWatchedIds(MEDIA_MOVIE),
-    getUserWatchedIds(MEDIA_TV),
+  // TMDB discovery can run freely in parallel. DB-backed calls share a max:1
+  // PgBouncer client — sequence them so they don’t fight and tear the socket.
+  const poolsPromise = Promise.allSettled([
+    getHomeTrendingPage(),
+    getPopularMoviesPage(1),
+    getHomeTopRatedPage(),
+    getTrendingTvPage("day", 1),
   ]);
+
+  const session = await auth().catch(() => null);
+  const rows = await getTasteRows();
+  const movieFavoriteIds = await getHomeMovieFavoriteIds();
+  const tvFavoriteIds = await getHomeTvFavoriteIds();
+  const watchedMovieIds = await getUserWatchedIds(MEDIA_MOVIE);
+  const watchedTvIds = await getUserWatchedIds(MEDIA_TV);
+  const pools = await poolsPromise;
 
   const showCoach = Boolean(session?.user?.id) && rows.length === 0;
 

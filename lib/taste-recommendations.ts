@@ -42,41 +42,52 @@ type TasteSeed = {
 
 /** Titles already on favorites / watchlist / watched — keep taste + discovery fresh. */
 export const getUserKnownTitleIds = cache(async (mediaType: MediaListType) => {
-  const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return new Set<number>();
+  try {
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) return new Set<number>();
 
-  const rows = await prisma.favorite.findMany({
-    where: {
-      userId,
-      mediaType,
-      listType: { in: [LIST_FAVORITE, LIST_WATCHLIST, LIST_WATCHED] },
-    },
-    select: { movieId: true },
-  });
-  return new Set(rows.map((row) => row.movieId));
+    const rows = await prisma.favorite.findMany({
+      where: {
+        userId,
+        mediaType,
+        listType: { in: [LIST_FAVORITE, LIST_WATCHLIST, LIST_WATCHED] },
+      },
+      select: { movieId: true },
+    });
+    return new Set(rows.map((row) => row.movieId));
+  } catch (err) {
+    console.warn("getUserKnownTitleIds failed:", err);
+    return new Set<number>();
+  }
 });
 
 /** Watched-only ids — hide from home discovery / endless feed. */
 export const getUserWatchedIds = cache(async (mediaType: MediaListType) => {
-  const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return [] as number[];
+  try {
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) return [] as number[];
 
-  const rows = await prisma.favorite.findMany({
-    where: { userId, mediaType, listType: LIST_WATCHED },
-    select: { movieId: true },
-  });
-  return rows.map((row) => row.movieId);
+    const rows = await prisma.favorite.findMany({
+      where: { userId, mediaType, listType: LIST_WATCHED },
+      select: { movieId: true },
+    });
+    return rows.map((row) => row.movieId);
+  } catch (err) {
+    console.warn("getUserWatchedIds failed:", err);
+    return [] as number[];
+  }
 });
 
 const getTasteSeeds = cache(async (): Promise<TasteSeed[]> => {
-  const session = await auth();
+  const session = await auth().catch(() => null);
   const userId = session?.user?.id;
   if (!userId) return [];
 
-  const [ratedRows, watchedRows] = await Promise.all([
-    prisma.favorite.findMany({
+  try {
+    // Sequential against a max:1 PgBouncer pool — parallel findMany fights for the only client.
+    const ratedRows = await prisma.favorite.findMany({
       where: {
         userId,
         listType: LIST_FAVORITE,
@@ -90,8 +101,8 @@ const getTasteSeeds = cache(async (): Promise<TasteSeed[]> => {
         createdAt: true,
       },
       orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
-    }),
-    prisma.favorite.findMany({
+    });
+    const watchedRows = await prisma.favorite.findMany({
       where: { userId, listType: LIST_WATCHED },
       select: {
         movieId: true,
@@ -102,52 +113,55 @@ const getTasteSeeds = cache(async (): Promise<TasteSeed[]> => {
       },
       orderBy: [{ watchedAt: "desc" }, { createdAt: "desc" }],
       take: 24,
-    }),
-  ]);
-
-  const movies: TasteSeed[] = [];
-  const tv: TasteSeed[] = [];
-  const used = new Set<string>();
-
-  function tryPush(seed: TasteSeed) {
-    const key = `${seed.mediaType}:${seed.movieId}`;
-    if (used.has(key)) return;
-    if (seed.mediaType === MEDIA_TV) {
-      if (tv.length >= MAX_TV_SEEDS) return;
-      tv.push(seed);
-    } else {
-      if (movies.length >= MAX_MOVIE_SEEDS) return;
-      movies.push(seed);
-    }
-    used.add(key);
-  }
-
-  for (const row of ratedRows) {
-    if (row.rating == null) continue;
-    tryPush({
-      movieId: row.movieId,
-      title: row.title,
-      mediaType: row.mediaType === MEDIA_TV ? MEDIA_TV : MEDIA_MOVIE,
-      rating: row.rating,
-      reason: "rated",
     });
-    if (movies.length >= MAX_MOVIE_SEEDS && tv.length >= MAX_TV_SEEDS) {
-      return [...movies, ...tv];
+
+    const movies: TasteSeed[] = [];
+    const tv: TasteSeed[] = [];
+    const used = new Set<string>();
+
+    function tryPush(seed: TasteSeed) {
+      const key = `${seed.mediaType}:${seed.movieId}`;
+      if (used.has(key)) return;
+      if (seed.mediaType === MEDIA_TV) {
+        if (tv.length >= MAX_TV_SEEDS) return;
+        tv.push(seed);
+      } else {
+        if (movies.length >= MAX_MOVIE_SEEDS) return;
+        movies.push(seed);
+      }
+      used.add(key);
     }
-  }
 
-  for (const row of watchedRows) {
-    tryPush({
-      movieId: row.movieId,
-      title: row.title,
-      mediaType: row.mediaType === MEDIA_TV ? MEDIA_TV : MEDIA_MOVIE,
-      rating: MIN_RATING,
-      reason: "watched",
-    });
-    if (movies.length >= MAX_MOVIE_SEEDS && tv.length >= MAX_TV_SEEDS) break;
-  }
+    for (const row of ratedRows) {
+      if (row.rating == null) continue;
+      tryPush({
+        movieId: row.movieId,
+        title: row.title,
+        mediaType: row.mediaType === MEDIA_TV ? MEDIA_TV : MEDIA_MOVIE,
+        rating: row.rating,
+        reason: "rated",
+      });
+      if (movies.length >= MAX_MOVIE_SEEDS && tv.length >= MAX_TV_SEEDS) {
+        return [...movies, ...tv];
+      }
+    }
 
-  return [...movies, ...tv];
+    for (const row of watchedRows) {
+      tryPush({
+        movieId: row.movieId,
+        title: row.title,
+        mediaType: row.mediaType === MEDIA_TV ? MEDIA_TV : MEDIA_MOVIE,
+        rating: MIN_RATING,
+        reason: "watched",
+      });
+      if (movies.length >= MAX_MOVIE_SEEDS && tv.length >= MAX_TV_SEEDS) break;
+    }
+
+    return [...movies, ...tv];
+  } catch (err) {
+    console.warn("getTasteSeeds failed:", err);
+    return [];
+  }
 });
 
 function normalizeTitle(title: string) {
@@ -187,50 +201,54 @@ export function excludeTitleIds<T extends { id: number }>(
  * Seeds from high ratings first, then recent watched.
  */
 export const getTasteRows = cache(async (): Promise<TasteRow[]> => {
-  const seeds = await getTasteSeeds();
-  if (seeds.length === 0) return [];
+  try {
+    const seeds = await getTasteSeeds();
+    if (seeds.length === 0) return [];
 
-  const [movieExcluded, tvExcluded] = await Promise.all([
-    getUserKnownTitleIds(MEDIA_MOVIE),
-    getUserKnownTitleIds(MEDIA_TV),
-  ]);
+    // Known-title lookups share the single pool connection — run one after the other.
+    const movieExcluded = await getUserKnownTitleIds(MEDIA_MOVIE);
+    const tvExcluded = await getUserKnownTitleIds(MEDIA_TV);
 
-  const pools = await Promise.all(
-    seeds.map(async (seed) => {
-      if (seed.mediaType === MEDIA_TV) {
-        const pool = await getTvRecommendations(seed.movieId, ROW_LIMIT + 10);
-        return { seed, pool: pool.map(tvShowAsMovie) };
-      }
-      const pool = await getMovieRecommendations(seed.movieId, ROW_LIMIT + 10);
-      return { seed, pool };
-    }),
-  );
-
-  const usedMovies = new Set<number>();
-  const usedTv = new Set<number>();
-  const rows: TasteRow[] = [];
-
-  for (const { seed, pool } of pools) {
-    const used = seed.mediaType === MEDIA_TV ? usedTv : usedMovies;
-    const excluded = new Set(
-      seed.mediaType === MEDIA_TV ? tvExcluded : movieExcluded,
+    const pools = await Promise.all(
+      seeds.map(async (seed) => {
+        if (seed.mediaType === MEDIA_TV) {
+          const pool = await getTvRecommendations(seed.movieId, ROW_LIMIT + 10);
+          return { seed, pool: pool.map(tvShowAsMovie) };
+        }
+        const pool = await getMovieRecommendations(seed.movieId, ROW_LIMIT + 10);
+        return { seed, pool };
+      }),
     );
-    // Always drop the seed id even if it somehow missed known-title lookup.
-    excluded.add(seed.movieId);
-    const movies = filterPool(pool, excluded, used, seed.title);
-    if (movies.length < MIN_RESULTS) continue;
-    for (const movie of movies) used.add(movie.id);
-    rows.push({
-      id: `taste-${seed.mediaType}-${seed.movieId}`,
-      seedId: seed.movieId,
-      seedTitle: seed.title,
-      mediaType: seed.mediaType,
-      reason: seed.reason,
-      movies,
-    });
-  }
 
-  return rows;
+    const usedMovies = new Set<number>();
+    const usedTv = new Set<number>();
+    const rows: TasteRow[] = [];
+
+    for (const { seed, pool } of pools) {
+      const used = seed.mediaType === MEDIA_TV ? usedTv : usedMovies;
+      const excluded = new Set(
+        seed.mediaType === MEDIA_TV ? tvExcluded : movieExcluded,
+      );
+      // Always drop the seed id even if it somehow missed known-title lookup.
+      excluded.add(seed.movieId);
+      const movies = filterPool(pool, excluded, used, seed.title);
+      if (movies.length < MIN_RESULTS) continue;
+      for (const movie of movies) used.add(movie.id);
+      rows.push({
+        id: `taste-${seed.mediaType}-${seed.movieId}`,
+        seedId: seed.movieId,
+        seedTitle: seed.title,
+        mediaType: seed.mediaType,
+        reason: seed.reason,
+        movies,
+      });
+    }
+
+    return rows;
+  } catch (err) {
+    console.warn("getTasteRows failed:", err);
+    return [];
+  }
 });
 
 /** First taste row for search idle / empty states (movies preferred). */
