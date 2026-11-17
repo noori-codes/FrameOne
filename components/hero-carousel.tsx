@@ -217,16 +217,26 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             Movies, lit for the night
           </h1>
           <p className="mt-4 max-w-md text-base leading-relaxed text-cream/65">
-            Browse what’s playing in the culture — posters, details, and your
-            list.
+            Couldn’t reach TMDB just now, so the featured set is empty. Check
+            your network or VPN, then try again.
           </p>
-          <Link
-            href="#trending"
-            className="cta-shine group relative mt-8 inline-flex w-fit items-center gap-2 overflow-hidden rounded-full bg-amber px-5 py-2.5 text-sm font-semibold text-(--on-amber) transition-[background-color,box-shadow] hover:bg-(--amber-dim) hover:text-cream hover:shadow-[0_14px_40px_-14px_color-mix(in_srgb,var(--amber)_70%,transparent)]"
-          >
-            <span className="cta-shine-beam pointer-events-none absolute inset-0" />
-            <span className="relative">Start browsing</span>
-          </Link>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <form action="/">
+              <button
+                type="submit"
+                className="cta-shine group relative inline-flex w-fit items-center gap-2 overflow-hidden rounded-full bg-amber px-5 py-2.5 text-sm font-semibold text-(--on-amber) transition-[background-color,box-shadow] hover:bg-(--amber-dim) hover:text-cream hover:shadow-[0_14px_40px_-14px_color-mix(in_srgb,var(--amber)_70%,transparent)]"
+              >
+                <span className="cta-shine-beam pointer-events-none absolute inset-0" />
+                <span className="relative">Retry home</span>
+              </button>
+            </form>
+            <Link
+              href="/search"
+              className="inline-flex w-fit items-center rounded-full border border-cream/20 px-5 py-2.5 text-sm font-medium text-cream/80 transition-colors hover:border-amber/40 hover:text-amber"
+            >
+              Search instead
+            </Link>
+          </div>
         </div>
       </section>
     );

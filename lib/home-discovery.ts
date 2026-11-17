@@ -30,38 +30,71 @@ const emptyTvPage: PaginatedTv = {
   totalResults: 0,
 };
 
+const EMPTY_POOLS: HomeDiscoveryPools = {
+  trending: emptyMoviePage,
+  popular: emptyMoviePage,
+  topRated: emptyMoviePage,
+  trendingTv: emptyTvPage,
+};
+
+function poolsHaveContent(pools: HomeDiscoveryPools) {
+  return (
+    pools.trending.results.length > 0 ||
+    pools.popular.results.length > 0 ||
+    pools.topRated.results.length > 0 ||
+    pools.trendingTv.results.length > 0
+  );
+}
+
+async function buildHomeDiscoveryPools(): Promise<HomeDiscoveryPools> {
+  const [trending, popular, topRated, trendingTv] = await Promise.allSettled([
+    getTrendingMoviesPage("day", 1),
+    getPopularMoviesPage(1),
+    getTopRatedMoviesPage(1),
+    getTrendingTvPage("day", 1),
+  ]);
+
+  for (const result of [trending, popular, topRated, trendingTv]) {
+    if (result.status === "rejected") {
+      console.warn("Home discovery pool failed:", result.reason);
+    }
+  }
+
+  return {
+    trending: trending.status === "fulfilled" ? trending.value : emptyMoviePage,
+    popular: popular.status === "fulfilled" ? popular.value : emptyMoviePage,
+    topRated: topRated.status === "fulfilled" ? topRated.value : emptyMoviePage,
+    trendingTv:
+      trendingTv.status === "fulfilled" ? trendingTv.value : emptyTvPage,
+  };
+}
+
 /**
  * Cross-request cached home discovery pools (no cookies / no user data).
- * Survives dynamic rendering of the personalized home shell.
+ * Empty outages are not written to the Data Cache.
  */
 export async function getHomeDiscoveryPools(): Promise<HomeDiscoveryPools> {
-  return unstable_cache(
-    async () => {
-      const [trending, popular, topRated, trendingTv] = await Promise.allSettled([
-        getTrendingMoviesPage("day", 1),
-        getPopularMoviesPage(1),
-        getTopRatedMoviesPage(1),
-        getTrendingTvPage("day", 1),
-      ]);
-
-      for (const result of [trending, popular, topRated, trendingTv]) {
-        if (result.status === "rejected") {
-          console.warn("Home discovery pool failed:", result.reason);
+  try {
+    return await unstable_cache(
+      async () => {
+        const pools = await buildHomeDiscoveryPools();
+        if (!poolsHaveContent(pools)) {
+          throw new Error("HOME_DISCOVERY_EMPTY");
         }
-      }
-
-      return {
-        trending:
-          trending.status === "fulfilled" ? trending.value : emptyMoviePage,
-        popular:
-          popular.status === "fulfilled" ? popular.value : emptyMoviePage,
-        topRated:
-          topRated.status === "fulfilled" ? topRated.value : emptyMoviePage,
-        trendingTv:
-          trendingTv.status === "fulfilled" ? trendingTv.value : emptyTvPage,
-      };
-    },
-    ["home-discovery-pools", todayKey()],
-    { revalidate: 1800 },
-  )();
+        return pools;
+      },
+      ["home-discovery-pools", todayKey()],
+      { revalidate: 1800 },
+    )();
+  } catch (err) {
+    if (err instanceof Error && err.message === "HOME_DISCOVERY_EMPTY") {
+      return EMPTY_POOLS;
+    }
+    try {
+      return await buildHomeDiscoveryPools();
+    } catch (liveErr) {
+      console.warn("Home discovery live fetch failed:", liveErr);
+      return EMPTY_POOLS;
+    }
+  }
 }

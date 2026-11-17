@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import https from "node:https";
 import { getRedisClient } from "@/lib/redis";
 
 /**
@@ -8,6 +9,69 @@ import { getRedisClient } from "@/lib/redis";
  * Why we read the key here: `TMDB_API_KEY` stays on the server.
  * Never import this into a Client Component (`"use client"`) or the key can leak.
  */
+
+/**
+ * Force IPv4 for TMDB. Under many VPNs, Node’s default `fetch` races IPv6
+ * CloudFront addresses and hangs until connect timeout while curl -4 works.
+ */
+function tmdbNetworkFetch(
+  url: string,
+  { signal }: { signal?: AbortSignal } = {},
+): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason ?? new DOMException("Aborted", "AbortError"));
+      return;
+    }
+
+    const parsed = new URL(url);
+    const req = https.request(
+      {
+        protocol: parsed.protocol,
+        hostname: parsed.hostname,
+        port: parsed.port || 443,
+        path: `${parsed.pathname}${parsed.search}`,
+        method: "GET",
+        family: 4,
+        headers: { Accept: "application/json" },
+      },
+      (res) => {
+        const chunks: Buffer[] = [];
+        res.on("data", (chunk) => chunks.push(chunk));
+        res.on("end", () => {
+          const headers = new Headers();
+          for (const [key, value] of Object.entries(res.headers)) {
+            if (value == null) continue;
+            if (Array.isArray(value)) {
+              for (const item of value) headers.append(key, item);
+            } else {
+              headers.set(key, value);
+            }
+          }
+          resolve(
+            new Response(Buffer.concat(chunks), {
+              status: res.statusCode ?? 500,
+              statusText: res.statusMessage,
+              headers,
+            }),
+          );
+        });
+      },
+    );
+
+    const onAbort = () => {
+      req.destroy();
+      reject(signal?.reason ?? new DOMException("Aborted", "AbortError"));
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
+    req.on("error", (err) => {
+      signal?.removeEventListener("abort", onAbort);
+      reject(err);
+    });
+    req.on("close", () => signal?.removeEventListener("abort", onAbort));
+    req.end();
+  });
+}
 
 function getBaseUrl() {
   return process.env.TMDB_BASE_URL ?? "https://api.themoviedb.org/3";
@@ -360,8 +424,9 @@ async function tmdbFetch(
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await fetch(url, {
-        next: { revalidate },
+      // Custom IPv4 transport (VPN-safe). App-level memory/Redis (+ home
+      // unstable_cache) cover caching — Next fetch cache is skipped here.
+      const res = await tmdbNetworkFetch(url, {
         signal: AbortSignal.timeout(timeoutMs),
       });
 
