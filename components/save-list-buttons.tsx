@@ -59,12 +59,16 @@ function ListToggle({
   const saved = state.saved ?? initialSaved;
   const [optimisticSaved, setOptimisticSaved] = useOptimistic(saved);
   const [pop, setPop] = useState(false);
+  // After a failed action, trust server state — optimistic can stick if
+  // `saved` didn’t change identity from the previous successful render.
+  const shownSaved =
+    state.error && !pending ? saved : optimisticSaved;
 
-  const buttonLabel = optimisticSaved ? activeLabel : idleLabel;
+  const buttonLabel = shownSaved ? activeLabel : idleLabel;
 
   function action(formData: FormData) {
     if (pending) return;
-    const next = !optimisticSaved;
+    const next = !shownSaved;
     setOptimisticSaved(next);
     if (next) setPop(true);
     dispatch(formData);
@@ -81,14 +85,14 @@ function ListToggle({
         type="submit"
         aria-busy={pending}
         aria-label={buttonLabel}
-        aria-pressed={optimisticSaved}
+        aria-pressed={shownSaved}
         onAnimationEnd={() => setPop(false)}
         className={cn(
           "backdrop-blur-md transition-[border-color,background-color,color,box-shadow,transform] active:scale-95",
           iconOnly
             ? "inline-flex h-10 w-10 items-center justify-center rounded-full sm:h-11 sm:w-11"
             : "min-h-10 rounded-full px-3.5 py-2 text-xs font-medium sm:min-h-11 sm:px-4 sm:text-sm",
-          optimisticSaved
+          shownSaved
             ? iconOnly
               ? "border border-red-500/45 bg-red-500/15 text-red-500 shadow-[0_10px_28px_-14px_rgba(239,68,68,0.55)] hover:border-red-400 hover:bg-red-500/20"
               : "border border-amber/50 bg-amber/15 text-amber shadow-[0_10px_28px_-14px_color-mix(in_srgb,var(--amber)_45%,transparent)] hover:border-amber hover:bg-amber/20"
@@ -100,8 +104,8 @@ function ListToggle({
           <Heart
             aria-hidden="true"
             className="h-5 w-5"
-            fill={optimisticSaved ? "currentColor" : "none"}
-            strokeWidth={optimisticSaved ? 2.5 : 2}
+            fill={shownSaved ? "currentColor" : "none"}
+            strokeWidth={shownSaved ? 2.5 : 2}
           />
         ) : (
           buttonLabel
@@ -140,11 +144,13 @@ function WatchedToggle({
   const saved = state.saved ?? initialSaved;
   const [optimisticSaved, setOptimisticSaved] = useOptimistic(saved);
   const [pop, setPop] = useState(false);
-  const buttonLabel = optimisticSaved ? "Watched" : "Mark watched";
+  const shownSaved =
+    state.error && !pending ? saved : optimisticSaved;
+  const buttonLabel = shownSaved ? "Watched" : "Mark watched";
 
   function action(formData: FormData) {
     if (pending) return;
-    const next = !optimisticSaved;
+    const next = !shownSaved;
     setOptimisticSaved(next);
     if (next) setPop(true);
     dispatch(formData);
@@ -161,11 +167,11 @@ function WatchedToggle({
           type="submit"
           aria-busy={pending}
           aria-label={buttonLabel}
-          aria-pressed={optimisticSaved}
+          aria-pressed={shownSaved}
           onAnimationEnd={() => setPop(false)}
           className={cn(
             "inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 py-2 text-xs font-medium backdrop-blur-md transition-[border-color,background-color,color,box-shadow,transform] active:scale-95 sm:min-h-11 sm:px-4 sm:text-sm",
-            optimisticSaved
+            shownSaved
               ? "border border-amber/50 bg-amber/15 text-amber shadow-[0_10px_28px_-14px_color-mix(in_srgb,var(--amber)_45%,transparent)] hover:border-amber hover:bg-amber/20"
               : "border border-cream/20 bg-black/30 text-cream hover:border-cream/40 hover:bg-black/45 hover:text-cream",
             pop && "save-confirm-pop",
@@ -174,13 +180,13 @@ function WatchedToggle({
           <Check
             aria-hidden
             className="size-4"
-            strokeWidth={optimisticSaved ? 2.75 : 2}
+            strokeWidth={shownSaved ? 2.75 : 2}
           />
           {buttonLabel}
         </button>
       </form>
 
-      {optimisticSaved ? (
+      {shownSaved ? (
         <form action={rewatchDispatch}>
           <input type="hidden" name="movieId" value={movieId} />
           <input type="hidden" name="mediaType" value={mediaType} />
@@ -200,6 +206,11 @@ function WatchedToggle({
       {state.error || rewatchState.error ? (
         <p className="basis-full text-sm text-red-400" role="alert">
           {state.error ?? rewatchState.error}
+        </p>
+      ) : null}
+      {rewatchState.success ? (
+        <p className="basis-full text-sm text-amber" role="status" aria-live="polite">
+          {rewatchState.success}
         </p>
       ) : null}
     </div>

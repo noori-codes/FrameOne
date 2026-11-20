@@ -70,9 +70,10 @@ export function MovieHeroActions({
         </a>
       ) : null}
 
-      {trailerKey ? (
+      {trailerKey || mediaType === MEDIA_MOVIE ? (
         <TrailerButton
           youtubeKey={trailerKey}
+          movieId={mediaType === MEDIA_MOVIE ? movieId : undefined}
           title={title}
           label="Trailer"
           variant={watch ? "ghost" : "primary"}

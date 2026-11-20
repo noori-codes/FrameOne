@@ -25,6 +25,12 @@
   --font-marquee: var(--font-marquee);
 }
 
+html {
+  /* Sticky header + mobile tab — in-page anchors (#trending) land cleanly. */
+  scroll-padding-top: 5.5rem;
+  scroll-padding-bottom: 5.5rem;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -266,7 +272,13 @@ button:disabled {
 }
 
 .route-enter {
-  animation: routeEnter 280ms ease-out both;
+  animation: routeEnter 180ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-enter {
+    animation: none;
+  }
 }
 
 @keyframes authLineIn {
@@ -503,6 +515,25 @@ button:disabled {
   }
 
   .movie-card .movie-card-heart {
+    opacity: 1;
+  }
+}
+
+/* List shelves: actions always usable on touch; hover-reveal on desktop. */
+.list-card-actions {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .list-card-actions {
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .group:hover .list-card-actions,
+  .group:focus-within .list-card-actions {
+    pointer-events: auto;
     opacity: 1;
   }
 }

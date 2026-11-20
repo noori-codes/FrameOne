@@ -18,6 +18,9 @@ const HIDDEN_PATHS = [
 /**
  * Fixed bottom bar for signed-out visitors — streaming-app pattern:
  * value prop + Sign in / Join, dismissible for the session.
+ *
+ * Sits above the mobile tab bar; hidden on title detail pages where the
+ * hero already has a “Sign in to save” CTA (avoids stacked bottom chrome).
  */
 export function GuestAuthNudge() {
   const pathname = usePathname();
@@ -35,14 +38,26 @@ export function GuestAuthNudge() {
   const onAuthPage = HIDDEN_PATHS.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
-  const show = visible && !onAuthPage;
+  const onDetailPage =
+    pathname.startsWith("/movie/") || pathname.startsWith("/tv/");
+  const show = visible && !onAuthPage && !onDetailPage;
 
   useEffect(() => {
     if (!show) return;
-    const prev = document.body.style.paddingBottom;
-    document.body.style.paddingBottom = "6.25rem";
+    // Nudge is mobile-only (`md:hidden`) — don’t pad the desktop footer.
+    const mq = window.matchMedia("(max-width: 767px)");
+    function applyPad() {
+      if (mq.matches) {
+        document.body.style.setProperty("--guest-nudge-pad", "5.5rem");
+      } else {
+        document.body.style.removeProperty("--guest-nudge-pad");
+      }
+    }
+    applyPad();
+    mq.addEventListener("change", applyPad);
     return () => {
-      document.body.style.paddingBottom = prev;
+      mq.removeEventListener("change", applyPad);
+      document.body.style.removeProperty("--guest-nudge-pad");
     };
   }, [show]);
 
@@ -57,11 +72,13 @@ export function GuestAuthNudge() {
     setVisible(false);
   }
 
+  const callback = encodeURIComponent(pathname || "/");
+
   return (
     <div
       role="region"
       aria-label="Sign in to save titles"
-      className="guest-nudge pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5"
+      className="guest-nudge pointer-events-none fixed inset-x-0 z-40 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:bottom-0 md:hidden"
     >
       <div className="guest-nudge-card pointer-events-auto relative mx-auto flex max-w-screen-2xl items-center gap-3 overflow-hidden rounded-2xl border border-cream/12 bg-[linear-gradient(118deg,rgba(20,18,16,0.94),rgba(9,8,7,0.9))] px-3.5 py-3.5 shadow-[0_-24px_60px_-28px_rgba(0,0,0,0.95),0_0_0_1px_color-mix(in_srgb,var(--amber)_8%,transparent)] backdrop-blur-2xl sm:gap-5 sm:px-6 sm:py-4">
         <div
@@ -88,7 +105,7 @@ export function GuestAuthNudge() {
 
         <div className="relative flex shrink-0 items-center gap-2">
           <Link
-            href="/signin"
+            href={`/signin?callbackUrl=${callback}`}
             className="inline-flex min-h-9 items-center rounded-full border border-cream/20 bg-cream/[0.03] px-3.5 text-xs font-medium text-cream/90 transition-[border-color,background-color,color,transform] hover:border-cream/40 hover:bg-cream/[0.06] hover:text-cream active:scale-[0.98] sm:min-h-10 sm:px-4 sm:text-sm"
           >
             Sign in

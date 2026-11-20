@@ -35,10 +35,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const query = q.trim();
   const page = parsePageParam(pageRaw);
 
+  let initialSearchFailed = false;
   const [initialData, trending, allGenres, tasteRow] = await Promise.all([
     query
       ? searchMulti(query, page).catch((err) => {
           console.warn(`Search for "${query}" failed:`, err);
+          initialSearchFailed = true;
           return {
             results: [],
             page,
@@ -71,6 +73,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       initialQuery={query}
       initialPage={page}
       initialData={initialData}
+      initialSearchFailed={initialSearchFailed}
       trending={trending.slice(0, 18)}
       genres={genres}
       taste={taste}

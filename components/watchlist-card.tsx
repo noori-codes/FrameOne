@@ -105,7 +105,7 @@ export function WatchlistCard({
         </div>
       </Link>
 
-      <div className="pointer-events-none absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 transition-opacity duration-300 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+      <div className="list-card-actions absolute top-2 right-2 z-10 flex gap-1.5 transition-opacity duration-300">
         <form action={watchedAction}>
           <input type="hidden" name="movieId" value={item.movieId} />
           <input type="hidden" name="title" value={item.title} />

@@ -663,13 +663,12 @@ export default async function TvPage({ params }: TvPageProps) {
         </div>
 
         <aside className="h-fit border-t border-cream/10 pt-7 lg:sticky lg:top-24 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-          {watchOffer ? (
-            <WhereToWatch
-              offer={watchOffer}
-              title={show.name}
-              className="mb-8 border-b border-cream/10 pb-8"
-            />
-          ) : null}
+          <WhereToWatch
+            offer={watchOffer}
+            region={watchRegion}
+            title={show.name}
+            className="mb-8 border-b border-cream/10 pb-8"
+          />
 
           <section aria-labelledby="details-heading">
             <p className="text-[10px] font-semibold tracking-[0.24em] text-amber uppercase sm:text-xs">

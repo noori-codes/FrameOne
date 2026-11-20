@@ -45,6 +45,7 @@ export function WatchRegionSelect({
         disabled={pending}
         onChange={(e) => onChange(e.target.value)}
         aria-label="Watch availability region"
+        aria-busy={pending}
         className="rounded-md border border-cream/15 bg-black/40 px-2 py-1.5 text-xs font-medium text-cream/80 outline-none transition-[border-color,background-color] hover:border-cream/30 focus:border-amber/40 disabled:opacity-60"
       >
         {WATCH_REGIONS.map((r) => (
@@ -53,6 +54,11 @@ export function WatchRegionSelect({
           </option>
         ))}
       </select>
+      {pending ? (
+        <span className="text-[11px] text-cream/40" aria-live="polite">
+          Updating…
+        </span>
+      ) : null}
     </label>
   );
 }

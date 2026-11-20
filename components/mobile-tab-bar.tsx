@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Search, Clapperboard, UserRound } from "lucide-react";
+import { Clapperboard, Home, LayoutGrid, Search, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -22,8 +22,14 @@ const tabs = [
     match: (p: string) => p.startsWith("/search"),
   },
   {
+    href: "/genres",
+    label: "Genres",
+    icon: LayoutGrid,
+    match: (p: string) => p.startsWith("/genres"),
+  },
+  {
     href: "/watched",
-    label: "Watched",
+    label: "Diary",
     icon: Clapperboard,
     match: (p: string) => p.startsWith("/watched"),
   },
@@ -37,6 +43,7 @@ const tabs = [
 
 /**
  * Thumb-first habit bar — phone only. Desktop keeps the top nav.
+ * Five tabs: browse (home/search/genres) + diary + profile.
  */
 export function MobileTabBar() {
   const pathname = usePathname();
@@ -55,7 +62,7 @@ export function MobileTabBar() {
       aria-label="Primary"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-cream/10 bg-background/92 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl md:hidden"
     >
-      <ul className="grid grid-cols-4">
+      <ul className="grid grid-cols-5">
         {tabs.map((tab) => {
           const active = tab.match(pathname);
           const Icon = tab.icon;

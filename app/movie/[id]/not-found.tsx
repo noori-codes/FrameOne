@@ -9,12 +9,20 @@ export default function NotFound() {
       <p className="mt-3 text-cream/60">
         That id isn’t in TMDB, or the request failed.
       </p>
-      <Link
-        href="/"
-        className="mt-8 w-fit text-sm text-amber transition-colors hover:text-cream"
-      >
-        ← Back home
-      </Link>
+      <div className="mt-8 flex flex-wrap gap-4">
+        <Link
+          href="/#trending"
+          className="w-fit text-sm text-amber transition-colors hover:text-cream"
+        >
+          ← Back to trending
+        </Link>
+        <Link
+          href="/search"
+          className="w-fit text-sm text-cream/55 transition-colors hover:text-amber"
+        >
+          Search instead
+        </Link>
+      </div>
     </main>
   );
 }

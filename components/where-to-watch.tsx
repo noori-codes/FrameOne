@@ -8,7 +8,10 @@ import {
 } from "@/lib/tmdb";
 
 type WhereToWatchProps = {
-  offer: WatchProviderOffer;
+  /** Null when TMDB has no offers for this title/region. */
+  offer: WatchProviderOffer | null;
+  /** Preferred region — used when offer is null so the selector still works. */
+  region: string;
   title: string;
   className?: string;
 };
@@ -79,14 +82,22 @@ function ProviderRow({
 
 /**
  * JustWatch-powered availability (free / stream / rent / buy) for the configured region.
+ * Always renders — empty region gets a clear hint + region switcher.
  */
-export function WhereToWatch({ offer, title, className }: WhereToWatchProps) {
-  const hasAny =
-    offer.free.length > 0 ||
-    offer.flatrate.length > 0 ||
-    offer.rent.length > 0 ||
-    offer.buy.length > 0;
-  if (!hasAny) return null;
+export function WhereToWatch({
+  offer,
+  region,
+  title,
+  className,
+}: WhereToWatchProps) {
+  const activeRegion = offer?.region ?? region;
+  const hasAny = Boolean(
+    offer &&
+      (offer.free.length > 0 ||
+        offer.flatrate.length > 0 ||
+        offer.rent.length > 0 ||
+        offer.buy.length > 0),
+  );
 
   return (
     <section
@@ -105,10 +116,10 @@ export function WhereToWatch({ offer, title, className }: WhereToWatchProps) {
             Where to watch
           </h2>
           <div className="mt-2.5">
-            <WatchRegionSelect region={offer.region} />
+            <WatchRegionSelect region={activeRegion} />
           </div>
         </div>
-        {offer.link ? (
+        {offer?.link ? (
           <a
             href={offer.link}
             target="_blank"
@@ -121,21 +132,32 @@ export function WhereToWatch({ offer, title, className }: WhereToWatchProps) {
         ) : null}
       </div>
 
-      <div className="mt-6 space-y-5">
-        <ProviderRow label="Free" providers={offer.free} href={offer.link} />
-        <ProviderRow
-          label="Stream"
-          providers={offer.flatrate}
-          href={offer.link}
-        />
-        <ProviderRow label="Rent" providers={offer.rent} href={offer.link} />
-        <ProviderRow label="Buy" providers={offer.buy} href={offer.link} />
-      </div>
+      {hasAny && offer ? (
+        <div className="mt-6 space-y-5">
+          <ProviderRow label="Free" providers={offer.free} href={offer.link} />
+          <ProviderRow
+            label="Stream"
+            providers={offer.flatrate}
+            href={offer.link}
+          />
+          <ProviderRow label="Rent" providers={offer.rent} href={offer.link} />
+          <ProviderRow label="Buy" providers={offer.buy} href={offer.link} />
+        </div>
+      ) : (
+        <div className="mt-6 rounded-xl border border-cream/10 bg-black/25 px-4 py-4">
+          <p className="text-sm leading-relaxed text-cream/65">
+            No streaming, rent, or buy options showed up for{" "}
+            <span className="text-cream/85">{title}</span> in{" "}
+            <span className="text-cream/85">{activeRegion}</span>.
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-cream/45">
+            Try another region above — catalogs differ by country.
+          </p>
+        </div>
+      )}
 
       <p className="mt-5 text-[11px] leading-relaxed text-cream/35">
-        Availability for{" "}
-        <span className="text-cream/50">{title}</span> via JustWatch. Links open
-        TMDB’s watch guide — FrameOne doesn’t stream titles.
+        Availability via JustWatch / TMDB. FrameOne doesn’t stream titles.
       </p>
     </section>
   );

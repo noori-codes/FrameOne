@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
-import {
-  Big_Shoulders_Display,
-  Fraunces,
-  Source_Sans_3,
-} from "next/font/google";
+import { Big_Shoulders, Fraunces, Source_Sans_3 } from "next/font/google";
 import { Suspense } from "react";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { NavigationProgress } from "@/components/navigation-progress";
@@ -17,11 +13,11 @@ import "./globals.css";
  * - SiteHeader stays mounted across navigations (layout does not remount)
  *
  * Type roles:
- * - marquee (Big Shoulders Display) — brand + hero titles (poster condensed)
+ * - marquee (Big Shoulders) — brand + hero titles (poster condensed)
  * - display (Fraunces) — section / page headlines (warm editorial)
  * - body (Source Sans 3) — UI copy
  */
-const marquee = Big_Shoulders_Display({
+const marquee = Big_Shoulders({
   weight: ["600", "700"],
   subsets: ["latin"],
   variable: "--font-marquee",
@@ -56,7 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${marquee.variable} ${display.variable} ${body.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col overflow-x-hidden bg-background pb-16 text-foreground md:pb-0">
+      <body className="flex min-h-full flex-col overflow-x-hidden bg-background pb-[calc(4rem+var(--guest-nudge-pad,0px))] text-foreground md:pb-[var(--guest-nudge-pad,0px)]">
         <Suspense fallback={null}>
           <NavigationProgress />
         </Suspense>

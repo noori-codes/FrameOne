@@ -37,6 +37,8 @@ type SearchExperienceProps = {
   initialQuery?: string;
   initialPage?: number;
   initialData?: PaginatedSearch | null;
+  /** SSR search threw — don’t pretend “no matches”. */
+  initialSearchFailed?: boolean;
   trending?: TmdbMovie[];
   genres?: TmdbGenre[];
   taste?: SearchTasteProps | null;
@@ -62,6 +64,7 @@ export function SearchExperience({
   initialQuery = "",
   initialPage = 1,
   initialData = null,
+  initialSearchFailed = false,
   trending = [],
   genres = [],
   taste = null,
@@ -78,7 +81,9 @@ export function SearchExperience({
   );
   const [searching, setSearching] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    initialSearchFailed ? "Couldn’t search right now. Try again." : null,
+  );
   const [, startTransition] = useTransition();
 
   const abortRef = useRef<AbortController | null>(null);
@@ -380,7 +385,11 @@ export function SearchExperience({
           ) : null}
 
           {query ? (
-            <p className="mt-5 text-sm text-cream/55">
+            <p
+              className="mt-5 text-sm text-cream/55"
+              role="status"
+              aria-live="polite"
+            >
               {searching && results.length === 0 ? (
                 <span className="inline-flex items-center gap-2">
                   <Loader2 className="size-3.5 animate-spin" aria-hidden />
@@ -398,6 +407,7 @@ export function SearchExperience({
                 <>
                   No matches for{" "}
                   <span className="text-cream/85">&ldquo;{query}&rdquo;</span>
+                  {" — try a shorter title or check the spelling."}
                 </>
               ) : null}
             </p>
@@ -407,12 +417,19 @@ export function SearchExperience({
 
       <div className="relative w-full flex-1 px-5 py-8 sm:px-8 sm:py-10 lg:px-12 xl:px-16">
         {error && results.length === 0 && query ? (
-          <p
-            className="mb-8 rounded-2xl border border-red-400/20 bg-red-500/10 px-5 py-4 text-sm text-red-300"
+          <div
+            className="mb-8 rounded-2xl border border-red-400/20 bg-red-500/10 px-5 py-4"
             role="alert"
           >
-            {error}
-          </p>
+            <p className="text-sm text-red-300">{error}</p>
+            <button
+              type="button"
+              onClick={() => void runSearch(query)}
+              className="mt-3 text-sm font-medium text-amber transition-colors hover:text-cream"
+            >
+              Retry search
+            </button>
+          </div>
         ) : null}
 
         {/* Idle — one spotlight + horizontal rails (not twin poster dumps) */}

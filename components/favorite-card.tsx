@@ -172,8 +172,8 @@ export function FavoriteCard({ favorite, priority = false }: FavoriteCardProps) 
         </div>
       </Link>
 
-      {/* Action dock — appears on hover */}
-      <div className="pointer-events-none absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 transition-[opacity,transform] duration-300 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+      {/* Action dock — always on touch; hover-reveal on fine pointers */}
+      <div className="list-card-actions absolute top-2 right-2 z-10 flex gap-1.5 transition-[opacity,transform] duration-300">
         <button
           type="button"
           onClick={() => setEditing(true)}

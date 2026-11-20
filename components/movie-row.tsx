@@ -88,7 +88,7 @@ export function MovieRow({
     <section
       id={id}
       aria-label={title}
-      className="row-reveal space-y-5 sm:space-y-6"
+      className="row-reveal scroll-mt-24 space-y-5 sm:space-y-6"
     >
       <div className="flex items-end justify-between gap-3 px-5 sm:gap-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="min-w-0">
