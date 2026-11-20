@@ -295,7 +295,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
                 FrameOne <span className="px-1 text-cream/35">/</span> Film
               </p>
 
-              <h1 className="hero-line hero-line-2 max-w-4xl font-marquee text-4xl leading-[0.9] text-balance wrap-break-word text-cream uppercase drop-shadow-[0_10px_40px_rgba(0,0,0,0.45)] sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-8xl">
+              <h1 className="hero-line hero-line-2 max-w-4xl font-marquee text-4xl font-semibold leading-[0.9] tracking-[0.04em] text-balance wrap-break-word text-cream uppercase drop-shadow-[0_10px_40px_rgba(0,0,0,0.45)] sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-8xl">
                 {movie.title}
               </h1>
 

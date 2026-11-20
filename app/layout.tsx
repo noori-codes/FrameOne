@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
-import { Bebas_Neue, DM_Sans, Instrument_Serif } from "next/font/google";
+import {
+  Big_Shoulders_Display,
+  Fraunces,
+  Source_Sans_3,
+} from "next/font/google";
 import { Suspense } from "react";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { NavigationProgress } from "@/components/navigation-progress";
@@ -12,24 +16,24 @@ import "./globals.css";
  * - fonts + metadata live here so they apply site-wide
  * - SiteHeader stays mounted across navigations (layout does not remount)
  *
- * Type roles (F24):
- * - marquee (Bebas) — brand + hero titles only
- * - display (Instrument Serif) — section / page headlines
- * - body (DM Sans) — UI copy
+ * Type roles:
+ * - marquee (Big Shoulders Display) — brand + hero titles (poster condensed)
+ * - display (Fraunces) — section / page headlines (warm editorial)
+ * - body (Source Sans 3) — UI copy
  */
-const marquee = Bebas_Neue({
-  weight: "400",
+const marquee = Big_Shoulders_Display({
+  weight: ["600", "700"],
   subsets: ["latin"],
   variable: "--font-marquee",
 });
 
-const display = Instrument_Serif({
-  weight: "400",
+const display = Fraunces({
+  weight: ["400", "600"],
   subsets: ["latin"],
   variable: "--font-display",
 });
 
-const body = DM_Sans({
+const body = Source_Sans_3({
   subsets: ["latin"],
   variable: "--font-body",
 });

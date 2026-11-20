@@ -41,7 +41,7 @@ export function BrandLogo({
         <span
           className={cn(
             // Same height as the mark so both share one vertical center
-            "inline-flex items-center font-marquee leading-none tracking-[0.2em] text-amber uppercase",
+            "inline-flex items-center font-marquee text-[1.05em] font-semibold leading-none tracking-[0.14em] text-amber uppercase",
             // Marquee face sits a hair high in the em-box — nudge to match the mark
             "translate-y-[0.06em]",
             // Drop the wordmark on very narrow phones so the header doesn’t overflow
