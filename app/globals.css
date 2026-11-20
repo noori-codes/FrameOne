@@ -98,6 +98,18 @@ button:disabled {
   background: var(--stage);
 }
 
+/* Horizontal poster strips — keep scroll, hide the bar (overrides * rules above). */
+.movie-row-scroller {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.movie-row-scroller::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* Soft film grain (CSS only — no image asset needed) */
 .film-grain {
   pointer-events: none;

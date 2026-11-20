@@ -44,7 +44,7 @@ export function MovieGridSkeleton({
   );
 }
 
-/** Poster shelf grid (home / similar titles). */
+/** One horizontal row of posters (home / similar titles). */
 export function MovieRowSkeleton() {
   return (
     <section className="space-y-5 sm:space-y-6">
@@ -58,21 +58,23 @@ export function MovieRowSkeleton() {
           <Skeleton className="h-8 w-44 rounded-sm sm:h-10 sm:w-64" />
           <Skeleton className="mt-2 h-3 w-28 sm:w-36" />
         </div>
-        <Skeleton className="mb-1 h-4 w-14" />
+        <div className="mb-0.5 flex gap-2">
+          <Skeleton className="size-9 rounded-full" />
+          <Skeleton className="size-9 rounded-full" />
+        </div>
       </div>
-      <ul
-        className={cn(
-          "grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-8 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
-          PAGE_GUTTER,
-        )}
-      >
-        {Array.from({ length: 12 }).map((_, i) => (
-          <li key={i} className="min-w-0">
-            <MoviePosterSkeleton />
-            <Skeleton className="mt-2.5 h-3.5 w-[85%]" />
-          </li>
-        ))}
-      </ul>
+      <div className={cn("overflow-hidden pt-2 pb-5", PAGE_GUTTER)}>
+        <ul className="flex gap-4 sm:gap-5 lg:gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <li
+              key={i}
+              className="min-w-0 shrink-0 grow-0 basis-36 sm:basis-44 md:basis-52 lg:basis-56"
+            >
+              <MoviePosterSkeleton />
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }
