@@ -10,6 +10,15 @@ import { getRedisClient } from "@/lib/redis";
  * Never import this into a Client Component (`"use client"`) or the key can leak.
  */
 
+/** Reuse TLS sockets across TMDB calls in one process (cold-path win). */
+const tmdbAgent = new https.Agent({
+  keepAlive: true,
+  family: 4,
+  maxSockets: 10,
+  maxFreeSockets: 6,
+  scheduling: "lifo",
+});
+
 /**
  * Force IPv4 for TMDB. Under many VPNs, Node’s default `fetch` races IPv6
  * CloudFront addresses and hangs until connect timeout while curl -4 works.
@@ -32,6 +41,7 @@ function tmdbNetworkFetch(
         port: parsed.port || 443,
         path: `${parsed.pathname}${parsed.search}`,
         method: "GET",
+        agent: tmdbAgent,
         family: 4,
         headers: { Accept: "application/json" },
       },

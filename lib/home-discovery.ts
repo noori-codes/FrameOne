@@ -1,13 +1,9 @@
-import { unstable_cache } from "next/cache";
-import { todayKey } from "@/lib/daily-hero";
 import {
-  getPopularMoviesPage,
-  getTopRatedMoviesPage,
-  getTrendingMoviesPage,
-  getTrendingTvPage,
-  type PaginatedMovies,
-  type PaginatedTv,
-} from "@/lib/tmdb";
+  getHomeTmdbBundle,
+  homeTmdbBundleHasContent,
+  type HomeTmdbBundle,
+} from "@/lib/home-tmdb-bundle";
+import type { PaginatedMovies, PaginatedTv } from "@/lib/tmdb";
 
 export type HomeDiscoveryPools = {
   trending: PaginatedMovies;
@@ -37,64 +33,25 @@ const EMPTY_POOLS: HomeDiscoveryPools = {
   trendingTv: emptyTvPage,
 };
 
-function poolsHaveContent(pools: HomeDiscoveryPools) {
-  return (
-    pools.trending.results.length > 0 ||
-    pools.popular.results.length > 0 ||
-    pools.topRated.results.length > 0 ||
-    pools.trendingTv.results.length > 0
-  );
-}
-
-async function buildHomeDiscoveryPools(): Promise<HomeDiscoveryPools> {
-  const [trending, popular, topRated, trendingTv] = await Promise.allSettled([
-    getTrendingMoviesPage("day", 1),
-    getPopularMoviesPage(1),
-    getTopRatedMoviesPage(1),
-    getTrendingTvPage("day", 1),
-  ]);
-
-  for (const result of [trending, popular, topRated, trendingTv]) {
-    if (result.status === "rejected") {
-      console.warn("Home discovery pool failed:", result.reason);
-    }
-  }
-
+function toDiscoveryPools(bundle: HomeTmdbBundle): HomeDiscoveryPools {
   return {
-    trending: trending.status === "fulfilled" ? trending.value : emptyMoviePage,
-    popular: popular.status === "fulfilled" ? popular.value : emptyMoviePage,
-    topRated: topRated.status === "fulfilled" ? topRated.value : emptyMoviePage,
-    trendingTv:
-      trendingTv.status === "fulfilled" ? trendingTv.value : emptyTvPage,
+    trending: bundle.trending,
+    popular: bundle.popular,
+    topRated: bundle.topRated,
+    trendingTv: bundle.trendingTv,
   };
 }
 
 /**
- * Cross-request cached home discovery pools (no cookies / no user data).
- * Empty outages are not written to the Data Cache.
+ * Discovery pools from the shared home TMDB bundle.
  */
 export async function getHomeDiscoveryPools(): Promise<HomeDiscoveryPools> {
   try {
-    return await unstable_cache(
-      async () => {
-        const pools = await buildHomeDiscoveryPools();
-        if (!poolsHaveContent(pools)) {
-          throw new Error("HOME_DISCOVERY_EMPTY");
-        }
-        return pools;
-      },
-      ["home-discovery-pools", todayKey()],
-      { revalidate: 1800 },
-    )();
+    const bundle = await getHomeTmdbBundle();
+    if (!homeTmdbBundleHasContent(bundle)) return EMPTY_POOLS;
+    return toDiscoveryPools(bundle);
   } catch (err) {
-    if (err instanceof Error && err.message === "HOME_DISCOVERY_EMPTY") {
-      return EMPTY_POOLS;
-    }
-    try {
-      return await buildHomeDiscoveryPools();
-    } catch (liveErr) {
-      console.warn("Home discovery live fetch failed:", liveErr);
-      return EMPTY_POOLS;
-    }
+    console.warn("Home discovery pools failed:", err);
+    return EMPTY_POOLS;
   }
 }

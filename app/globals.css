@@ -37,6 +37,13 @@ body {
   font-family: var(--font-body), system-ui, sans-serif;
 }
 
+/* Guest nudge present → reserve space without JS (avoids CLS). Mobile only. */
+@media (max-width: 767px) {
+  body:has(.guest-nudge) {
+    padding-bottom: calc(4rem + 5.5rem);
+  }
+}
+
 .movie-detail-hero {
   min-height: calc(100svh - 3.5rem - 4rem);
 }

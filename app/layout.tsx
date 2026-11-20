@@ -52,7 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${marquee.variable} ${display.variable} ${body.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col overflow-x-hidden bg-background pb-[calc(4rem+var(--guest-nudge-pad,0px))] text-foreground md:pb-[var(--guest-nudge-pad,0px)]">
+      <body className="flex min-h-full flex-col overflow-x-hidden bg-background pb-16 text-foreground md:pb-0">
         <Suspense fallback={null}>
           <NavigationProgress />
         </Suspense>

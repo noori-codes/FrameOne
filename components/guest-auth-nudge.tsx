@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { Sparkles, X } from "lucide-react";
 
 const DISMISS_KEY = "frameone:guest-nudge-dismissed";
@@ -15,62 +15,59 @@ const HIDDEN_PATHS = [
   "/reset-password",
 ];
 
+const listeners = new Set<() => void>();
+
+function emitDismissChange() {
+  for (const listener of listeners) listener();
+}
+
+function subscribeDismiss(onStoreChange: () => void) {
+  listeners.add(onStoreChange);
+  return () => {
+    listeners.delete(onStoreChange);
+  };
+}
+
+function readDismissed() {
+  try {
+    return sessionStorage.getItem(DISMISS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Fixed bottom bar for signed-out visitors — streaming-app pattern:
  * value prop + Sign in / Join, dismissible for the session.
  *
- * Sits above the mobile tab bar; hidden on title detail pages where the
- * hero already has a “Sign in to save” CTA (avoids stacked bottom chrome).
+ * First paint uses useSyncExternalStore (no useEffect flash). Body pad from
+ * `body:has(.guest-nudge)` in CSS — no layout thrash.
  */
 export function GuestAuthNudge() {
   const pathname = usePathname();
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    try {
-      if (sessionStorage.getItem(DISMISS_KEY) === "1") return;
-    } catch {
-      // private mode / blocked storage — still show
-    }
-    setVisible(true);
-  }, []);
+  const dismissed = useSyncExternalStore(
+    subscribeDismiss,
+    readDismissed,
+    () => false,
+  );
 
   const onAuthPage = HIDDEN_PATHS.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
   const onDetailPage =
     pathname.startsWith("/movie/") || pathname.startsWith("/tv/");
-  const show = visible && !onAuthPage && !onDetailPage;
+  const show = !dismissed && !onAuthPage && !onDetailPage;
 
-  useEffect(() => {
-    if (!show) return;
-    // Nudge is mobile-only (`md:hidden`) — don’t pad the desktop footer.
-    const mq = window.matchMedia("(max-width: 767px)");
-    function applyPad() {
-      if (mq.matches) {
-        document.body.style.setProperty("--guest-nudge-pad", "5.5rem");
-      } else {
-        document.body.style.removeProperty("--guest-nudge-pad");
-      }
-    }
-    applyPad();
-    mq.addEventListener("change", applyPad);
-    return () => {
-      mq.removeEventListener("change", applyPad);
-      document.body.style.removeProperty("--guest-nudge-pad");
-    };
-  }, [show]);
-
-  if (!show) return null;
-
-  function dismiss() {
+  const dismiss = useCallback(() => {
     try {
       sessionStorage.setItem(DISMISS_KEY, "1");
     } catch {
       // ignore
     }
-    setVisible(false);
-  }
+    emitDismissChange();
+  }, []);
+
+  if (!show) return null;
 
   const callback = encodeURIComponent(pathname || "/");
 
