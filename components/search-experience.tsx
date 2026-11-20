@@ -569,12 +569,9 @@ export function SearchExperience({
                       : `Because you watched ${taste.seedTitle}`}
                   </h2>
                 </div>
-                <ul className="mt-6 flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-3.5 [&::-webkit-scrollbar]:hidden">
+                <ul className={cn("mt-6", gridClass)}>
                   {taste.movies.slice(1, 13).map((movie, i) => (
-                    <li
-                      key={`taste-${movie.id}`}
-                      className="w-[9.5rem] shrink-0 sm:w-44"
-                    >
+                    <li key={`taste-${movie.id}`}>
                       <MovieCard
                         id={movie.id}
                         title={movie.title}
@@ -590,7 +587,7 @@ export function SearchExperience({
                             : movieFavoriteSet
                           )?.has(movie.id) ?? false
                         }
-                        sizes="176px"
+                        sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, (max-width: 1280px) 16vw, 12vw"
                       />
                     </li>
                   ))}
@@ -614,12 +611,9 @@ export function SearchExperience({
               </div>
 
               {trending.length > 0 ? (
-                <ul className="mt-6 flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-3.5 [&::-webkit-scrollbar]:hidden">
-                  {trending.slice(0, 14).map((movie, i) => (
-                    <li
-                      key={movie.id}
-                      className="w-[9.5rem] shrink-0 sm:w-44"
-                    >
+                <ul className={cn("mt-6", gridClass)}>
+                  {trending.slice(0, 12).map((movie, i) => (
+                    <li key={movie.id}>
                       <MovieCard
                         id={movie.id}
                         title={movie.title}
@@ -631,7 +625,7 @@ export function SearchExperience({
                         initialFavorite={
                           movieFavoriteSet?.has(movie.id) ?? false
                         }
-                        sizes="176px"
+                        sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, (max-width: 1280px) 16vw, 12vw"
                       />
                     </li>
                   ))}

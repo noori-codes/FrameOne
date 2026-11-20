@@ -57,11 +57,11 @@ export function ProfileShelfStrip({
       </div>
 
       {items.length > 0 ? (
-        <ul className="mt-5 flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-3.5 [&::-webkit-scrollbar]:hidden">
-          {items.map((item, i) => {
+        <ul className="mt-5 grid grid-cols-3 gap-x-2.5 gap-y-3 sm:grid-cols-4 sm:gap-x-3 md:grid-cols-5 lg:grid-cols-6">
+          {items.slice(0, 12).map((item, i) => {
             const poster = posterUrl(item.posterPath, "w342");
             return (
-              <li key={item.id} className="w-[7.25rem] shrink-0 sm:w-32">
+              <li key={item.id} className="min-w-0">
                 <Link
                   href={mediaHref(item.mediaType, item.movieId)}
                   className="group/card relative block aspect-2/3 overflow-hidden rounded-xl bg-stage ring-1 ring-cream/10 transition-[transform,box-shadow,ring-color] duration-500 hover:-translate-y-1 hover:shadow-[0_24px_40px_-18px_rgba(0,0,0,0.85)] hover:ring-amber/35"
@@ -71,7 +71,7 @@ export function ProfileShelfStrip({
                       src={poster}
                       alt={item.title}
                       fill
-                      sizes="128px"
+                      sizes="(max-width: 640px) 30vw, (max-width: 1024px) 18vw, 120px"
                       priority={i < 4}
                       className="object-cover transition-transform duration-700 group-hover/card:scale-[1.05]"
                     />
