@@ -71,6 +71,7 @@ async function TasteRows() {
           }
           movies={row.movies}
           mediaType={row.mediaType}
+          showFavorite={Boolean(personal.userId)}
           favoriteIds={
             row.mediaType === "tv"
               ? personal.tvFavoriteIds
@@ -124,6 +125,7 @@ async function DiscoveryRows() {
         title="Trending now"
         movies={trendingMovies}
         href="/browse/trending"
+        showFavorite={Boolean(personal.userId)}
         favoriteIds={personal.movieFavoriteIds}
       />
       <MovieRow
@@ -132,6 +134,7 @@ async function DiscoveryRows() {
         subtitle="TV shows rising on TMDB today"
         movies={trendingSeries}
         mediaType="tv"
+        showFavorite={Boolean(personal.userId)}
         favoriteIds={personal.tvFavoriteIds}
       />
       {popularFresh.length >= 6 ? (
@@ -141,6 +144,7 @@ async function DiscoveryRows() {
           subtitle="Fresh popular picks you haven’t logged"
           movies={popularFresh}
           href="/browse/popular"
+          showFavorite={Boolean(personal.userId)}
           favoriteIds={personal.movieFavoriteIds}
         />
       ) : null}
@@ -149,6 +153,7 @@ async function DiscoveryRows() {
         title="Top rated"
         movies={topRatedMovies}
         href="/browse/top-rated"
+        showFavorite={Boolean(personal.userId)}
         favoriteIds={personal.movieFavoriteIds}
       />
     </>
@@ -161,6 +166,7 @@ async function HomeGenreRows() {
     <DeferredGenreRows
       favoriteIds={personal.movieFavoriteIds}
       excludeIds={personal.watchedMovieIds}
+      showFavorite={Boolean(personal.userId)}
     />
   );
 }

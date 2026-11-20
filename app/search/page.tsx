@@ -1,5 +1,6 @@
 import { SearchExperience } from "@/components/search-experience";
 import { parsePageParam } from "@/components/pagination-nav";
+import { getHomePersonalization } from "@/lib/home-personalization";
 import { getSearchTasteRow } from "@/lib/taste-recommendations";
 import {
   getMovieGenres,
@@ -36,23 +37,25 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const page = parsePageParam(pageRaw);
 
   let initialSearchFailed = false;
-  const [initialData, trending, allGenres, tasteRow] = await Promise.all([
-    query
-      ? searchMulti(query, page).catch((err) => {
-          console.warn(`Search for "${query}" failed:`, err);
-          initialSearchFailed = true;
-          return {
-            results: [],
-            page,
-            totalPages: 0,
-            totalResults: 0,
-          } satisfies PaginatedSearch;
-        })
-      : Promise.resolve(null),
-    getTrendingMovies("day").catch(() => []),
-    getMovieGenres().catch(() => []),
-    getSearchTasteRow(),
-  ]);
+  const [initialData, trending, allGenres, tasteRow, personal] =
+    await Promise.all([
+      query
+        ? searchMulti(query, page).catch((err) => {
+            console.warn(`Search for "${query}" failed:`, err);
+            initialSearchFailed = true;
+            return {
+              results: [],
+              page,
+              totalPages: 0,
+              totalResults: 0,
+            } satisfies PaginatedSearch;
+          })
+        : Promise.resolve(null),
+      getTrendingMovies("day").catch(() => []),
+      getMovieGenres().catch(() => []),
+      getSearchTasteRow(),
+      getHomePersonalization(),
+    ]);
 
   const genreById = new Map(allGenres.map((g) => [g.id, g]));
   const genres = FEATURED_GENRE_IDS.map((id) => genreById.get(id)).filter(
@@ -77,6 +80,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       trending={trending.slice(0, 18)}
       genres={genres}
       taste={taste}
+      showFavorite={Boolean(personal.userId)}
+      movieFavoriteIds={personal.movieFavoriteIds}
+      tvFavoriteIds={personal.tvFavoriteIds}
     />
   );
 }

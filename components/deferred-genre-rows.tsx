@@ -23,6 +23,7 @@ const ROWS_PER_WAVE = 4;
 type DeferredGenreRowsProps = {
   favoriteIds?: number[];
   excludeIds?: number[];
+  showFavorite?: boolean;
 };
 
 /**
@@ -31,6 +32,7 @@ type DeferredGenreRowsProps = {
 export function DeferredGenreRows({
   favoriteIds = [],
   excludeIds = [],
+  showFavorite = false,
 }: DeferredGenreRowsProps) {
   const excludeSet = useMemo(
     () => (excludeIds.length > 0 ? new Set(excludeIds) : null),
@@ -90,6 +92,7 @@ export function DeferredGenreRows({
             wave={wave}
             canArm={previousSettled}
             favoriteIds={favoriteIds}
+            showFavorite={showFavorite}
             excludeSet={excludeSet}
             onArm={() => void loadWave(index)}
             onRetry={() => retryWave(index)}
@@ -105,6 +108,7 @@ function GenreWave({
   wave,
   canArm,
   favoriteIds,
+  showFavorite,
   excludeSet,
   onArm,
   onRetry,
@@ -113,6 +117,7 @@ function GenreWave({
   wave: WaveState;
   canArm: boolean;
   favoriteIds: number[];
+  showFavorite: boolean;
   excludeSet: Set<number> | null;
   onArm: () => void;
   onRetry: () => void;
@@ -203,6 +208,7 @@ function GenreWave({
                   : genre.movies
               }
               href={`/genres/${genre.id}`}
+              showFavorite={showFavorite}
               favoriteIds={favoriteIds}
             />
           ))

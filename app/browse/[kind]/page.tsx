@@ -12,6 +12,7 @@ import {
   isBrowseKind,
 } from "@/lib/browse";
 import { parsePageParam } from "@/components/pagination-nav";
+import { getHomePersonalization } from "@/lib/home-personalization";
 import { emptyMoviesPage, getMovieGenres } from "@/lib/tmdb";
 
 type BrowsePageProps = {
@@ -65,12 +66,13 @@ export default async function BrowsePage({
 
   const page = parsePageParam(pageRaw);
   const meta = BROWSE_KINDS[kind];
-  const [moviesResult, genres] = await Promise.all([
+  const [moviesResult, genres, personal] = await Promise.all([
     getBrowseMoviesPage(kind, page).catch((err) => {
       console.warn(`Browse ${kind} page ${page} failed:`, err);
       return emptyMoviesPage(page);
     }),
     getMovieGenres(),
+    getHomePersonalization(),
   ]);
   const moviesPage = moviesResult;
   const featuredMovie = moviesPage.results.find(
@@ -93,6 +95,8 @@ export default async function BrowsePage({
         key={`${kind}-${page}`}
         endpoint={`/api/browse/${kind}/movies`}
         initial={moviesPage}
+        showFavorite={Boolean(personal.userId)}
+        favoriteIds={personal.movieFavoriteIds}
       />
     </CollectionPageLayout>
   );

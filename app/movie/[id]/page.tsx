@@ -33,6 +33,7 @@ import {
   profileUrl,
   type TmdbCrewMember,
 } from "@/lib/tmdb";
+import { getHomePersonalization } from "@/lib/home-personalization";
 import { getPreferredWatchRegion } from "@/lib/watch-region-server";
 
 type MoviePageProps = {
@@ -150,8 +151,15 @@ export default async function MoviePage({ params }: MoviePageProps) {
   const collectionId = movie.belongs_to_collection?.id ?? null;
   const watchRegion = await getPreferredWatchRegion();
 
-  const [favorite, watchlistItem, watchedItem, similar, watchOffer, collectionParts] =
-    await Promise.all([
+  const [
+    favorite,
+    watchlistItem,
+    watchedItem,
+    similar,
+    watchOffer,
+    collectionParts,
+    personal,
+  ] = await Promise.all([
       userId
         ? prisma.favorite.findUnique({
             where: {
@@ -193,6 +201,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
       collectionId
         ? getMovieCollectionParts(collectionId)
         : Promise.resolve([]),
+      getHomePersonalization(),
     ]);
 
   const trailerKey = getMovieTrailerKeyFromVideos(movie.videos?.results);
@@ -707,6 +716,8 @@ export default async function MoviePage({ params }: MoviePageProps) {
             title={movie.belongs_to_collection.name}
             subtitle={`Part of ${movie.belongs_to_collection.name}`}
             movies={collectionMovies}
+            showFavorite={Boolean(personal.userId)}
+            favoriteIds={personal.movieFavoriteIds}
           />
         </section>
       ) : null}
@@ -718,6 +729,8 @@ export default async function MoviePage({ params }: MoviePageProps) {
             title="More like this"
             subtitle="Recommended from this title"
             movies={similar}
+            showFavorite={Boolean(personal.userId)}
+            favoriteIds={personal.movieFavoriteIds}
           />
         </section>
       ) : null}

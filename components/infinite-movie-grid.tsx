@@ -11,6 +11,8 @@ type InfiniteMovieGridProps = {
   /** Hide the “Showing X of Y” line (home feed). Default true. */
   showCount?: boolean;
   favoriteIds?: number[];
+  /** Mount favorite hearts (signed-in only). */
+  showFavorite?: boolean;
   /** Drop these TMDB ids (e.g. already watched) from every page. */
   excludeIds?: number[];
 };
@@ -63,6 +65,7 @@ export function InfiniteMovieGrid({
   initial,
   showCount = true,
   favoriteIds,
+  showFavorite = false,
   excludeIds,
 }: InfiniteMovieGridProps) {
   const [movies, setMovies] = useState(initial.results);
@@ -185,6 +188,7 @@ export function InfiniteMovieGrid({
               posterPath={movie.poster_path}
               voteAverage={movie.vote_average}
               showTitle
+              showFavorite={showFavorite}
               initialFavorite={favoriteSet?.has(movie.id) ?? false}
               sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, (max-width: 1280px) 22vw, 18vw"
             />

@@ -1,9 +1,8 @@
 "use client";
 
-import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MovieCard } from "@/components/movie-card";
 import type { MediaKind, TmdbMovie } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
@@ -18,11 +17,13 @@ type MovieRowProps = {
   /** Defaults to movie; use `tv` for series rows. */
   mediaType?: MediaKind;
   favoriteIds?: number[];
+  /** Mount favorite hearts (signed-in only). */
+  showFavorite?: boolean;
 };
 
 /**
- * Horizontal poster row powered by Embla.
- * Next/prev jump by roughly a full “page” of posters (not one card at a time).
+ * Horizontal poster row — native CSS scroll-snap (no Embla).
+ * Prev/next jump by roughly one viewport of posters.
  */
 export function MovieRow({
   id,
@@ -32,52 +33,42 @@ export function MovieRow({
   href,
   mediaType = "movie",
   favoriteIds,
+  showFavorite = false,
 }: MovieRowProps) {
   const row = movies;
   const favoriteSet =
     favoriteIds && favoriteIds.length > 0 ? new Set(favoriteIds) : null;
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    align: "start",
-    containScroll: "trimSnaps",
-    dragFree: false,
-    duration: 18,
-    // Leave a peek of the next poster so the row feels scrollable.
-    slidesToScroll: "auto",
-  });
+  const scrollerRef = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
 
+  const updateButtons = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setCanPrev(el.scrollLeft > 8);
+    setCanNext(el.scrollLeft < max - 8);
+  }, []);
+
   useEffect(() => {
-    if (!emblaApi) return;
-
-    function updateButtons() {
-      setCanPrev(emblaApi!.canScrollPrev());
-      setCanNext(emblaApi!.canScrollNext());
-    }
-
+    const el = scrollerRef.current;
+    if (!el) return;
     updateButtons();
-    emblaApi.on("select", updateButtons);
-    emblaApi.on("reInit", updateButtons);
-
+    el.addEventListener("scroll", updateButtons, { passive: true });
+    const ro = new ResizeObserver(updateButtons);
+    ro.observe(el);
     return () => {
-      emblaApi.off("select", updateButtons);
-      emblaApi.off("reInit", updateButtons);
+      el.removeEventListener("scroll", updateButtons);
+      ro.disconnect();
     };
-  }, [emblaApi]);
+  }, [updateButtons, row.length]);
 
-  const scrollPage = useCallback(
-    (dir: -1 | 1) => {
-      if (!emblaApi) return;
-
-      const current = emblaApi.selectedScrollSnap();
-      const visible = emblaApi.slidesInView().length;
-      const step = Math.max(visible > 1 ? visible - 1 : 4, 3);
-      const last = emblaApi.scrollSnapList().length - 1;
-      const next = Math.min(Math.max(current + dir * step, 0), last);
-      emblaApi.scrollTo(next);
-    },
-    [emblaApi],
-  );
+  const scrollPage = useCallback((dir: -1 | 1) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const delta = Math.max(el.clientWidth * 0.85, 280) * dir;
+    el.scrollBy({ left: delta, behavior: "smooth" });
+  }, []);
 
   if (row.length === 0) return null;
 
@@ -143,15 +134,15 @@ export function MovieRow({
       </div>
 
       <div
-        className="overflow-hidden px-5 pt-2 pb-5 sm:px-8 lg:px-12 xl:px-16"
-        ref={emblaRef}
+        ref={scrollerRef}
+        className="movie-row-scroller overflow-x-auto overscroll-x-contain px-5 pt-2 pb-5 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-8 lg:px-12 xl:px-16 [&::-webkit-scrollbar]:hidden"
       >
-        <ul className="flex gap-3 sm:gap-3.5 lg:gap-4">
+        <ul className="flex snap-x snap-mandatory gap-3 sm:gap-3.5 lg:gap-4">
           {row.map((movie) => (
             <li
               key={movie.id}
               className={cn(
-                "min-w-0 shrink-0 grow-0 basis-[9.75rem] sm:basis-48 md:basis-56 lg:basis-[15.5rem] xl:basis-[17rem]",
+                "min-w-0 shrink-0 grow-0 basis-[9.75rem] snap-start sm:basis-48 md:basis-56 lg:basis-[15.5rem] xl:basis-[17rem]",
               )}
             >
               <MovieCard
@@ -160,13 +151,16 @@ export function MovieRow({
                 posterPath={movie.poster_path}
                 voteAverage={movie.vote_average}
                 mediaType={mediaType}
+                showFavorite={showFavorite}
                 initialFavorite={favoriteSet?.has(movie.id) ?? false}
                 sizes="(max-width: 640px) 156px, (max-width: 768px) 192px, (max-width: 1024px) 224px, (max-width: 1280px) 248px, 272px"
               />
             </li>
           ))}
-          {/* Trailing spacer so the last card can peek past the gutter. */}
-          <li aria-hidden className="w-3 shrink-0 grow-0 basis-3 sm:w-5 sm:basis-5" />
+          <li
+            aria-hidden
+            className="w-3 shrink-0 grow-0 basis-3 sm:w-5 sm:basis-5"
+          />
         </ul>
       </div>
     </section>

@@ -42,6 +42,10 @@ type SearchExperienceProps = {
   trending?: TmdbMovie[];
   genres?: TmdbGenre[];
   taste?: SearchTasteProps | null;
+  /** Mount favorite hearts (signed-in only). */
+  showFavorite?: boolean;
+  movieFavoriteIds?: number[];
+  tvFavoriteIds?: number[];
 };
 
 function syncUrl(query: string) {
@@ -68,6 +72,9 @@ export function SearchExperience({
   trending = [],
   genres = [],
   taste = null,
+  showFavorite = false,
+  movieFavoriteIds = [],
+  tvFavoriteIds = [],
 }: SearchExperienceProps) {
   const [input, setInput] = useState(initialQuery);
   const [query, setQuery] = useState(initialQuery.trim());
@@ -108,6 +115,15 @@ export function SearchExperience({
 
   const hasMore = page < totalPages;
   const featured = results[0] ?? null;
+  const movieFavoriteSet = useMemo(
+    () =>
+      movieFavoriteIds.length > 0 ? new Set(movieFavoriteIds) : null,
+    [movieFavoriteIds],
+  );
+  const tvFavoriteSet = useMemo(
+    () => (tvFavoriteIds.length > 0 ? new Set(tvFavoriteIds) : null),
+    [tvFavoriteIds],
+  );
 
   const atmosphere = useMemo(() => {
     if (featured?.backdrop_path) {
@@ -567,6 +583,13 @@ export function SearchExperience({
                         mediaType={taste.mediaType}
                         priority={i < 4}
                         showTitle
+                        showFavorite={showFavorite}
+                        initialFavorite={
+                          (taste.mediaType === "tv"
+                            ? tvFavoriteSet
+                            : movieFavoriteSet
+                          )?.has(movie.id) ?? false
+                        }
                         sizes="176px"
                       />
                     </li>
@@ -604,6 +627,10 @@ export function SearchExperience({
                         voteAverage={movie.vote_average}
                         priority={i < 4 && !(taste && taste.movies.length > 0)}
                         showTitle
+                        showFavorite={showFavorite}
+                        initialFavorite={
+                          movieFavoriteSet?.has(movie.id) ?? false
+                        }
                         sizes="176px"
                       />
                     </li>
@@ -656,6 +683,13 @@ export function SearchExperience({
                         voteAverage={movie.vote_average}
                         mediaType={taste.mediaType}
                         showTitle
+                        showFavorite={showFavorite}
+                        initialFavorite={
+                          (taste.mediaType === "tv"
+                            ? tvFavoriteSet
+                            : movieFavoriteSet
+                          )?.has(movie.id) ?? false
+                        }
                         sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, (max-width: 1280px) 16vw, 12vw"
                       />
                     </li>
@@ -679,6 +713,10 @@ export function SearchExperience({
                         posterPath={movie.poster_path}
                         voteAverage={movie.vote_average}
                         showTitle
+                        showFavorite={showFavorite}
+                        initialFavorite={
+                          movieFavoriteSet?.has(movie.id) ?? false
+                        }
                         sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, (max-width: 1280px) 16vw, 12vw"
                       />
                     </li>
@@ -753,6 +791,13 @@ export function SearchExperience({
                     mediaType={hit.mediaType}
                     showMediaBadge
                     showTitle
+                    showFavorite={showFavorite}
+                    initialFavorite={
+                      (hit.mediaType === "tv"
+                        ? tvFavoriteSet
+                        : movieFavoriteSet
+                      )?.has(hit.id) ?? false
+                    }
                     sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, (max-width: 1280px) 16vw, 12vw"
                   />
                 </li>

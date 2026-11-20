@@ -4,6 +4,7 @@ import { GenreChips } from "@/components/genre-chips";
 import { GenreSortNav } from "@/components/genre-sort-nav";
 import { GenreSplitLayout } from "@/components/genre-split-layout";
 import { InfiniteMovieGrid } from "@/components/infinite-movie-grid";
+import { getHomePersonalization } from "@/lib/home-personalization";
 import {
   GENRE_SORTS,
   emptyMoviesPage,
@@ -47,12 +48,13 @@ export default async function GenrePage({
 
   if (!Number.isFinite(genreId) || genreId <= 0) notFound();
 
-  const [genres, initial] = await Promise.all([
+  const [genres, initial, personal] = await Promise.all([
     getMovieGenres(),
     getMoviesByGenre(genreId, 1, sort).catch((err) => {
       console.warn(`Genre ${genreId} failed:`, err);
       return emptyMoviesPage(1);
     }),
+    getHomePersonalization(),
   ]);
 
   const genre = genres.find((g) => g.id === genreId);
@@ -87,6 +89,8 @@ export default async function GenrePage({
         endpoint={`/api/genres/${genreId}/movies`}
         sort={sort}
         initial={initial}
+        showFavorite={Boolean(personal.userId)}
+        favoriteIds={personal.movieFavoriteIds}
       />
     </GenreSplitLayout>
   );

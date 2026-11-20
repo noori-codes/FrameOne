@@ -14,6 +14,7 @@ import {
 import { notFound } from "next/navigation";
 import { MovieCard } from "@/components/movie-card";
 import { SiteFooter } from "@/components/site-footer";
+import { getHomePersonalization } from "@/lib/home-personalization";
 import {
   backdropUrl,
   getPerson,
@@ -161,11 +162,13 @@ export async function generateMetadata({
 
 export default async function PersonPage({ params }: PersonPageProps) {
   const { id } = await params;
-  const [person, credits] = await Promise.all([
+  const [person, credits, personal] = await Promise.all([
     getPerson(id),
     getPersonCombinedCredits(id),
+    getHomePersonalization(),
   ]);
   if (!person) notFound();
+  const showFavorite = Boolean(personal.userId);
 
   const department = person.known_for_department || "Acting";
   const knownFor = getPersonKnownFor(credits, department, 24);
@@ -382,6 +385,8 @@ export default async function PersonPage({ params }: PersonPageProps) {
                   title="Films"
                   icon={<Clapperboard className="size-4" aria-hidden />}
                   credits={movieCredits}
+                  showFavorite={showFavorite}
+                  favoriteIds={personal.movieFavoriteIds}
                 />
               ) : null}
 
@@ -392,6 +397,8 @@ export default async function PersonPage({ params }: PersonPageProps) {
                   title="Series"
                   icon={<Tv className="size-4" aria-hidden />}
                   credits={tvCredits}
+                  showFavorite={showFavorite}
+                  favoriteIds={personal.tvFavoriteIds}
                 />
               ) : null}
             </div>
@@ -453,13 +460,20 @@ function KnownForSection({
   title,
   icon,
   credits,
+  showFavorite = false,
+  favoriteIds = [],
 }: {
   id: string;
   eyebrow: string;
   title: string;
   icon: ReactNode;
   credits: TmdbPersonCredit[];
+  showFavorite?: boolean;
+  favoriteIds?: number[];
 }) {
+  const favoriteSet =
+    favoriteIds.length > 0 ? new Set(favoriteIds) : null;
+
   return (
     <section aria-labelledby={id}>
       <div className="flex items-end justify-between gap-4 border-b border-cream/10 pb-5">
@@ -495,6 +509,8 @@ function KnownForSection({
                 voteAverage={credit.vote_average}
                 mediaType={credit.media_type}
                 showTitle
+                showFavorite={showFavorite}
+                initialFavorite={favoriteSet?.has(credit.id) ?? false}
                 sizes="(max-width: 640px) 42vw, (max-width: 1024px) 22vw, 160px"
               />
               <p

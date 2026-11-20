@@ -22,13 +22,14 @@ export async function HomeEndlessFeed() {
       },
       favoriteIds: personal.movieFavoriteIds,
       watchedIds: personal.watchedMovieIds,
+      showFavorite: Boolean(personal.userId),
     };
   } catch (err) {
     console.warn("Home endless feed failed:", err);
     return null;
   }
 
-  const { page: moviesPage, favoriteIds, watchedIds } = initial;
+  const { page: moviesPage, favoriteIds, watchedIds, showFavorite } = initial;
   if (moviesPage.results.length === 0) return null;
 
   return (
@@ -65,6 +66,7 @@ export async function HomeEndlessFeed() {
           initial={moviesPage}
           favoriteIds={favoriteIds}
           excludeIds={watchedIds}
+          showFavorite={showFavorite}
           showCount={false}
         />
       </div>

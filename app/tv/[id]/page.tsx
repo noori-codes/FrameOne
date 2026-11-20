@@ -35,6 +35,7 @@ import {
   tvShowAsMovie,
   type TmdbCrewMember,
 } from "@/lib/tmdb";
+import { getHomePersonalization } from "@/lib/home-personalization";
 import { getPreferredWatchRegion } from "@/lib/watch-region-server";
 
 type TvPageProps = {
@@ -147,8 +148,16 @@ export default async function TvPage({ params }: TvPageProps) {
     (season) => season.episode_count > 0,
   );
 
-  const [favorite, watchlistItem, watchedItem, similar, watchOffer, seasonDetails, episodeWatches] =
-    await Promise.all([
+  const [
+    favorite,
+    watchlistItem,
+    watchedItem,
+    similar,
+    watchOffer,
+    seasonDetails,
+    episodeWatches,
+    personal,
+  ] = await Promise.all([
       userId
         ? prisma.favorite.findUnique({
             where: {
@@ -203,6 +212,7 @@ export default async function TvPage({ params }: TvPageProps) {
             },
           })
         : Promise.resolve([]),
+      getHomePersonalization(),
     ]);
 
   const progressSeasons = seasonDetails;
@@ -750,6 +760,8 @@ export default async function TvPage({ params }: TvPageProps) {
             subtitle="Recommended from this series"
             movies={similar.map(tvShowAsMovie)}
             mediaType="tv"
+            showFavorite={Boolean(personal.userId)}
+            favoriteIds={personal.tvFavoriteIds}
           />
         </section>
       ) : null}
